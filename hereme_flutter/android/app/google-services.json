@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "127452083818",
+    "firebase_url": "https://hereme-flutter.firebaseio.com",
+    "project_id": "hereme-flutter",
+    "storage_bucket": "hereme-flutter.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:127452083818:android:759be608ee1fbbfe",
+        "android_client_info": {
+          "package_name": "com.TVCCYA.HereMe.heremeflutter"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "127452083818-tj7uo9kullset4dke8cvl26id7cr0l4v.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.TVCCYA.HereMe.heremeflutter",
+            "certificate_hash": "dfc82f14c9f69d7b393041af2325fe41b2621dc8"
+          }
+        },
+        {
+          "client_id": "127452083818-db0o1kparctpu1i6el7i1vu4ghibskar.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCJB-9HW3IswRZn9Z0QRjuSyhj5mUHE7yk"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "127452083818-db0o1kparctpu1i6el7i1vu4ghibskar.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
