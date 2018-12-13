@@ -27,7 +27,10 @@ class _InitialPageState extends State<InitialPage>{
           minWidth: 200.0,
           height: 42.0,
           onPressed: () {
-//            _signInWithEmail();
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => SignIn()),
+            );
           },
           color: Colors.black,
           child: Text('Sign In', style: TextStyle(color: Colors.white)),
@@ -89,7 +92,7 @@ class _InitialPageState extends State<InitialPage>{
           SizedBox(height: 50.0),
           signInButton,
           SignUpButton,
-          emailLogout
+          emailLogout,
         ].toList(),
       ),
     );

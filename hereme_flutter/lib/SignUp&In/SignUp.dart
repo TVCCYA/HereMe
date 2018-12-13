@@ -4,6 +4,7 @@ import 'package:hereme_flutter/SignUp&In/PhotoAdd.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class SignUp extends StatefulWidget {
   SignUp({Key key}) : super(key: key);
@@ -157,7 +158,6 @@ class _SignUpState extends State<SignUp> {
             autocorrect: false,
             textInputAction: TextInputAction.done,
             onEditingComplete: () {
-              passwordFocus.unfocus();
               _continueAction();
             },
             onChanged: (_) {
@@ -171,7 +171,6 @@ class _SignUpState extends State<SignUp> {
             decoration: InputDecoration(
               border: InputBorder.none,
               hintText: '••••••',
-              fillColor: Colors.green,
               contentPadding: EdgeInsets.fromLTRB(0.0, 10.0, 20.0, 10.0),
             ),
           ),
@@ -291,7 +290,7 @@ class _SignUpState extends State<SignUp> {
   _continueAction() async {
     var succeed = true;
 
-    //clears the red text to notify the user their changes were indeed submitted
+    //clears the red text to notify the user that their changes were indeed submitted
     setState(() {
       inputErrorText = "";
     });
@@ -308,6 +307,7 @@ class _SignUpState extends State<SignUp> {
     }).then((user) {
       if (succeed == true) {
         _saveUserFirebase();
+        _saveUserSharedPref();
       }
     });
   }
@@ -330,6 +330,14 @@ class _SignUpState extends State<SignUp> {
         MaterialPageRoute(builder: (context) => new PhotoAdd(uid: user.uid)),
       );
     }).catchError((e) => print(e));
+  }
+
+  _saveUserSharedPref() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    FirebaseUser user = await FirebaseAuth.instance.currentUser();
+    await prefs.setString("name", "$firstNameInput");
+    await prefs.setString("uid", "${user.uid}");
+    await prefs.setString("photoUrl", "");
   }
 
   _launchURL() async {
