@@ -56,6 +56,17 @@ flutter:
   #  - images/a_dot_ham.jpeg
   assets:
     - images/polaroidProPic180.png
+    - images/menu55.png
+
+  # menu icons
+    - images/setings/linkGray180.png
+    - images/setings/localPhoto180.png
+    - images/setings/incognito180.png
+    - images/setings/share180.png
+    - images/setings/star180.png
+    - images/setings/umbrella180.png
+    - images/setings/glasses180.png
+
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.io/assets-and-images/#resolution-aware.

@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:hereme_flutter/SignUp&In/InitialPage.dart';
+import 'TabController.dart';
 
 void main() {
+  //todo move _isUserLoggedIn() here
   runApp(
       new MaterialApp(
     debugShowCheckedModeBanner: false,
-    home: new InitialPage(),
+    home: new NavController(),
   ));
 }

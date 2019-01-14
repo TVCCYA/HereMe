@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import '../SignUp&In/InitialPage.dart';
+import '../UserProfile/ProfilePage/UserProfilePage.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class GridFindCollectionPage extends StatefulWidget {
   @override
@@ -6,7 +9,13 @@ class GridFindCollectionPage extends StatefulWidget {
 }
 
 class _GridFindCollectionPageState extends State<GridFindCollectionPage> {
+
   @override
+  void initState() {
+    super.initState();
+    _isUserLoggedIn();
+  }
+
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
@@ -24,30 +33,21 @@ class _GridFindCollectionPageState extends State<GridFindCollectionPage> {
         ),
         automaticallyImplyLeading: false,
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: 0, // this will be set when a new tab is tapped
-        fixedColor: Colors.offWhite,
-        items: [
-          BottomNavigationBarItem(
-              icon: new Icon(Icons.home,
-                color: Colors.mainPurple,
-              ),
-              title: new Text('Find Them', style: TextStyle(color: Colors.mainPurple,),),
-              ),
-          BottomNavigationBarItem(
-            icon: new Icon(Icons.mail, color: Colors.mainPurple),
-            title: new Text('Photos'),
-          ),
-          BottomNavigationBarItem(
-            icon: new Icon(Icons.mail, color: Colors.mainPurple),
-            title: new Text('Knocks'),
-          ),
-          BottomNavigationBarItem(
-              icon: Icon(Icons.person, color: Colors.mainPurple), title: Text('Profile'))
-        ],
-      ),
       body: ListView(children: _getListData()),
     );
+  }
+
+  void _isUserLoggedIn() {
+    final FirebaseAuth _auth = FirebaseAuth.instance;
+    _auth.currentUser().then((value) {
+      if (value == null) {
+        var route = new MaterialPageRoute(
+            builder: (BuildContext context) => new InitialPage());
+        Navigator.of(context).push(route);
+      } else {
+        //Todo successful user log in
+      }
+    });
   }
 
   _getListData() {
@@ -58,4 +58,5 @@ class _GridFindCollectionPageState extends State<GridFindCollectionPage> {
     }
     return widgets;
   }
+
 }
