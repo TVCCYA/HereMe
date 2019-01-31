@@ -107,6 +107,7 @@ class _UserProfileState extends State<UserProfile> {
 
     return Scaffold(
       appBar: new AppBar(
+        brightness: Brightness.light,
         backgroundColor: Colors.white,
         title: new Text(
           "Name",

@@ -59,13 +59,14 @@ flutter:
     - images/menu55.png
 
   # menu icons
-    - images/setings/linkGray180.png
-    - images/setings/localPhoto180.png
-    - images/setings/incognito180.png
-    - images/setings/share180.png
-    - images/setings/star180.png
-    - images/setings/umbrella180.png
-    - images/setings/glasses180.png
+    - images/settings/linkGray180.png
+    - images/settings/bookmarkFilled180.png
+    - images/settings/localPhoto180.png
+    - images/settings/incognito180.png
+    - images/settings/share180.png
+    - images/settings/star180.png
+    - images/settings/umbrella180.png
+    - images/settings/glasses180.png
 
 
   # An image asset can refer to one or more resolution-specific "variants", see

@@ -20,6 +20,7 @@ class _GridFindCollectionPageState extends State<GridFindCollectionPage> {
     return Scaffold(
       appBar: AppBar(
         centerTitle: false,
+        brightness: Brightness.light,
         backgroundColor: Colors.offWhite,
         title: new Text(
           "HereMe",
