@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'dart:io';
 import 'dart:async';
+import 'package:image_picker/image_picker.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:image_picker/image_picker.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:hereme_flutter/SettingsMenu/MenuListPage.dart';
 
 class UserProfile extends StatefulWidget {
@@ -20,16 +20,22 @@ class _UserProfileState extends State<UserProfile> {
   bool showLibCamButtons = false;
   bool showProgIndicator = false;
   File pickerPhoto;
+  String username;
   String userPhotoUrl;
 
   @override
   void initState() {
     super.initState();
-    _getUid();
+    _getUrl();
+    _getUsername();
+
+    _loadAccounts();
+//    if(linkedAccounts.length == 0) {
+//      _loadAccounts();
+//    }
   }
 
   Widget build(BuildContext context) {
-    double screenHeight = MediaQuery.of(context).size.height;
     double screenWidth = MediaQuery.of(context).size.width;
 
     final polaroidPic = new Container(
@@ -110,7 +116,7 @@ class _UserProfileState extends State<UserProfile> {
         brightness: Brightness.light,
         backgroundColor: Colors.white,
         title: new Text(
-          "Name",
+          username == null ? '' : username,
           style: TextStyle(color: Colors.black),
         ),
         actions: <Widget>[
@@ -134,12 +140,21 @@ class _UserProfileState extends State<UserProfile> {
             new Expanded(
               child: new ListView(
                 padding: EdgeInsets.only(top: 5.0),
+                physics: const AlwaysScrollableScrollPhysics(),
                 children: <Widget>[
                   SizedBox(height: 30.0),
                   userPhoto,
                   SizedBox(height: 10.0),
                   showLibCamButtons ? libraryCameraRow : SizedBox(height: 10.0),
-                  showProgIndicator ? progIndicator : SizedBox(height: 0.0)
+                  showProgIndicator ? progIndicator : SizedBox(height: 0.0),
+                  new ListView.builder(
+                    shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: linkedAccounts.length,
+                      itemBuilder: (BuildContext content, int index) {
+                        Accounts account = linkedAccounts[index];
+                        return accountsListTile(account, context);
+                      })
                 ].toList(),
               ),
             ),
@@ -220,11 +235,19 @@ class _UserProfileState extends State<UserProfile> {
     await prefs.setString("photoUrl", "$downloadUrl");
   }
 
-  _getUid() async {
+  _getUrl() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String url = await prefs.getString('photoUrl');
     setState(() {
       userPhotoUrl = url;
+    });
+  }
+
+  _getUsername() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String name = await prefs.getString('name');
+    setState(() {
+      username = name;
     });
   }
 
@@ -266,5 +289,131 @@ class _UserProfileState extends State<UserProfile> {
 //        );
 //      },
 //    );
+  }
+
+//  WillPopScope() {
+//    setState(() {
+//      linkedAccounts.removeRange(0, linkedAccounts.length);
+//    });
+//  }
+
+}
+
+void _loadAccounts() async {
+  print("yeet");
+  FirebaseUser user = await FirebaseAuth.instance.currentUser();
+  final socialMediasReference = Firestore.instance.collection("socialMedias").document("${user.uid}").collection('socials');
+
+  socialMediasReference.snapshots().listen((media) {
+    for(int i = 0; i < media.documents.length; i++) {
+
+//      print(media.documents[i].data.values.single.toString());
+//          icon: '${_iconPath(media.documents[i].data.keys.single.toString())}');
+
+
+//      if(linkedAccounts[i].icon.toString() == media.documents[i].data.keys.single.toString() || ) {
+        linkedAccounts.add(
+            Accounts(socialMediaHandle: media.documents[i].data.values.single.toString(),
+                icon: '${_iconPath(media.documents[i].data.keys.single.toString())}')
+        );
+//      }
+    }
+
+
+
+    print(linkedAccounts[0].icon.toString());
+    print(media.documents[0].data.keys.single.toString());
+  });
+
+}
+
+String _iconPath(String socialmedia) {
+  switch(socialmedia) {
+    case 'twitterUsername': {
+      return 'images/SocialMedias/twitter120.png';
+    }
+    break;
+    case 'snapchatUsername': {
+      return 'images/SocialMedias/snapLogo120.png';
+    }
+    break;
+    case 'instagramUsername': {
+      return 'images/SocialMedias/instagramAppIcon.png';
+    }
+    break;
+    case 'youtubeUsername': {
+      return 'images/SocialMedias/youtubeCircle120.png';
+    }
+    break;
+    case 'soundcloudUsername': {
+      return 'images/SocialMedias/soundcloud120.png';
+    }
+    break;
+    case 'pinterestUsername': {
+      return 'images/SocialMedias/pinterest120.png';
+    }
+    break;
+    case 'venmoUsername': {
+      return 'images/SocialMedias/venmo120.png';
+    }
+    break;
+    case 'spotifyUsername': {
+      return 'images/SocialMedias/spotify120.png';
+    }
+    break;
+    case 'twitchUsername': {
+      return 'images/SocialMedias/twitch.png';
+    }
+    break;
+    case 'tumblrUsername': {
+      return 'images/SocialMedias/tumblr120.png';
+    }
+    break;
+    case 'redditUsername': {
+      return 'images/SocialMedias/reddit120.png';
+    }
+    break;
+    case 'facebookUsername': {
+      return 'images/SocialMedias/facebook120.png';
+    }
+    break;
+    default : {
+      print("couldn't find social media username to link");
+    }
+  }
+}
+
+class Accounts {
+  Accounts({this.socialMediaHandle, this.icon});
+  final String socialMediaHandle;
+  final String icon;
+}
+
+List<Accounts> linkedAccounts = [];
+
+class accountsListTile extends ListTile {
+  accountsListTile(Accounts media, context)
+      : super(
+      title: Text(media.socialMediaHandle, style: new TextStyle(color: Colors.offBlack, fontWeight: FontWeight.bold, fontSize: 14.0),),
+      leading: new Container(
+        height: 45.0,
+        width: 45.0,
+        child: new Image.asset(media.icon),
+      ),
+      onTap: () {
+        print(media.socialMediaHandle);
+        switch(media.socialMediaHandle){
+          case 'Instagram': {
+          }
+          break;
+        };
+      },
+      contentPadding: EdgeInsets.fromLTRB(20.0, 10.0, 0.0, 10.0)
+  );
+}
+
+void refreshUserProfile() {
+  setState() {
+
   }
 }

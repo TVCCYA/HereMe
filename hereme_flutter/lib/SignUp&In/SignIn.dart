@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/cupertino.dart';
 import './ResetPassword.dart';
-import '../GridFind/GridFindCollectionPage.dart';
+import '../TabController.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 class SignIn extends StatefulWidget {
@@ -256,16 +256,16 @@ class _SignInState extends State<SignIn> {
 
       setState(() {
         inputErrorText = errorToString;
+        SystemChannels.textInput.invokeMethod('TextInput.hide');
       });
 
       succeed = false;
     }).then((user) {
       if (succeed == true) {
         print("signed in successfuly");
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => new GridFindCollectionPage()),
-        );
+        Navigator.pushAndRemoveUntil(context,
+            MaterialPageRoute(builder: (context) => new NavControllerState()),
+                (Route<dynamic> route) => false);
       }
     });
   }

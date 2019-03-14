@@ -28,6 +28,7 @@ dependencies:
   firebase_storage: "^1.0.1"
   shared_preferences: ^0.4.3
   cloud_firestore: ^0.7.4
+  circle_wheel_scroll: ^0.0.1+1
 
 dev_dependencies:
   flutter_test:
@@ -57,8 +58,9 @@ flutter:
   assets:
     - images/polaroidProPic180.png
     - images/menu55.png
+    - images/swipe.png
 
-  # menu icons
+  # Menu icons
     - images/settings/linkGray180.png
     - images/settings/bookmarkFilled180.png
     - images/settings/localPhoto180.png
@@ -67,7 +69,21 @@ flutter:
     - images/settings/star180.png
     - images/settings/umbrella180.png
     - images/settings/glasses180.png
+    - images/settings/logout180.png
 
+  # Social media icons
+    - images/SocialMedias/twitter120.png
+    - images/SocialMedias/snapLogo120.png
+    - images/SocialMedias/instagramAppIcon.png
+    - images/SocialMedias/youtubeCircle120.png
+    - images/SocialMedias/soundcloud120.png
+    - images/SocialMedias/pinterest120.png
+    - images/SocialMedias/venmo120.png
+    - images/SocialMedias/spotify120.png
+    - images/SocialMedias/twitch.png
+    - images/SocialMedias/tumblr120.png
+    - images/SocialMedias/reddit120.png
+    - images/SocialMedias/facebook120.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.io/assets-and-images/#resolution-aware.

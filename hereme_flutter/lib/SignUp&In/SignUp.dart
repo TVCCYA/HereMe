@@ -301,6 +301,7 @@ class _SignUpState extends State<SignUp> {
 
       setState(() {
         inputErrorText = errorToString;
+        SystemChannels.textInput.invokeMethod('TextInput.hide');
       });
 
       succeed = false;
@@ -335,7 +336,7 @@ class _SignUpState extends State<SignUp> {
   _saveUserSharedPref() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     FirebaseUser user = await FirebaseAuth.instance.currentUser();
-    await prefs.setString("name", "$firstNameInput");
+    await prefs.setString("name", "${firstNameInput.text}");
     await prefs.setString("uid", "${user.uid}");
     await prefs.setString("photoUrl", "");
   }

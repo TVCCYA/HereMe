@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
-import 'dart:io';
-import 'dart:async';
+import 'package:firebase_auth/firebase_auth.dart';
+import '../SignUp&In/InitialPage.dart';
+import './SocialMediasList.dart';
 
-class Settings {
-  Settings({this.setting, this.icon});
+class Accounts {
+  Accounts({this.setting, this.icon});
   final String setting;
   final String icon;
 }
@@ -11,13 +12,9 @@ class Settings {
 class ListPage extends StatelessWidget  {
   ListPage({Key key}) : super(key: key);
 
-  final GlobalKey<ScaffoldState> _scaffoldKey = new GlobalKey<ScaffoldState>();
-  int _id;
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      key: _scaffoldKey,
       appBar: new AppBar(
         brightness: Brightness.light,
         backgroundColor: Colors.white,
@@ -26,29 +23,18 @@ class ListPage extends StatelessWidget  {
           color: Colors.mainPurple, //change your color here
         ),
       ),
-      body: Container(
-        child: new ListView(
-            children: new List.generate(8, (int index){
-              return _buildContent();
-            }),
-      ),
-      )
+      body: new ListView.builder(
+              itemCount: allSettings.length,
+              itemBuilder: (BuildContext content, int index) {
+                Accounts contact = allSettings[index];
+                return settingsListTile(contact, context);
+              }),
     );
-  }
-
-  Widget _buildContent() {
-    return ListView.builder(
-        padding: const EdgeInsets.fromLTRB(0.0, 10.0, 0.0, 0.0),
-        itemCount: allSettings.length,
-        itemBuilder: (BuildContext content, int index) {
-          Settings contact = allSettings[index];
-          return settingsListTile(contact);
-        });
   }
 }
 
 class settingsListTile extends ListTile {
-  settingsListTile(Settings option)
+  settingsListTile(Accounts option, context)
       : super(
     title: Text(option.setting, style: new TextStyle(color: Colors.offBlack, fontWeight: FontWeight.bold, fontSize: 14.0),),
     leading: new Container(
@@ -57,19 +43,56 @@ class settingsListTile extends ListTile {
       child: new Image.asset(option.icon),
     ),
     onTap: () {
-//      print();
+      print(option.setting);
+      switch(option.setting){
+        case 'Link Your Accounts': {
+          Navigator.push(context, MaterialPageRoute(builder: (BuildContext context) => MediasList()));
+        }
+        break;
+        case 'Saved Them': {
+
+        }
+        break;
+        case 'HideMe': {
+
+        }
+        break;
+        case 'Tell Your Friends': {
+
+        }
+        break;
+        case 'Rate HereMe': {
+
+        }
+        break;
+        case 'Help & Support': {
+
+        }
+        break;
+        case 'Logout': {
+          final FirebaseAuth _auth = FirebaseAuth.instance;
+            _auth.signOut().catchError((error) {
+              print("error signing out i guess :/");
+            }).then((_){
+              print("successful logout");
+              Navigator.pushAndRemoveUntil(context,
+                  MaterialPageRoute(builder: (BuildContext context) => InitialPage()),
+                      (Route<dynamic> route) => false);
+            });
+        }
+        break;
+      };
     },
-    contentPadding: EdgeInsets.fromLTRB(20.0, 20.0, 0.0, 20.0)
+    contentPadding: EdgeInsets.fromLTRB(20.0, 10.0, 0.0, 10.0)
   );
 }
 
-List<Settings> allSettings = [
-  Settings(setting: 'Link Your Accounts', icon: 'images/settings/linkGray180.png'),
-  Settings(setting: 'Saved Them', icon: 'images/settings/bookmarkFilled180.png'),
-  Settings(setting: 'My Local Photos', icon: 'images/settings/localPhoto180.png'),
-  Settings(setting: 'HideMe', icon: 'images/settings/incognito180.png'),
-  Settings(setting: 'Tell Your Friends', icon: 'images/settings/share180.png'),
-  Settings(setting: 'Rate HereMe', icon: 'images/settings/star180.png'),
-  Settings(setting: 'Help & Support', icon: 'images/settings/umbrella180.png'),
-  Settings(setting: 'check out our apps', icon: 'images/settings/glasses180.png'),
+List<Accounts> allSettings = [
+  Accounts(setting: 'Link Your Accounts', icon: 'images/settings/linkGray180.png'),
+  Accounts(setting: 'Saved Them', icon: 'images/settings/bookmarkFilled180.png'),
+  Accounts(setting: 'HideMe', icon: 'images/settings/incognito180.png'),
+  Accounts(setting: 'Tell Your Friends', icon: 'images/settings/share180.png'),
+  Accounts(setting: 'Rate HereMe', icon: 'images/settings/star180.png'),
+  Accounts(setting: 'Help & Support', icon: 'images/settings/umbrella180.png'),
+  Accounts(setting: 'Logout', icon: 'images/settings/logout180.png')
 ];

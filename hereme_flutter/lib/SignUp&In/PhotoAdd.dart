@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:io';
 import 'dart:async';
-import '../GridFind/GridFindCollectionPage.dart';
-import 'package:cached_network_image/cached_network_image.dart';
+import '../TabController.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -231,10 +230,9 @@ class _PhotoAddState extends State<PhotoAdd> {
   }
 
   _continueAction() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => new GridFindCollectionPage()),
-    );
+    Navigator.pushAndRemoveUntil(context,
+        MaterialPageRoute(builder: (context) => new NavControllerState()),
+            (Route<dynamic> route) => false);
   }
 
   _savePhotoSharedPref(String downloadUrl) async {

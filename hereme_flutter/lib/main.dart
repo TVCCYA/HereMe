@@ -7,6 +7,6 @@ void main() {
   runApp(
       new MaterialApp(
     debugShowCheckedModeBanner: false,
-    home: new NavController(),
+    home: new NavControllerState(),
   ));
 }
