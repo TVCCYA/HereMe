@@ -73,9 +73,9 @@ flutter:
 
   # Social media icons
     - images/SocialMedias/twitter120.png
-    - images/SocialMedias/snapLogo120.png
-    - images/SocialMedias/instagramAppIcon.png
-    - images/SocialMedias/youtubeCircle120.png
+    - images/SocialMedias/snapchat120.png
+    - images/SocialMedias/instagram120.png
+    - images/SocialMedias/youtube120.png
     - images/SocialMedias/soundcloud120.png
     - images/SocialMedias/pinterest120.png
     - images/SocialMedias/venmo120.png

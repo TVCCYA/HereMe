@@ -6,6 +6,7 @@ import 'package:circle_wheel_scroll/circle_wheel_scroll_view.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../UserProfile/ProfilePage/UserProfilePage.dart';
+import '../UserProfile/ProfilePage/UserProfilePage.dart';
 
 
 class SocialMedias {
@@ -176,11 +177,10 @@ class _MediasListState extends State<MediasList> {
     socialMediasReference.updateData(socialMediaData).whenComplete(() {
       print("Social Media Updated");
 
+      linkedAccounts.clear();
+
       Navigator.pop(context);
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => UserProfile()),
-      );
+      Navigator.pop(context);
 
     }).catchError((e){
       print(e.toString());
@@ -196,9 +196,9 @@ class _MediasListState extends State<MediasList> {
 
   List<SocialMedias> allMedias = [
     SocialMedias(media: 'Twitter', icon: 'images/SocialMedias/twitter120.png'),
-    SocialMedias(media: 'Snapchat', icon: 'images/SocialMedias/snapLogo120.png'),
-    SocialMedias(media: 'Instagram', icon: 'images/SocialMedias/instagramAppIcon.png'),
-    SocialMedias(media: 'YouTube', icon: 'images/SocialMedias/youtubeCircle120.png'),
+    SocialMedias(media: 'Snapchat', icon: 'images/SocialMedias/snapchat120.png'),
+    SocialMedias(media: 'Instagram', icon: 'images/SocialMedias/instagram120.png'),
+    SocialMedias(media: 'YouTube', icon: 'images/SocialMedias/youtube120.png'),
     SocialMedias(media: 'SoundCloud', icon: 'images/SocialMedias/soundcloud120.png'),
     SocialMedias(media: 'Pinterest', icon: 'images/SocialMedias/pinterest120.png'),
     SocialMedias(media: 'Venmo', icon: 'images/SocialMedias/venmo120.png'),

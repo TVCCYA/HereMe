@@ -29,10 +29,10 @@ class _UserProfileState extends State<UserProfile> {
     _getUrl();
     _getUsername();
 
-    _loadAccounts();
-//    if(linkedAccounts.length == 0) {
-//      _loadAccounts();
-//    }
+//    _loadAccounts();
+    if(linkedAccounts.length == 0) {
+      _loadAccounts();
+    }
   }
 
   Widget build(BuildContext context) {
@@ -300,29 +300,30 @@ class _UserProfileState extends State<UserProfile> {
 }
 
 void _loadAccounts() async {
-  print("yeet");
+  print("RUNNING YEET");
   FirebaseUser user = await FirebaseAuth.instance.currentUser();
   final socialMediasReference = Firestore.instance.collection("socialMedias").document("${user.uid}").collection('socials');
 
   socialMediasReference.snapshots().listen((media) {
     for(int i = 0; i < media.documents.length; i++) {
+      bool contains = false;
 
-//      print(media.documents[i].data.values.single.toString());
-//          icon: '${_iconPath(media.documents[i].data.keys.single.toString())}');
-
-
-//      if(linkedAccounts[i].icon.toString() == media.documents[i].data.keys.single.toString() || ) {
+      for(int y = 0; y < linkedAccounts.length; y++) {
+        if(media.documents[i].data.values.single.toString() == linkedAccounts[y].socialMediaHandle.toString()) {
+          String socialMedia = media.documents[i].data.keys.single.toString().replaceAll("Username", "");
+          if(linkedAccounts[y].icon.toString().contains(socialMedia)) {
+            print("account already exists");
+            contains = true;
+          }
+        }
+      }
+      if(contains == false) {
         linkedAccounts.add(
             Accounts(socialMediaHandle: media.documents[i].data.values.single.toString(),
                 icon: '${_iconPath(media.documents[i].data.keys.single.toString())}')
         );
-//      }
+      }
     }
-
-
-
-    print(linkedAccounts[0].icon.toString());
-    print(media.documents[0].data.keys.single.toString());
   });
 
 }
@@ -334,15 +335,15 @@ String _iconPath(String socialmedia) {
     }
     break;
     case 'snapchatUsername': {
-      return 'images/SocialMedias/snapLogo120.png';
+      return 'images/SocialMedias/snapchat120.png';
     }
     break;
     case 'instagramUsername': {
-      return 'images/SocialMedias/instagramAppIcon.png';
+      return 'images/SocialMedias/instagram120.png';
     }
     break;
     case 'youtubeUsername': {
-      return 'images/SocialMedias/youtubeCircle120.png';
+      return 'images/SocialMedias/youtube120.png';
     }
     break;
     case 'soundcloudUsername': {
