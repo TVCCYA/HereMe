@@ -4,6 +4,8 @@ import 'package:flutter/cupertino.dart';
 import './ResetPassword.dart';
 import '../TabController.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class SignIn extends StatefulWidget {
   SignIn({Key key}) : super(key: key);
@@ -263,10 +265,38 @@ class _SignInState extends State<SignIn> {
     }).then((user) {
       if (succeed == true) {
         print("signed in successfuly");
+        _saveUserSharedPref();
         Navigator.pushAndRemoveUntil(context,
             MaterialPageRoute(builder: (context) => new NavControllerState()),
                 (Route<dynamic> route) => false);
       }
     });
   }
+
+  _saveUserSharedPref() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    FirebaseUser user = await FirebaseAuth.instance.currentUser();
+
+    final socialMediasReference = await Firestore.instance.collection("users").document(user.uid).get();
+
+
+    for(int i = 0; i < socialMediasReference.data.length; i++){
+      if(socialMediasReference.data.keys.elementAt(i).toString() == "username") {
+        print("username ${socialMediasReference.data.values.elementAt(i).toString()}");
+        await prefs.setString("username", "${socialMediasReference.data.values.elementAt(i).toString()}");
+      } else if(socialMediasReference.data.keys.elementAt(i).toString() == "profileImageUrl") {
+        print("photo url ${socialMediasReference.data.values.elementAt(i).toString()}");
+        await prefs.setString("photoUrl", "${socialMediasReference.data.values.elementAt(i).toString()}");
+      }
+    }
+
+//    print("username ${socialMediasReference.data}");
+//    print("photoUrl ${socialMediasReference.data.containsKey("profileImageUrl")}");
+//
+//    await prefs.setString("uid", "${user.uid}");
+//    await prefs.setString("name", "${socialMediasReference.data.containsKey("username")}");
+//    await prefs.setString("photoUrl", "${socialMediasReference.data.containsKey("profileImageUrl")}");
+
+  }
+  
 }

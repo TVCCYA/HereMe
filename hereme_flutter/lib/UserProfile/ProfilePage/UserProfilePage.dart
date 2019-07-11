@@ -1,65 +1,87 @@
 import 'package:flutter/material.dart';
 import 'dart:io';
 import 'dart:async';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
+import 'package:hereme_flutter/TabController.dart';
+import 'package:swipedetector/swipedetector.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:image_cropper/image_cropper.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:url_launcher/url_launcher.dart';
+
 import 'package:hereme_flutter/SettingsMenu/MenuListPage.dart';
+import 'package:hereme_flutter/GridFind/GridFindCollectionPage.dart';
+import 'package:hereme_flutter/UserProfile/ProfilePage/Accounts&iconPath.dart';
+
 
 class UserProfile extends StatefulWidget {
-  UserProfile({Key key}) : super(key: key);
+  final Profiles passedProfile;
+  UserProfile({Key key, this.passedProfile}) : super(key: key);
 
   @override
   _UserProfileState createState() => _UserProfileState();
 }
 
-class _UserProfileState extends State<UserProfile> {
-  bool showUserPhoto = false;
+class _UserProfileState extends State<UserProfile> with AutomaticKeepAliveClientMixin{
+  bool clientSideUser = true;
   bool showLibCamButtons = false;
   bool showProgIndicator = false;
-  File pickerPhoto;
   String username;
   String userPhotoUrl;
 
   @override
   void initState() {
     super.initState();
-    _getUrl();
-    _getUsername();
-
-//    _loadAccounts();
-    if(linkedAccounts.length == 0) {
-      _loadAccounts();
-    }
+    _determinePage();
   }
+
+  @override
+  bool get wantKeepAlive => true;
+//  bool get wantKeepAlive => keepProfileAlive == null ? false : keepProfileAlive;
 
   Widget build(BuildContext context) {
     double screenWidth = MediaQuery.of(context).size.width;
 
-    final polaroidPic = new Container(
-      child: new ImageIcon(new AssetImage("images/polaroidProPic180.png"),
-          size: screenWidth * 0.25, color: Colors.black),
-    );
+    final placeholderProfile = new Container(
+        height: screenWidth * 0.25,
+        width: screenWidth * 0.25,
+        decoration: new BoxDecoration(
+          boxShadow: [
+            BoxShadow(
+              color: Colors.white,
+              blurRadius: 25.0,
+              spreadRadius: 25.0,
+              offset: Offset(
+                15.0,
+                15.0,
+              ),
+            )
+          ],
+        ));
 
     final userPhoto = userPhotoUrl != null
-        ? new Container(
-            padding: EdgeInsets.fromLTRB(
+        ? new Card(
+            margin: EdgeInsets.fromLTRB(
                 screenWidth * 0.36, 0.0, screenWidth * 0.36, 0.0),
-//      width: screenWidth * 0.25,
-            child: new ClipRRect(
-                borderRadius: new BorderRadius.circular(15.0),
-                child: GestureDetector(
-                    onTap: _changeUserPhoto,
-                    child: new Image.network(
-                      userPhotoUrl,
+            elevation: 8.0,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15.0)),
+            child: new InkResponse(
+                child: new ClipRRect(
+                    borderRadius: new BorderRadius.circular(15.0),
+                    child: new CachedNetworkImage(
+                      imageUrl: userPhotoUrl,
                       height: screenWidth * 0.28,
-//             width: screenWidth * 0.25,
                       fit: BoxFit.cover,
-                    ))),
+                    )),
+                onTap: () => _changeUserPhoto(),
+            ),
           )
-        : polaroidPic;
+        : placeholderProfile;
 
     final libraryCameraRow = new Row(
       mainAxisAlignment: MainAxisAlignment.center,
@@ -67,15 +89,15 @@ class _UserProfileState extends State<UserProfile> {
         new Padding(
           padding: EdgeInsets.fromLTRB(50.0, 0.0, 8.0, 0.0),
           child: new Container(
-            height: 40.0,
+            height: 30.0,
             width: 120.0,
             child: new FlatButton(
               shape: new RoundedRectangleBorder(
-                  borderRadius: new BorderRadius.circular(10.0)),
+                  borderRadius: new BorderRadius.circular(7.0)),
               onPressed: () {
                 _getImage(1);
               },
-              color: Colors.mainPurple,
+              color: Colors.grey,
               child: Text('Library', style: TextStyle(color: Colors.white)),
             ),
           ),
@@ -83,15 +105,15 @@ class _UserProfileState extends State<UserProfile> {
         new Padding(
           padding: EdgeInsets.fromLTRB(8.0, 0.0, 50.0, 0.0),
           child: new Container(
-            height: 40.0,
+            height: 30.0,
             width: 120.0,
             child: new FlatButton(
               shape: new RoundedRectangleBorder(
-                  borderRadius: new BorderRadius.circular(10.0)),
+                  borderRadius: new BorderRadius.circular(7.0)),
               onPressed: () {
                 _getImage(2);
               },
-              color: Colors.mainPurple,
+              color: Colors.grey,
               child: Text('Camera', style: TextStyle(color: Colors.white)),
             ),
           ),
@@ -111,21 +133,33 @@ class _UserProfileState extends State<UserProfile> {
       ),
     );
 
-    return Scaffold(
+    final scaffold = new Scaffold(
       appBar: new AppBar(
+         leading: clientSideUser ? SizedBox() : new IconButton(
+            icon: new Icon(Icons.arrow_back_ios),
+            onPressed: (){Navigator.pop(context);},
+          color: Colors.mainPurple,
+        ),
+//        elevation: 5.0,
         brightness: Brightness.light,
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.offWhite,
         title: new Text(
           username == null ? '' : username,
           style: TextStyle(color: Colors.black),
         ),
         actions: <Widget>[
-          IconButton(icon: new Image.asset("images/menu55.png", color: Colors.black), onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => new ListPage()),
-            );
-    })
+          IconButton(
+              icon: new Image.asset("images/menu55.png",
+                  color: Colors.black),
+              onPressed: () {
+                if (clientSideUser) {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => new ListPage()),
+                  );
+                }
+              })
         ],
       ),
       body: new GestureDetector(
@@ -145,15 +179,18 @@ class _UserProfileState extends State<UserProfile> {
                   SizedBox(height: 30.0),
                   userPhoto,
                   SizedBox(height: 10.0),
-                  showLibCamButtons ? libraryCameraRow : SizedBox(height: 10.0),
-                  showProgIndicator ? progIndicator : SizedBox(height: 0.0),
+                  showLibCamButtons
+                      ? libraryCameraRow
+                      : SizedBox(height: 10.0),
+                  showProgIndicator
+                      ? progIndicator
+                      : SizedBox(height: 0.0),
                   new ListView.builder(
-                    shrinkWrap: true,
+                      shrinkWrap: true,
                       physics: const NeverScrollableScrollPhysics(),
                       itemCount: linkedAccounts.length,
                       itemBuilder: (BuildContext content, int index) {
-                        Accounts account = linkedAccounts[index];
-                        return accountsListTile(account, context);
+                        return _buildAccountTiles(linkedAccounts[index]);
                       })
                 ].toList(),
               ),
@@ -162,28 +199,224 @@ class _UserProfileState extends State<UserProfile> {
         ),
       ),
     );
+
+    return new WillPopScope(
+        onWillPop: () async {
+          return false;
+        },
+        child: !clientSideUser ? new SwipeDetector(
+          onSwipeRight: () {
+            setState(() {
+              Navigator.pop(context);
+            });
+          },
+          child: scaffold,
+        ) : scaffold
+    );
+  }
+
+  ListTile _buildAccountTiles(Accounts media) {
+    return new ListTile(
+        title: Text(
+          media.socialMediaHandle,
+          style: new TextStyle(
+              color: Colors.offBlack,
+              fontWeight: FontWeight.bold,
+              fontSize: 14.0),
+        ),
+        leading: new Container(
+          height: 45.0,
+          width: 45.0,
+          child: new Image.asset(media.icon),
+        ),
+        onTap: () {
+          _actionSheet(context, media);
+        },
+        contentPadding: EdgeInsets.fromLTRB(20.0, 10.0, 0.0, 10.0)
+    );
+  }
+
+  void _actionSheet(context, Accounts media) {
+    showModalBottomSheet<void>(context: context, builder: (BuildContext context) {
+      return Container(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(0.0, 0.0, 0.0, 30.0),
+          child: new Column(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              new ListTile(
+                title: new Text(
+                    'Open In App',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18.0
+                    )
+                ),
+                onTap: () {
+                  launchUrl(media);
+                  Navigator.pop(context);
+                },
+              ),
+              new ListTile(
+                title: new Text(
+                    'Copy To Clipboard',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18.0
+                    )
+                ),
+                onTap: () {
+                  Clipboard.setData(ClipboardData(text: media.socialMediaHandle));
+                  Navigator.pop(context);
+                },
+              ),
+              clientSideUser ? new ListTile(
+                title: new Text(
+                    'Unlink ${media.socialMediaHandle}',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18.0
+                    )
+                ),
+                onTap: () {
+                  _handleUnlink(context, media);
+                  Navigator.pop(context);
+                },
+              ) : SizedBox(),
+              new ListTile(
+                title: new Text(
+                    'Cancel',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18.0
+                    )
+                ),
+                onTap: () {
+                  Navigator.pop(context);
+                },
+              ),
+            ],
+          ),
+        ),
+      );
+    });
+  }
+
+  //todo decrement numberOfSocialmedias in firebase
+  void _handleUnlink(context, Accounts media) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String uid = await prefs.getString('uid');
+
+    final socialMediasReference = Firestore.instance
+        .collection("socialMedias")
+        .document(uid)
+        .collection('socials');
+
+    socialMediasReference.snapshots().listen((snapshot) {
+
+      for (int i = 0; i < snapshot.documents.length; i++) {
+
+        if(snapshot.documents[i].data.values.first.toString() == media.socialMediaHandle) {
+          socialMediasReference.document(snapshot.documents[i].documentID.toString()).delete();
+          _loadAccounts(uid);
+        }
+      }
+    });
+  }
+
+  void _changeUserPhoto() {
+    if (clientSideUser) {
+      setState(() {
+        showLibCamButtons
+            ? showLibCamButtons = false
+            : showLibCamButtons = true;
+      });
+    }
+  }
+
+  void _determinePage() {
+    if (widget.passedProfile == null) {
+      setState(() {
+        clientSideUser = true;
+      });
+      _getSharedPrefs();
+    } else {
+      final String userUid = widget.passedProfile.uid;
+      setState(() {
+        clientSideUser = false;
+        username = widget.passedProfile.username;
+        userPhotoUrl = widget.passedProfile.profileImageUrl;
+      });
+      _loadAccounts(userUid);
+    }
+  }
+
+  _savePhotoSharedPref(String downloadUrl) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setString("photoUrl", "$downloadUrl");
+  }
+
+  _getSharedPrefs() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String url = await prefs.getString('photoUrl');
+    String name = await prefs.getString('name');
+    String uid = await prefs.getString('uid');
+    setState(() {
+      userPhotoUrl = url;
+      username = name;
+    });
+    _loadAccounts(uid);
   }
 
   _getImage(int photoChoice) async {
+    setState(() {
+      showProgIndicator = true;
+    });
+
     if (photoChoice == 1) {
       await ImagePicker.pickImage(source: ImageSource.gallery)
           .then((profilePic) {
         if (profilePic != null) {
-          pickerPhoto = profilePic;
-          showLibCamButtons = false;
-          _uploadImageToFirebase(profilePic);
+          _cropImage(profilePic);
+          setState(() {
+            showLibCamButtons = false;
+          });
+        } else {
+          setState(() {
+            showProgIndicator = false;
+          });
         }
       });
     } else if (photoChoice == 2) {
       await ImagePicker.pickImage(source: ImageSource.camera)
           .then((profilePic) {
         if (profilePic != null) {
-          pickerPhoto = profilePic;
-          showLibCamButtons = false;
-          _uploadImageToFirebase(profilePic);
+          _cropImage(profilePic);
+          setState(() {
+            showLibCamButtons = false;
+          });
+        } else {
+          setState(() {
+            showProgIndicator = false;
+          });
         }
       });
     }
+  }
+
+  Future<Null> _cropImage(File imageFile) async {
+    File croppedFile = await ImageCropper.cropImage(
+      sourcePath: imageFile.path,
+      ratioX: 1.0,
+      ratioY: 1.0,
+      maxWidth: 512,
+      maxHeight: 512,
+    );
+    _uploadImageToFirebase(croppedFile);
   }
 
   Future _uploadImageToFirebase(File profilePic) async {
@@ -191,16 +424,16 @@ class _UserProfileState extends State<UserProfile> {
     final FirebaseStorage _storage = FirebaseStorage.instance;
     var succeed = true;
 
-    setState(() {
-      showProgIndicator = true;
-    });
-
     FirebaseUser user = await FirebaseAuth.instance.currentUser();
     StorageUploadTask uploadFile =
-        _storage.ref().child("profile_images/${user.uid}").putFile(profilePic);
+    _storage.ref().child("profile_images/${user.uid}").putFile(profilePic);
 
     uploadFile.onComplete.catchError((error) {
       print(error);
+      setState(() {
+        showProgIndicator = false;
+        showLibCamButtons = false;
+      });
       succeed = false;
     }).then((uploaded) async {
       if (succeed == true) {
@@ -222,199 +455,113 @@ class _UserProfileState extends State<UserProfile> {
             .whenComplete(() {
           print("User Photo Added");
           setState(() {
+            userPhotoUrl = downloadUrl;
             showProgIndicator = false;
-            showUserPhoto = true;
           });
         }).catchError((e) => print(e));
       }
     });
   }
 
-  _savePhotoSharedPref(String downloadUrl) async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.setString("photoUrl", "$downloadUrl");
-  }
+  void _loadAccounts(String userUid) async {
+    linkedAccounts.clear();
 
-  _getUrl() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    String url = await prefs.getString('photoUrl');
-    setState(() {
-      userPhotoUrl = url;
-    });
-  }
+    final socialMediasReference = Firestore.instance
+        .collection("socialMedias")
+        .document(userUid)
+        .collection('socials');
 
-  _getUsername() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    String name = await prefs.getString('name');
-    setState(() {
-      username = name;
-    });
-  }
+    socialMediasReference.snapshots().listen((snapshot) {
+      for (int i = 0; i < snapshot.documents.length; i++) {
+        bool contains = false;
 
-  void _changeUserPhoto() {
-    setState(() {
-      showLibCamButtons ? showLibCamButtons = false : showLibCamButtons = true;
-    });
-
-//    showDialog(
-//      context: context,
-//      builder: (BuildContext context) {
-//        // return object of type AlertDialog
-//        return AlertDialog(
-//          title: new Text("Change Your Photo"),
-////          content: new Text("Creates an alert dialog.Typically used in conjunction with showDialog."+
-////              "The contentPadding must not be null. The titlePadding defaults to null, which implies a default."),
-//
-//          actions: <Widget>[
-//            // usually buttons at the bottom of the dialog
-//            new FlatButton(
-//              child: new Text("Library"),
-//              onPressed: () {
-//                Navigator.of(context).pop();
-//              },
-//            ),
-//            new FlatButton(
-//              child: new Text("Camera"),
-//              onPressed: () {
-//                Navigator.of(context).pop();
-//              },
-//            ),
-//            new FlatButton(
-//              child: new Text("Cancel"),
-//              onPressed: () {
-//                Navigator.of(context).pop();
-//              },
-//            ),
-//          ],
-//        );
-//      },
-//    );
-  }
-
-//  WillPopScope() {
-//    setState(() {
-//      linkedAccounts.removeRange(0, linkedAccounts.length);
-//    });
-//  }
-
-}
-
-void _loadAccounts() async {
-  print("RUNNING YEET");
-  FirebaseUser user = await FirebaseAuth.instance.currentUser();
-  final socialMediasReference = Firestore.instance.collection("socialMedias").document("${user.uid}").collection('socials');
-
-  socialMediasReference.snapshots().listen((media) {
-    for(int i = 0; i < media.documents.length; i++) {
-      bool contains = false;
-
-      for(int y = 0; y < linkedAccounts.length; y++) {
-        if(media.documents[i].data.values.single.toString() == linkedAccounts[y].socialMediaHandle.toString()) {
-          String socialMedia = media.documents[i].data.keys.single.toString().replaceAll("Username", "");
-          if(linkedAccounts[y].icon.toString().contains(socialMedia)) {
-            print("account already exists");
-            contains = true;
+        /// removes duplicates when an account gets deleted
+        for (int y = 0; y < linkedAccounts.length; y++) {
+          if(snapshot.documents[i].data.values.first.toString() == linkedAccounts[y].socialMediaHandle.toString()) {
+            String socialMedia = snapshot.documents[i].data.keys.first.toString().replaceAll("Username", "");
+            for(int z = 0; z < linkedAccounts.length; z++) {
+              if(linkedAccounts[z].icon.toString().contains(socialMedia)) {
+                contains = true;
+              }
+            }
           }
         }
-      }
-      if(contains == false) {
-        linkedAccounts.add(
-            Accounts(socialMediaHandle: media.documents[i].data.values.single.toString(),
-                icon: '${_iconPath(media.documents[i].data.keys.single.toString())}')
-        );
-      }
+
+        if(contains == false) {
+
+          if(mounted) {
+            if(snapshot.documents[i].data.values.length == 1) {
+              setState(() {
+                linkedAccounts.add(Accounts(
+                    socialMediaHandle: snapshot.documents[i].data.values.single.toString(),
+                    icon: iconPath(snapshot.documents[i].data.keys.single.toString())
+                )
+                );
+              });
+            } else {
+              setState(() {
+                linkedAccounts.add(Accounts(
+                    socialMediaHandle: snapshot.documents[i].data.values.first.toString(),
+                    icon: iconPath(snapshot.documents[i].data.keys.first.toString()),
+                    socialMediaUrl: snapshot.documents[i].data.values.last.toString())
+                );
+              });
+            }
+          } else print("ERROR: not mounted");
+        }
+        }
+    });
+    for(int i = 0; i < linkedAccounts.length; i++){
+      print("linked accounts: ${linkedAccounts[i].toString()}");
     }
-  });
+    setState(() {
+      keepProfileAlive = true;
+    });
+  }
 
 }
 
-String _iconPath(String socialmedia) {
-  switch(socialmedia) {
-    case 'twitterUsername': {
-      return 'images/SocialMedias/twitter120.png';
-    }
-    break;
-    case 'snapchatUsername': {
-      return 'images/SocialMedias/snapchat120.png';
-    }
-    break;
-    case 'instagramUsername': {
-      return 'images/SocialMedias/instagram120.png';
-    }
-    break;
-    case 'youtubeUsername': {
-      return 'images/SocialMedias/youtube120.png';
-    }
-    break;
-    case 'soundcloudUsername': {
-      return 'images/SocialMedias/soundcloud120.png';
-    }
-    break;
-    case 'pinterestUsername': {
-      return 'images/SocialMedias/pinterest120.png';
-    }
-    break;
-    case 'venmoUsername': {
-      return 'images/SocialMedias/venmo120.png';
-    }
-    break;
-    case 'spotifyUsername': {
-      return 'images/SocialMedias/spotify120.png';
-    }
-    break;
-    case 'twitchUsername': {
-      return 'images/SocialMedias/twitch.png';
-    }
-    break;
-    case 'tumblrUsername': {
-      return 'images/SocialMedias/tumblr120.png';
-    }
-    break;
-    case 'redditUsername': {
-      return 'images/SocialMedias/reddit120.png';
-    }
-    break;
-    case 'facebookUsername': {
-      return 'images/SocialMedias/facebook120.png';
-    }
-    break;
-    default : {
-      print("couldn't find social media username to link");
-    }
+void launchUrl(Accounts media) async {
+  String url = determineUrl(media);
+
+
+  print(url);
+
+  if (await canLaunch(url)) {
+    await launch(url, forceSafariVC: false);
+  } else {
+    await launch(url, forceSafariVC: true);
   }
 }
 
-class Accounts {
-  Accounts({this.socialMediaHandle, this.icon});
-  final String socialMediaHandle;
-  final String icon;
-}
+String determineUrl(Accounts media) {
+  final icon = media.icon;
+  final socialMed = media.socialMediaHandle;
+  final socialMedUrl = media.socialMediaUrl;
 
-List<Accounts> linkedAccounts = [];
-
-class accountsListTile extends ListTile {
-  accountsListTile(Accounts media, context)
-      : super(
-      title: Text(media.socialMediaHandle, style: new TextStyle(color: Colors.offBlack, fontWeight: FontWeight.bold, fontSize: 14.0),),
-      leading: new Container(
-        height: 45.0,
-        width: 45.0,
-        child: new Image.asset(media.icon),
-      ),
-      onTap: () {
-        print(media.socialMediaHandle);
-        switch(media.socialMediaHandle){
-          case 'Instagram': {
-          }
-          break;
-        };
-      },
-      contentPadding: EdgeInsets.fromLTRB(20.0, 10.0, 0.0, 10.0)
-  );
-}
-
-void refreshUserProfile() {
-  setState() {
-
+  if(icon.contains("twitter")) {
+    return "https://twitter.com/$socialMed";
+  } else if (icon.contains("snapchat")) {
+    return "https://www.snapchat.com/add/$socialMed";
+  } else if (icon.contains("instagram")) {
+    return "https://www.instagram.com/$socialMed";
+  } else if (icon.contains("youtube")) {
+    return socialMedUrl;
+  } else if (icon.contains("soundcloud")) {
+    return socialMedUrl;
+  } else if (icon.contains("venmo")) {
+    return "https://venmo.com/$socialMed";
+  } else if (icon.contains("spotify")) {
+    return "https://open.spotify.com/user/${socialMed.toLowerCase()}";
+  } else if (icon.contains("twitch")) {
+    return "https://www.twitch.tv/$socialMed";
+  } else if (icon.contains("tumblr")) {
+    return "http://$socialMed.tumblr.com/";
+  } else if (icon.contains("reddit")) {
+    return "https://www.reddit.com/user/$socialMed";
+  } else if (icon.contains("facebook")) {
+    return socialMedUrl;
+  } else {
+    print("whoops, no media found");
   }
 }

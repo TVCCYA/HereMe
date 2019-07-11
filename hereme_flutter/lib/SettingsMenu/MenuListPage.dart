@@ -3,8 +3,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../SignUp&In/InitialPage.dart';
 import './SocialMediasList.dart';
 
-class Accounts {
-  Accounts({this.setting, this.icon});
+class MenuOptions {
+  MenuOptions({this.setting, this.icon});
   final String setting;
   final String icon;
 }
@@ -20,21 +20,21 @@ class ListPage extends StatelessWidget  {
         backgroundColor: Colors.white,
         title: new Text("Settings", style: new TextStyle(color: Colors.offBlack),),
         iconTheme: IconThemeData(
-          color: Colors.mainPurple, //change your color here
+          color: Colors.mainPurple,
         ),
       ),
       body: new ListView.builder(
               itemCount: allSettings.length,
               itemBuilder: (BuildContext content, int index) {
-                Accounts contact = allSettings[index];
-                return settingsListTile(contact, context);
+                MenuOptions option = allSettings[index];
+                return SettingsListTile(option, context);
               }),
     );
   }
 }
 
-class settingsListTile extends ListTile {
-  settingsListTile(Accounts option, context)
+class SettingsListTile extends ListTile {
+  SettingsListTile(MenuOptions option, context)
       : super(
     title: Text(option.setting, style: new TextStyle(color: Colors.offBlack, fontWeight: FontWeight.bold, fontSize: 14.0),),
     leading: new Container(
@@ -62,7 +62,7 @@ class settingsListTile extends ListTile {
         }
         break;
         case 'Rate HereMe': {
-
+          //todo Apps have to be published for the app to be found correctly
         }
         break;
         case 'Help & Support': {
@@ -81,18 +81,18 @@ class settingsListTile extends ListTile {
             });
         }
         break;
-      };
+      }
     },
     contentPadding: EdgeInsets.fromLTRB(20.0, 10.0, 0.0, 10.0)
   );
 }
 
-List<Accounts> allSettings = [
-  Accounts(setting: 'Link Your Accounts', icon: 'images/settings/linkGray180.png'),
-  Accounts(setting: 'Saved Them', icon: 'images/settings/bookmarkFilled180.png'),
-  Accounts(setting: 'HideMe', icon: 'images/settings/incognito180.png'),
-  Accounts(setting: 'Tell Your Friends', icon: 'images/settings/share180.png'),
-  Accounts(setting: 'Rate HereMe', icon: 'images/settings/star180.png'),
-  Accounts(setting: 'Help & Support', icon: 'images/settings/umbrella180.png'),
-  Accounts(setting: 'Logout', icon: 'images/settings/logout180.png')
+List<MenuOptions> allSettings = [
+  MenuOptions(setting: 'Link Your Accounts', icon: 'images/settings/linkGray180.png'),
+  MenuOptions(setting: 'Saved Them', icon: 'images/settings/bookmarkFilled180.png'),
+  MenuOptions(setting: 'HideMe', icon: 'images/settings/incognito180.png'),
+  MenuOptions(setting: 'Tell Your Friends', icon: 'images/settings/share180.png'),
+//  MenuOptions(setting: 'Rate HereMe', icon: 'images/settings/star180.png'),
+  MenuOptions(setting: 'Help & Support', icon: 'images/settings/umbrella180.png'),
+  MenuOptions(setting: 'Logout', icon: 'images/settings/logout180.png')
 ];
