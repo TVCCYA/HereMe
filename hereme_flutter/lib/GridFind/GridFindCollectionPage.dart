@@ -6,9 +6,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 
-//import 'package:flutter_geofire/flutter_geofire.dart';
-//import 'package:location/location.dart';
-
 class GridFindCollectionPage extends StatefulWidget {
   @override
   _GridFindCollectionPageState createState() => _GridFindCollectionPageState();
