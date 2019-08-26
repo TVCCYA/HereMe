@@ -463,7 +463,7 @@ class _UserProfileState extends State<UserProfile> with AutomaticKeepAliveClient
     });
   }
 
-  void _loadAccounts(String userUid) async {
+  Future _loadAccounts(String userUid) async {
     linkedAccounts.clear();
 
     final socialMediasReference = Firestore.instance

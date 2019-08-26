@@ -19,11 +19,19 @@ class _GridFindCollectionPageState extends State<GridFindCollectionPage>
   final GlobalKey<RefreshIndicatorState> _refreshIndicatorKey =
       new GlobalKey<RefreshIndicatorState>();
 
+  var _result;
+
   @override
   void initState() {
     super.initState();
     _isUserLoggedIn();
-    _getFirebaseProfiles();
+    _getFirebaseProfiles().then((result) {
+      // If we need to rebuild the widget with the resulting data,
+      // make sure to use `setState`
+      setState(() {
+        _result = result;
+      });
+    });
   }
 
 //  @override
@@ -36,6 +44,7 @@ class _GridFindCollectionPageState extends State<GridFindCollectionPage>
 //  bool get wantKeepAlive => keepGridAlive == null ? true : keepGridAlive;
 
   Widget build(BuildContext context) {
+
     void _onTileClicked(int index) async {
       Navigator.push(
         context,
@@ -48,26 +57,29 @@ class _GridFindCollectionPageState extends State<GridFindCollectionPage>
 
     List<Widget> _getTiles() {
       final List<Widget> tiles = <Widget>[];
-      for (int i = 0; i < firebaseProfiles.length; i++) {
-        tiles.add(new GridTile(
-            child: new InkResponse(
-          enableFeedback: true,
-          child: new Card(
-            margin: EdgeInsets.all(0.0),
-            elevation: 8.0,
-            shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(15.0)),
-            child: new ClipRRect(
-              borderRadius: new BorderRadius.circular(15.0),
-              child: new CachedNetworkImage(
-                imageUrl: firebaseProfiles[i].profileImageUrl,
-                fit: BoxFit.cover,
-              ),
-            ),
-          ),
-          onTap: () => _onTileClicked(i),
-        )));
-      }
+        print("if this is zero then go get coffee");
+        print(firebaseProfiles.length);
+        for (int i = 0; i < firebaseProfiles.length; i++) {
+          tiles.add(new GridTile(
+              child: new InkResponse(
+                enableFeedback: true,
+                child: new Card(
+                  margin: EdgeInsets.all(0.0),
+                  elevation: 8.0,
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(15.0)),
+                  child: new ClipRRect(
+                    borderRadius: new BorderRadius.circular(15.0),
+                    child: new CachedNetworkImage(
+                      imageUrl: firebaseProfiles[i].profileImageUrl,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                ),
+                onTap: () => _onTileClicked(i),
+              )));
+        }
+
       return tiles;
     }
 
@@ -98,13 +110,18 @@ class _GridFindCollectionPageState extends State<GridFindCollectionPage>
               padding: const EdgeInsets.all(1.0),
               mainAxisSpacing: 1.0,
               crossAxisSpacing: 1.0,
-              children: _getTiles(),
+              children: _result != null ? _getTiles() : <Widget>[Text('big ass titos')],
             ),
         ));
   }
 
-  _refresh() {
+  Future<void> _refresh() async {
     print("printy boi");
+//    _getFirebaseProfiles();
+    setState(() {
+      firebaseProfiles.clear();
+      _getFirebaseProfiles();
+    });
   }
 
   void _isUserLoggedIn() {
@@ -115,25 +132,35 @@ class _GridFindCollectionPageState extends State<GridFindCollectionPage>
             builder: (BuildContext context) => new InitialPage());
         Navigator.of(context).push(route);
       } else {
-        //Todo successful user log in
+        //todo unsuccessful user login
       }
     });
   }
 
-  void _getFirebaseProfiles() async {
+  Future<List<Profiles>> _getFirebaseProfiles() async {
     FirebaseUser user = await FirebaseAuth.instance.currentUser();
-    final socialMediasReference = await Firestore.instance.collection("users");
+    final socialMediasReference = Firestore.instance.collection("users");
 
-    socialMediasReference.snapshots().listen((media) {
-      for (int i = 0; i < media.documents.length; i++) {
-        firebaseProfiles.add(Profiles(
-            profileImageUrl: media.documents[i].data["profileImageUrl"],
-            uid: media.documents[i].data["uid"],
-            username: media.documents[i].data["username"]));
-      }
+    firebaseProfiles.clear();
+
+    setState(() {
+      socialMediasReference.snapshots().listen((media) {
+        for (int i = 0; i < media.documents.length; i++) {
+          if(media.documents[i].data["uid"] != user.uid){
+            firebaseProfiles.add(Profiles(
+                profileImageUrl: media.documents[i].data["profileImageUrl"],
+                uid: media.documents[i].data["uid"],
+                username: media.documents[i].data["username"]));
+          }
+        }
+      });
     });
+
+    return firebaseProfiles;
   }
 }
+
+List<Profiles> firebaseProfiles = [];
 
 class Profiles {
   Profiles({this.profileImageUrl, this.uid, this.username});
@@ -142,5 +169,3 @@ class Profiles {
   final String uid;
   final String username;
 }
-
-List<Profiles> firebaseProfiles = [];

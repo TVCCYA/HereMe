@@ -10,13 +10,13 @@ bool keepProfileAlive;
 class NavControllerState extends StatelessWidget {
 
 //  TabController controller;
-//
+
   @override
   void initState() {
     keepGridAlive = true;
     keepProfileAlive = true;
   }
-//
+
 //  @override
 //  void dispose() {
 //    controller.dispose();
@@ -61,31 +61,4 @@ class NavControllerState extends StatelessWidget {
     );
   }
 
-
-
-
-
-
-//  Widget build(BuildContext context) {
-//    SystemChrome.setEnabledSystemUIOverlays(SystemUiOverlay.values);
-//    return new Scaffold(
-//        bottomNavigationBar: new Material(
-//            color: Colors.deepOrange,
-//            child: new TabBar(
-//                controller: controller,
-//                tabs: <Tab>[
-//                  new Tab(icon: new Icon(Icons.arrow_forward)),
-//                  new Tab(icon: new Icon(Icons.arrow_back)),
-//                ]
-//            )
-//        ),
-//        body: new TabBarView(
-//            controller: controller,
-//            children: <Widget>[
-//              new gridFind.GridFindCollectionPage(),
-//              new userProfile.UserProfile()
-//            ]
-//        )
-//    );
-//  }
 }
