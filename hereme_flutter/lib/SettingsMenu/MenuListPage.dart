@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import '../SignUp&In/InitialPage.dart';
+import '../registration//initial_page.dart';
 import './SocialMediasList.dart';
+import 'package:hereme_flutter/contants/constants.dart';
 
 class MenuOptions {
   MenuOptions({this.setting, this.icon});
@@ -18,9 +19,9 @@ class ListPage extends StatelessWidget  {
       appBar: new AppBar(
         brightness: Brightness.light,
         backgroundColor: Colors.white,
-        title: new Text("Settings", style: new TextStyle(color: Colors.offBlack),),
+        title: new Text("Settings", style: new TextStyle(color: kColorOffBlack),),
         iconTheme: IconThemeData(
-          color: Colors.mainPurple,
+          color: kColorPurple,
         ),
       ),
       body: new ListView.builder(
@@ -36,7 +37,7 @@ class ListPage extends StatelessWidget  {
 class SettingsListTile extends ListTile {
   SettingsListTile(MenuOptions option, context)
       : super(
-    title: Text(option.setting, style: new TextStyle(color: Colors.offBlack, fontWeight: FontWeight.bold, fontSize: 14.0),),
+    title: Text(option.setting, style: new TextStyle(color: kColorOffBlack, fontWeight: FontWeight.bold, fontSize: 14.0),),
     leading: new Container(
       height: 45.0,
       width: 45.0,
