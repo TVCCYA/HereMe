@@ -2,10 +2,20 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+<<<<<<< HEAD
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 import './MenuListPage.dart';
 import './SocialMediasList.dart';
+=======
+import 'package:hereme_flutter/TabController.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:hereme_flutter/SignUp&In/InitialPage.dart';
+import './MenuListPage.dart';
+import './SocialMediasList.dart';
+import 'package:hereme_flutter/UserProfile/ProfilePage/UserProfilePage.dart';
+>>>>>>> origin/master
 
 class SupportPage extends StatelessWidget {
   SupportPage({Key key}) : super(key: key);
@@ -219,6 +229,7 @@ class SupportPage extends StatelessWidget {
 
     userReference.updateData(nameData).whenComplete(() {
       print("Name Changed");
+<<<<<<< HEAD
 //      _updatePreferences(context);
     }).catchError((e) => print(e));
   }
@@ -231,6 +242,20 @@ class SupportPage extends StatelessWidget {
 //              (Route<dynamic> route) => false);
 //    });
 //  }
+=======
+      _updatePreferences(context);
+    }).catchError((e) => print(e));
+  }
+
+  _updatePreferences(BuildContext context) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setString("name", "${_textFieldController.text}").whenComplete(() {
+      Navigator.pushAndRemoveUntil(context,
+          MaterialPageRoute(builder: (context) => new NavControllerState()),
+              (Route<dynamic> route) => false);
+    });
+  }
+>>>>>>> origin/master
 
   _deleteAlert(BuildContext context) async {
 
@@ -243,9 +268,15 @@ class SupportPage extends StatelessWidget {
               child: new Text('OKAYYY'),
               onPressed: () {
                 _handleAccountDelete();
+<<<<<<< HEAD
 //                Navigator.pushAndRemoveUntil(context,
 //                    MaterialPageRoute(builder: (context) => new InitialPage()),
 //                        (Route<dynamic> route) => false);
+=======
+                Navigator.pushAndRemoveUntil(context,
+                    MaterialPageRoute(builder: (context) => new InitialPage()),
+                        (Route<dynamic> route) => false);
+>>>>>>> origin/master
               },
             ),
             actions: <Widget>[
