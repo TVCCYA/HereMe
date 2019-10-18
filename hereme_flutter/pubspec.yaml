@@ -35,6 +35,7 @@ dependencies:
   geolocator: ^5.1.4+1
   permission_handler: ^3.2.2
   geoflutterfire: ^2.0.3+5
+  launch_review: ^2.0.0
 
 dev_dependencies:
   flutter_test:

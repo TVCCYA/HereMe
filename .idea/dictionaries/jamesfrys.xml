@@ -2,9 +2,11 @@
   <dictionary name="jamesfrys">
     <words>
       <w>firebase</w>
+      <w>flushbar</w>
       <w>geolocator</w>
       <w>instagram</w>
       <w>pinterest</w>
+      <w>placemark</w>
       <w>recents</w>
       <w>reddit</w>
       <w>snapchat</w>

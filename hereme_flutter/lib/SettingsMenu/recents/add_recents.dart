@@ -6,15 +6,12 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:hereme_flutter/contants/constants.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:hereme_flutter/utils/reusable_bottom_sheet.dart';
 import 'package:hereme_flutter/utils/reusable_profile_card.dart';
 import 'package:hereme_flutter/utils/reusable_registration_textfield.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:modal_progress_hud/modal_progress_hud.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
-import 'package:hereme_flutter/contants/constants.dart';
 
 final _firestore = Firestore.instance;
 
@@ -118,7 +115,7 @@ class _AddRecentState extends State<AddRecent> {
                               if (url.contains('https://')) {
                                 FocusScope.of(context).requestFocus(_urlFocus);
                               } else {
-                                kNoHttps(context);
+                                kErrorFlushbar(context: context, errorText: 'https://example.com');
                               }
                             },
                             onChanged: (value) {
@@ -180,8 +177,9 @@ class _AddRecentState extends State<AddRecent> {
                       alignment: Alignment.topRight,
                       child: FlatButton.icon(
                         onPressed: () {
-                          _isButtonDisabled ?
-                          kNoHttps(context) : _uploadImageToFirebase(mediaFile);
+                          _isButtonDisabled
+                              ? kErrorFlushbar(context: context, errorText: 'https://example.com')
+                              : _uploadImageToFirebase(mediaFile);
                         },
                         splashColor: _isButtonDisabled
                             ? Colors.transparent
@@ -240,11 +238,6 @@ class _AddRecentState extends State<AddRecent> {
       isValid();
     });
   }
-
-//  _savePhotoSharedPref(String downloadUrl) async {
-//    SharedPreferences prefs = await SharedPreferences.getInstance();
-//    await prefs.setString('photoUrl', '$downloadUrl');
-//  }
 
   Future _uploadImageToFirebase(File mediaFile) async {
     final ref = _firestore.collection('recentUploads');

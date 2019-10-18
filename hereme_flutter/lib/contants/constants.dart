@@ -1,20 +1,19 @@
-import 'package:async/async.dart';
-import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:flushbar/flushbar.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:rflutter_alert/rflutter_alert.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 
 const kColorPurple = Color.fromRGBO(111, 89, 194, 1.0);
 const kColorBlue = Color.fromRGBO(71, 106, 188, 1.0);
 const kColorGreen = Color.fromRGBO(71, 188, 153, 1.0);
+
 const kColorBlack105 = Color.fromRGBO(105, 105, 105, 1.0);
 const kColorOffWhite = Color.fromRGBO(245, 245, 245, 1.0);
 const kColorOffBlack = Color.fromRGBO(50, 50, 50, 1.0);
 const kColorLightGray = Color.fromRGBO(188, 188, 188, 1.0);
 const kColorRed = Color.fromRGBO(188, 71, 89, 1.0);
 const kColorThistle = Color.fromRGBO(197, 188, 230, 1.0);
+const kColorDarkThistle = Color.fromRGBO(164, 150, 216, 1.0);
 // SOCIAL MEDIA COLORS
 const kColorInstagramColor = Color.fromRGBO(131, 58, 180, 1.0);
 const kColorSnapchatColor = Color.fromRGBO(255, 252, 0, 1.0);
@@ -194,12 +193,12 @@ void kActionSheet(context, sheets) {
   );
 }
 
-void kNoHttps(BuildContext context) {
+void kErrorFlushbar({BuildContext context, String errorText}) {
   Flushbar(
     flushbarPosition: FlushbarPosition.TOP,
     backgroundColor: Colors.white,
     messageText: Text(
-      'https://example.com',
+      errorText,
       style: kDefaultTextStyle,
     ),
     icon: Icon(

@@ -5,8 +5,6 @@ import 'package:circle_wheel_scroll/circle_wheel_scroll_view.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:hereme_flutter/GridFind/home.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:hereme_flutter/user_profile//profile_page/Accounts&iconPath.dart';
 import 'package:hereme_flutter/contants/constants.dart';
 
 final _firestore = Firestore.instance;

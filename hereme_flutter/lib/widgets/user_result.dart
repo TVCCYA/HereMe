@@ -6,14 +6,15 @@ import 'package:hereme_flutter/utils/custom_image.dart';
 
 class UserResult extends StatelessWidget {
   final User user;
+  final String locationLabel;
 
-  UserResult(this.user);
+  UserResult({this.user, this.locationLabel});
 
   toProfile(context) {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => Profile(user: user),
+        builder: (context) => Profile(user: user, locationLabel: locationLabel),
       ),
     );
 //    incrementViewCount();

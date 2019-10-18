@@ -68,7 +68,7 @@ class _AllUsersCloseByState extends State<AllUsersCloseBy> {
         }
         List<GridTile> gridTiles = [];
         usersAround.forEach((user) {
-          gridTiles.add(GridTile(child: UserResult(user)));
+          gridTiles.add(GridTile(child: UserResult(user: user, locationLabel: 'Nearby')));
         });
         if (usersAround.isNotEmpty) {
           return Column(

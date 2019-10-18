@@ -10,6 +10,7 @@ class User {
   bool isVerified;
   String storageFilename;
   String displayName;
+  String city;
 
   User({
     this.username,
@@ -21,6 +22,7 @@ class User {
     this.isVerified,
     this.storageFilename,
     this.displayName,
+    this.city,
   });
 
   factory User.fromDocument(DocumentSnapshot doc) {
@@ -34,6 +36,7 @@ class User {
       isVerified: doc['isVerified'],
       storageFilename: doc['storageFilename'],
       displayName: doc['displayName'],
+      city: doc['city'],
     );
   }
 }

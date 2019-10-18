@@ -30,14 +30,17 @@ final _firestore = Firestore.instance;
 
 class Profile extends StatefulWidget {
   final User user;
+  final String locationLabel;
 
   Profile({
     this.user,
+    this.locationLabel
   });
 
   @override
   _ProfileState createState() => _ProfileState(
     user: this.user,
+    locationLabel: this.locationLabel,
   );
 }
 
@@ -50,9 +53,10 @@ class _ProfileState extends State<Profile> {
   int weeklyVisitsCount;
   int totalVisitsCount;
   final String currentUserUid = currentUser?.uid;
-  final User user;
 
-  _ProfileState({this.user});
+  final User user;
+  final String locationLabel;
+  _ProfileState({this.user, this.locationLabel});
 
   @override
   void initState() {
@@ -127,12 +131,13 @@ class _ProfileState extends State<Profile> {
                         style: kAppBarTextStyle,
                       ),
                       flexibleSpace: FlexibleSpaceBar(
-                        background: MyFlexibleAppBar(
+                        background: FlexibleProfileAppBar(
                           userPhotoUrl: profileImageUrl,
-                          changeUserPhoto: _changeUserPhoto,
+                          onTap: _isCurrentUser ? _changeUserPhoto : _fullScreenProfileImage,
                           topProfileContainerHeight: topProfileContainerHeight,
                           weeklyVisitsCount: NumberFormat.compact().format(weeklyVisitsCount),
                           totalVisitsCount: NumberFormat.compact().format(totalVisitsCount),
+                          locationLabel: _isCurrentUser ? 'Here' : locationLabel ?? 'Around',
                         ),
                       ),
                     ),
@@ -509,6 +514,10 @@ class _ProfileState extends State<Profile> {
         ),
       ),
     );
+  }
+
+  _fullScreenProfileImage() {
+    print('full screen');
   }
 
   _updateFirestoreHasAccountLinked() {
@@ -894,9 +903,6 @@ class _ProfileState extends State<Profile> {
     });
   }
 
-  incrementViewCount() {
-  }
-
   _getCurrentUserData() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String url = prefs.getString('profileImageUrl');
@@ -1067,21 +1073,23 @@ class ReusableSectionLabel extends StatelessWidget {
   }
 }
 
-class MyFlexibleAppBar extends StatelessWidget {
+class FlexibleProfileAppBar extends StatelessWidget {
   final double appBarHeight = 66.0;
 
   final String userPhotoUrl;
-  final Function changeUserPhoto;
+  final Function onTap;
   final double topProfileContainerHeight;
   final String weeklyVisitsCount;
   final String totalVisitsCount;
+  final String locationLabel;
 
-  const MyFlexibleAppBar({
+  const FlexibleProfileAppBar({
         @required this.userPhotoUrl,
-        this.changeUserPhoto,
+        this.onTap,
         this.topProfileContainerHeight,
         this.weeklyVisitsCount,
         this.totalVisitsCount,
+        this.locationLabel
       });
 
   @override
@@ -1108,7 +1116,7 @@ class MyFlexibleAppBar extends StatelessWidget {
                     ReusableProfileCard(
                       imageUrl: userPhotoUrl,
                       cardSize: topProfileContainerHeight,
-                      onTap: changeUserPhoto,
+                      onTap: onTap,
                     ),
                     Text('Visits this week: $weeklyVisitsCount',
                         style: kAppBarTextStyle.copyWith(
@@ -1121,12 +1129,12 @@ class MyFlexibleAppBar extends StatelessWidget {
                       children: <Widget>[
                         Icon(
                           FontAwesomeIcons.mapMarkerAlt,
-                          color: kColorThistle,
+                          color: kColorDarkThistle,
                           size: 14.0,
                         ),
                         SizedBox(width: 4.0),
                         Text(
-                          'Here',
+                          locationLabel,
                           style:
                               kAppBarTextStyle.copyWith(color: kColorThistle),
                         ),

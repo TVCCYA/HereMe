@@ -25,11 +25,11 @@
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSCameraUsageDescription</key>
-	<string>We would like access to your camera</string>
+	<string>We would like access to your camera.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>We would like access to your photo library</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>We would like access to your location so you can see what's happening around you</string>
+    <string>We would like access to your location so you can see what's happening around you.</string>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>
@@ -49,5 +49,11 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<false/>
+
+	<!-- For RateMe Plug In -->
+	<key>LSApplicationQueriesSchemes</key>
+    <array>
+            <string>itms</string>
+    </array>
 </dict>
 </plist>

@@ -9,6 +9,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:hereme_flutter/GridFind/all_users_close_by.dart';
 import 'package:hereme_flutter/SettingsMenu/SocialMediasList.dart';
 import 'package:hereme_flutter/models/user.dart';
+import 'package:hereme_flutter/registration/photo_add.dart';
 import 'package:hereme_flutter/user_profile/profile_page/profile.dart';
 import 'package:hereme_flutter/utils/custom_image.dart';
 import 'package:hereme_flutter/utils/reusable_bottom_sheet.dart';
@@ -75,6 +76,12 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
     DocumentSnapshot doc = await usersRef.document(user.uid).get();
     currentUser = User.fromDocument(doc);
 
+    if (currentUser.profileImageUrl == null) {
+      Navigator.pushAndRemoveUntil(context,
+          MaterialPageRoute(builder: (BuildContext context) => PhotoAdd(uid: currentUser.uid)),
+              (Route<dynamic> route) => false);
+    }
+
     SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.setString('username', currentUser.username);
     await prefs.setString('profileImageUrl', currentUser.profileImageUrl);
@@ -100,8 +107,9 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
       setState(() {
         _isAuth = false;
       });
-      Navigator.push(
-          context, MaterialPageRoute(builder: (context) => InitialPage()));
+      Navigator.pushAndRemoveUntil(context,
+          MaterialPageRoute(builder: (BuildContext context) => InitialPage()),
+              (Route<dynamic> route) => false);
     }
   }
 
@@ -122,6 +130,12 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
           _locationEnabled = true;
           latitude = newPosition.latitude;
           longitude = newPosition.longitude;
+        });
+        List<Placemark> placemark = await geolocator.placemarkFromCoordinates(latitude, longitude);
+        placemark.forEach((mark){
+          usersRef.document(currentUser.uid).updateData({
+            'city': mark.locality,
+          });
         });
         await setGeoFireData(
             currentUser: currentUser,
@@ -216,7 +230,7 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
           }
           List<GridTile> gridTiles = [];
           usersAround.forEach((user) {
-            gridTiles.add(GridTile(child: UserResult(user)));
+            gridTiles.add(GridTile(child: UserResult(user: user, locationLabel: 'Nearby')));
           });
           if (usersAround.isNotEmpty) {
             return Column(
@@ -291,17 +305,6 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
     }
   }
 
-  getTopTotalViewedUsers() async {
-    QuerySnapshot snapshot = await usersRef
-        .orderBy('totalVisitsCount', descending: true)
-        .getDocuments();
-    List<User> users =
-        snapshot.documents.map((doc) => User.fromDocument(doc)).toList();
-    setState(() {
-      this.topTotalViewedUsers = users;
-    });
-  }
-
   buildTopViewed() {
     return StreamBuilder(
       stream: usersRef
@@ -321,6 +324,7 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
           final uid = user.data['uid'];
           final weeklyVisitsCount = user.data['weeklyVisitsCount'];
           final totalVisitsCount = user.data['totalVisitsCount'];
+          final city = user.data['city'];
 
           final displayedUser = User(
             username: username,
@@ -328,12 +332,13 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
             uid: uid,
             weeklyVisitsCount: weeklyVisitsCount,
             totalVisitsCount: totalVisitsCount,
+            city: city,
           );
           topUsers.add(displayedUser);
         }
         List<GridTile> gridTiles = [];
         topUsers.forEach((user) {
-          gridTiles.add(GridTile(child: UserResult(user)));
+          gridTiles.add(GridTile(child: UserResult(user: user, locationLabel: user.city,)));
         });
         if (topUsers.isNotEmpty) {
           return Column(
@@ -367,6 +372,17 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
     );
   }
 
+  getTopTotalViewedUsers() async {
+    QuerySnapshot snapshot = await usersRef
+        .orderBy('totalVisitsCount', descending: true)
+        .getDocuments();
+    List<User> users =
+        snapshot.documents.map((doc) => User.fromDocument(doc)).toList();
+    setState(() {
+      this.topTotalViewedUsers = users;
+    });
+  }
+
   buildTotalTopViewed() {
     return FutureBuilder(
       future: usersRef.limit(10).getDocuments(),
@@ -376,7 +392,7 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
         }
         List<GridTile> gridTiles = [];
         topTotalViewedUsers.forEach((user) {
-          gridTiles.add(GridTile(child: UserResult(user)));
+          gridTiles.add(GridTile(child: UserResult(user: user, locationLabel: user.city)));
         });
         if (topTotalViewedUsers.isNotEmpty) {
           return Column(

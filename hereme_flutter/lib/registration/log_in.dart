@@ -314,10 +314,9 @@ class _LogInState extends State<LogIn> {
             email: email, password: password);
         if (user != null) {
           _saveUserSharedPref();
-          Navigator.push(
-              context,
-              MaterialPageRoute(
-                  builder: (context) => Home()));
+          Navigator.pushAndRemoveUntil(context,
+              MaterialPageRoute(builder: (BuildContext context) => Home()),
+                  (Route<dynamic> route) => false);
         }
         setState(() {
           showSpinner = false;
