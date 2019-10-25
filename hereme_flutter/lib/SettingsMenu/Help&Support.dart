@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:hereme_flutter/contants/constants.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class SupportPage extends StatelessWidget {
@@ -17,10 +18,10 @@ class SupportPage extends StatelessWidget {
         backgroundColor: Colors.white,
         title: new Text(
           "Help & Support",
-          style: new TextStyle(color: Colors.offBlack),
+          style: new TextStyle(color: kColorBlack105),
         ),
         iconTheme: IconThemeData(
-          color: Colors.mainPurple,
+          color: kColorPurple,
         ),
       ),
       body: new Container(
@@ -40,7 +41,7 @@ class SupportPage extends StatelessWidget {
                 Padding(padding: EdgeInsets.only(left: 20.0)),
                 Text("Blocked Users",
                     style: new TextStyle(
-                        color: Colors.offBlack,
+                        color: kColorBlack105,
                         fontWeight: FontWeight.bold,
                         fontSize: 16.0)),
               ],
@@ -60,7 +61,7 @@ class SupportPage extends StatelessWidget {
                 Padding(padding: EdgeInsets.only(left: 20.0)),
                 Text("Privacy Policy",
                     style: new TextStyle(
-                        color: Colors.offBlack,
+                        color: kColorBlack105,
                         fontWeight: FontWeight.bold,
                         fontSize: 16.0)),
               ],
@@ -80,7 +81,7 @@ class SupportPage extends StatelessWidget {
                 Padding(padding: EdgeInsets.only(left: 20.0)),
                 Text("Terms & Conditions",
                     style: new TextStyle(
-                        color: Colors.offBlack,
+                        color: kColorBlack105,
                         fontWeight: FontWeight.bold,
                         fontSize: 16.0)),
               ],
@@ -100,7 +101,7 @@ class SupportPage extends StatelessWidget {
                 Padding(padding: EdgeInsets.only(left: 20.0)),
                 Text("Change HereMe Name",
                     style: new TextStyle(
-                        color: Colors.offBlack,
+                        color: kColorBlack105,
                         fontWeight: FontWeight.bold,
                         fontSize: 16.0)),
               ],
@@ -119,7 +120,7 @@ class SupportPage extends StatelessWidget {
                 Padding(padding: EdgeInsets.only(left: 20.0)),
                 Text("Reset Password",
                     style: new TextStyle(
-                        color: Colors.offBlack,
+                        color: kColorBlack105,
                         fontWeight: FontWeight.bold,
                         fontSize: 16.0)),
               ],

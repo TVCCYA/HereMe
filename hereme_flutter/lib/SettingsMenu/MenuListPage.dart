@@ -51,7 +51,7 @@ class ListPage extends StatelessWidget {
                 Padding(padding: EdgeInsets.only(left: 20.0)),
                 Text("Link Your Accounts",
                     style: new TextStyle(
-                        color: Colors.offBlack,
+                        color: kColorBlack105,
                         fontWeight: FontWeight.bold,
                         fontSize: 16.0)),
               ],
@@ -70,7 +70,7 @@ class ListPage extends StatelessWidget {
                 Padding(padding: EdgeInsets.only(left: 20.0)),
                 Text("Saved Them",
                     style: new TextStyle(
-                        color: Colors.offBlack,
+                        color: kColorBlack105,
                         fontWeight: FontWeight.bold,
                         fontSize: 16.0)),
               ],
@@ -89,7 +89,7 @@ class ListPage extends StatelessWidget {
                 Padding(padding: EdgeInsets.only(left: 20.0)),
                 Text("Hide Me",
                     style: new TextStyle(
-                        color: Colors.offBlack,
+                        color: kColorBlack105,
                         fontWeight: FontWeight.bold,
                         fontSize: 16.0)),
               ],
@@ -108,7 +108,7 @@ class ListPage extends StatelessWidget {
                 Padding(padding: EdgeInsets.only(left: 20.0)),
                 Text("Tell Your Friends",
                     style: new TextStyle(
-                        color: Colors.offBlack,
+                        color: kColorBlack105,
                         fontWeight: FontWeight.bold,
                         fontSize: 16.0)),
               ],
@@ -128,7 +128,7 @@ class ListPage extends StatelessWidget {
                 Padding(padding: EdgeInsets.only(left: 20.0)),
                 Text("Rate HereMe",
                     style: new TextStyle(
-                        color: Colors.offBlack,
+                        color: kColorBlack105,
                         fontWeight: FontWeight.bold,
                         fontSize: 16.0)),
               ],
@@ -153,7 +153,7 @@ class ListPage extends StatelessWidget {
                 Padding(padding: EdgeInsets.only(left: 20.0)),
                 Text("Help & Support",
                     style: new TextStyle(
-                        color: Colors.offBlack,
+                        color: kColorBlack105,
                         fontWeight: FontWeight.bold,
                         fontSize: 16.0)),
               ],
@@ -172,7 +172,7 @@ class ListPage extends StatelessWidget {
                 Padding(padding: EdgeInsets.only(left: 20.0)),
                 Text("Share Your Feedback",
                     style: new TextStyle(
-                        color: Colors.offBlack,
+                        color: kColorBlack105,
                         fontWeight: FontWeight.bold,
                         fontSize: 16.0)),
               ],
