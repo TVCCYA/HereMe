@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'log_in.dart';
 import 'sign_up.dart';
 import 'package:hereme_flutter/contants/constants.dart';
-import 'package:animated_text_kit/animated_text_kit.dart';
 import 'package:hereme_flutter/utils/reusable_button.dart';
 
 class InitialPage extends StatefulWidget {
@@ -64,7 +63,7 @@ class _InitialPageState extends State<InitialPage> {
                           'Discover the social media presence\n of people nearby',
                           textAlign: TextAlign.center,
                           style: TextStyle(
-                            fontFamily: 'Montserrat',
+                            fontFamily: 'Arimo',
                             fontSize: 16.0,
                             color: kColorPurple,
                           ),

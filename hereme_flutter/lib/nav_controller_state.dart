@@ -66,7 +66,7 @@ class _NavControllerState extends State<NavController> {
           textAlign: TextAlign.left,
           style: TextStyle(
             color: kColorPurple,
-            fontFamily: 'Montserrat',
+            fontFamily: 'Arimo',
             fontSize: 24.0,
             fontWeight: FontWeight.w700,
           ),

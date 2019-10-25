@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:hereme_flutter/SettingsMenu/SocialMediasList.dart';
 import 'package:hereme_flutter/SettingsMenu/recents/add_recents.dart';
 import 'package:hereme_flutter/contants/constants.dart';
+import 'package:hereme_flutter/live_chat/add_live_chat.dart';
 import 'package:hereme_flutter/models/knock.dart';
 import 'package:hereme_flutter/models/linked_account.dart';
 import 'package:hereme_flutter/models/recent_upload.dart';
@@ -34,7 +35,7 @@ class Profile extends StatefulWidget {
 
   Profile({
     this.user,
-    this.locationLabel
+    this.locationLabel,
   });
 
   @override
@@ -51,7 +52,9 @@ class _ProfileState extends State<Profile> {
   String userUid;
   String profileImageUrl;
   int weeklyVisitsCount;
+  String displayedWeeklyCount;
   int totalVisitsCount;
+  String displayedTotalCount;
   final String currentUserUid = currentUser?.uid;
 
   final User user;
@@ -71,6 +74,9 @@ class _ProfileState extends State<Profile> {
         setState(() {
           weeklyVisitsCount = doc.data['weeklyVisitsCount'];
           totalVisitsCount = doc.data['totalVisitsCount'];
+
+          displayedWeeklyCount = NumberFormat.compact().format(weeklyVisitsCount);
+          displayedTotalCount = NumberFormat.compact().format(totalVisitsCount);
         });
       });
     }
@@ -104,6 +110,8 @@ class _ProfileState extends State<Profile> {
                           Navigator.pop(context);
                         },
                         color: kColorBlack105,
+                        splashColor: Colors.transparent,
+                        highlightColor: Colors.grey[200],
                       ),
                       actions: <Widget>[
                         _isCurrentUser
@@ -135,8 +143,8 @@ class _ProfileState extends State<Profile> {
                           userPhotoUrl: profileImageUrl,
                           onTap: _isCurrentUser ? _changeUserPhoto : _fullScreenProfileImage,
                           topProfileContainerHeight: topProfileContainerHeight,
-                          weeklyVisitsCount: NumberFormat.compact().format(weeklyVisitsCount),
-                          totalVisitsCount: NumberFormat.compact().format(totalVisitsCount),
+                          weeklyVisitsCount: displayedWeeklyCount,
+                          totalVisitsCount: displayedTotalCount,
                           locationLabel: _isCurrentUser ? 'Here' : locationLabel ?? 'Around',
                         ),
                       ),
@@ -612,12 +620,13 @@ class _ProfileState extends State<Profile> {
                   title: "Unlink Account?",
                   desc: "Are you sure you want to unlink $accountUsername?",
                   buttonText: "Unlink",
-                  onPressed: () => {
-                        Navigator.pop(context),
-                        _handleRemoveData(context, accountUsername,
-                            'socialMedias', 'socials'),
-                        Navigator.pop(context)
-                      });
+                  onPressed: () {
+                    Navigator.pop(context);
+                    _handleRemoveData(context, accountUsername,
+                        'socialMedias', 'socials');
+                    Navigator.pop(context);
+                  },
+              );
             },
           ))
         : SizedBox();
@@ -657,12 +666,13 @@ class _ProfileState extends State<Profile> {
                   title: "Remove Recent?",
                   desc: "Are you sure you want to remove $title?",
                   buttonText: "Delete",
-                  onPressed: () => {
-                        Navigator.pop(context),
-                        _handleRemoveData(
-                            context, title, 'recentUploads', 'recents'),
-                        Navigator.pop(context)
-                      });
+                  onPressed: () {
+                    Navigator.pop(context);
+                    _handleRemoveData(
+                    context, title, 'recentUploads', 'recents');
+                    Navigator.pop(context);
+                  },
+              );
             },
           ))
         : SizedBox();
@@ -816,10 +826,13 @@ class _ProfileState extends State<Profile> {
     sheets.add(
       ReusableBottomActionSheetListTile(
         iconData: FontAwesomeIcons.comments,
-        title: 'Create Live Event',
+        title: 'Create Live Chat',
         onTap: () {
           Navigator.pop(context);
-          //TODO: Add live chat
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => AddLiveChat())
+          );
         },
       ),
     );
@@ -875,6 +888,9 @@ class _ProfileState extends State<Profile> {
           profileImageUrl = user.profileImageUrl;
           weeklyVisitsCount = user.weeklyVisitsCount + 1;
           totalVisitsCount = user.totalVisitsCount + 1;
+
+          displayedWeeklyCount = NumberFormat.compact().format(weeklyVisitsCount);
+          displayedTotalCount = NumberFormat.compact().format(totalVisitsCount);
         });
         usersRef.document(userUid).updateData({
           'weeklyVisitsCount': user.weeklyVisitsCount + 1,
@@ -895,6 +911,9 @@ class _ProfileState extends State<Profile> {
         profileImageUrl = user.profileImageUrl;
         weeklyVisitsCount = user.weeklyVisitsCount + 1;
         totalVisitsCount = user.totalVisitsCount + 1;
+
+        displayedWeeklyCount = NumberFormat.compact().format(weeklyVisitsCount);
+        displayedTotalCount = NumberFormat.compact().format(totalVisitsCount);
       });
       usersRef.document(userUid).updateData({
         'weeklyVisitsCount': user.weeklyVisitsCount + 1,

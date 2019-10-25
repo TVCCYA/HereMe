@@ -1,9 +1,9 @@
 import 'dart:io';
 
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
+import 'package:hereme_flutter/GridFind/home.dart';
 import 'package:hereme_flutter/contants/constants.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:hereme_flutter/utils/reusable_profile_card.dart';
@@ -12,8 +12,6 @@ import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:modal_progress_hud/modal_progress_hud.dart';
 import 'package:uuid/uuid.dart';
-
-final _firestore = Firestore.instance;
 
 class AddRecent extends StatefulWidget {
   @override
@@ -179,7 +177,7 @@ class _AddRecentState extends State<AddRecent> {
                         onPressed: () {
                           _isButtonDisabled
                               ? kErrorFlushbar(context: context, errorText: 'https://example.com')
-                              : _uploadImageToFirebase(mediaFile);
+                              : _uploadRecentToFirebase(mediaFile);
                         },
                         splashColor: _isButtonDisabled
                             ? Colors.transparent
@@ -224,7 +222,7 @@ class _AddRecentState extends State<AddRecent> {
     );
   }
 
-  Future<Null> _cropImage(File imageFile) async {
+  _cropImage(File imageFile) async {
     mediaFile = await ImageCropper.cropImage(
       sourcePath: imageFile.path,
       ratioX: 1.0,
@@ -239,8 +237,7 @@ class _AddRecentState extends State<AddRecent> {
     });
   }
 
-  Future _uploadImageToFirebase(File mediaFile) async {
-    final ref = _firestore.collection('recentUploads');
+  _uploadRecentToFirebase(File mediaFile) async {
     final FirebaseStorage _storage = FirebaseStorage.instance;
     var succeed = true;
     final filename = Uuid().v4();
@@ -265,8 +262,6 @@ class _AddRecentState extends State<AddRecent> {
               .child(filename)
               .getDownloadURL();
 
-//          _savePhotoSharedPref(downloadUrl);
-
           Map<String, dynamic> photoUrl = <String, dynamic>{
             'thumbnailImageUrl': downloadUrl,
             'storageFilename': filename,
@@ -274,7 +269,7 @@ class _AddRecentState extends State<AddRecent> {
             'url': url,
             'creationDate': DateTime.now().millisecondsSinceEpoch * 1000,
           };
-          ref.document(uid).collection('recents').document(filename)
+          recentUploadsRef.document(uid).collection('recents').document(filename)
               .setData(photoUrl).whenComplete(() {
             print('Recent Upload Added');
             setState(() {

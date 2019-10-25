@@ -80,6 +80,12 @@
       <excludeFolder url="file://$MODULE_DIR$/hereme_flutter/ios/.symlinks/plugins/image_picker/example/.dart_tool" />
       <excludeFolder url="file://$MODULE_DIR$/hereme_flutter/ios/.symlinks/plugins/image_picker/example/.pub" />
       <excludeFolder url="file://$MODULE_DIR$/hereme_flutter/ios/.symlinks/plugins/image_picker/example/build" />
+      <excludeFolder url="file://$MODULE_DIR$/hereme_flutter/ios/.symlinks/plugins/launch_review/.dart_tool" />
+      <excludeFolder url="file://$MODULE_DIR$/hereme_flutter/ios/.symlinks/plugins/launch_review/.pub" />
+      <excludeFolder url="file://$MODULE_DIR$/hereme_flutter/ios/.symlinks/plugins/launch_review/build" />
+      <excludeFolder url="file://$MODULE_DIR$/hereme_flutter/ios/.symlinks/plugins/launch_review/example/.dart_tool" />
+      <excludeFolder url="file://$MODULE_DIR$/hereme_flutter/ios/.symlinks/plugins/launch_review/example/.pub" />
+      <excludeFolder url="file://$MODULE_DIR$/hereme_flutter/ios/.symlinks/plugins/launch_review/example/build" />
       <excludeFolder url="file://$MODULE_DIR$/hereme_flutter/ios/.symlinks/plugins/location/.dart_tool" />
       <excludeFolder url="file://$MODULE_DIR$/hereme_flutter/ios/.symlinks/plugins/location/.pub" />
       <excludeFolder url="file://$MODULE_DIR$/hereme_flutter/ios/.symlinks/plugins/location/build" />

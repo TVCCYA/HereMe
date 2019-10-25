@@ -22,7 +22,7 @@ class ReusableButton extends StatelessWidget {
             title,
             style: TextStyle(
               color: textColor,
-              fontFamily: 'Montserrat',
+              fontFamily: 'Arimo',
               fontWeight: FontWeight.w600,
               fontSize: 16.0,
             ),

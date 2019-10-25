@@ -41,7 +41,7 @@ ThemeData kTheme(BuildContext context) {
 
 const kDefaultTextStyle = TextStyle(
   color: kColorBlack105,
-  fontFamily: 'Montserrat',
+  fontFamily: 'Arimo',
   fontSize: 16.0,
   fontWeight: FontWeight.w300
 );
@@ -53,7 +53,7 @@ const kRegistrationInputDecoration = InputDecoration(
     ),
   ),
   focusedBorder: UnderlineInputBorder(
-    borderSide: BorderSide(color: kColorPurple),
+    borderSide: BorderSide(color: kColorThistle),
   ),
 );
 
@@ -77,7 +77,7 @@ void kShowFlushBar(
 }
 
 const kAppBarTextStyle = TextStyle(
-  fontFamily: 'Montserrat',
+  fontFamily: 'Arimo',
   fontSize: 18.0,
   color: kColorBlack105,
   fontWeight: FontWeight.w600,

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flushbar/flushbar.dart';
 import 'package:flutter/material.dart';
@@ -6,7 +8,6 @@ import 'package:geoflutterfire/geoflutterfire.dart';
 import 'package:hereme_flutter/contants/constants.dart';
 import 'package:hereme_flutter/models/user.dart';
 import 'package:hereme_flutter/widgets/user_result.dart';
-
 import 'home.dart';
 
 class AllUsersCloseBy extends StatefulWidget {
@@ -124,6 +125,8 @@ class _AllUsersCloseByState extends State<AllUsersCloseBy> {
             Navigator.pop(context);
           },
           color: kColorBlack105,
+          splashColor: Colors.grey[200],
+          highlightColor: Colors.transparent,
         ),
       ),
       body: SafeArea(

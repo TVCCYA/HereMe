@@ -233,7 +233,7 @@ class _LogInState extends State<LogIn> {
                                           textAlign: TextAlign.right,
                                           style: TextStyle(
                                             color: kColorBlue,
-                                            fontFamily: 'Montserrat',
+                                            fontFamily: 'Arimo',
                                             fontSize: 14.0,
                                           ),
                                         ),

@@ -8,6 +8,7 @@ import 'package:geoflutterfire/geoflutterfire.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:hereme_flutter/GridFind/all_users_close_by.dart';
 import 'package:hereme_flutter/SettingsMenu/SocialMediasList.dart';
+import 'package:hereme_flutter/live_chat/live_chat_result.dart';
 import 'package:hereme_flutter/models/user.dart';
 import 'package:hereme_flutter/registration/photo_add.dart';
 import 'package:hereme_flutter/user_profile/profile_page/profile.dart';
@@ -26,8 +27,13 @@ final usersRef = Firestore.instance.collection('users');
 final socialMediasRef = Firestore.instance.collection('socialMedias');
 final knocksRef = Firestore.instance.collection('knocks');
 final recentUploadsRef = Firestore.instance.collection('recentUploads');
+final liveChatsRef = Firestore.instance.collection('liveChats');
 final userLocationsRef = Firestore.instance.collection('userLocations');
+final liveChatLocationsRef = Firestore.instance.collection('liveChatLocations');
+final liveChatMessagesRef = Firestore.instance.collection('liveChatMessages');
 User currentUser;
+double currentLatitude;
+double currentLongitude;
 
 class Home extends StatefulWidget {
   @override
@@ -39,7 +45,6 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
   bool _isAuth = false;
   bool _hasAccountLinked = false;
 
-  List<User> closeByUsers = [];
   List<User> topTotalViewedUsers = [];
 
   double latitude;
@@ -53,16 +58,21 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
   StreamSubscription<Position> positionStream;
   Position position;
 
+  // if getCurrentLocation doesnt work in didChangeDependencies
+  // replace getCurrentLocation with handleLoggedIn and
+  // remove handleLoggedIn from initState
+
   @override
   void initState() {
     super.initState();
     getTopTotalViewedUsers();
+    handleLoggedIn();
   }
 
   @override
   void didChangeDependencies() async {
     super.didChangeDependencies();
-    handleLoggedIn();
+    getCurrentLocation();
   }
 
   @override
@@ -77,9 +87,12 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
     currentUser = User.fromDocument(doc);
 
     if (currentUser.profileImageUrl == null) {
-      Navigator.pushAndRemoveUntil(context,
-          MaterialPageRoute(builder: (BuildContext context) => PhotoAdd(uid: currentUser.uid)),
-              (Route<dynamic> route) => false);
+      Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(
+              builder: (BuildContext context) =>
+                  PhotoAdd(uid: currentUser.uid)),
+          (Route<dynamic> route) => false);
     }
 
     SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -87,7 +100,7 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
     await prefs.setString('profileImageUrl', currentUser.profileImageUrl);
     await prefs.setString('uid', currentUser.uid);
 
-    await getUserLocation(currentUser: currentUser);
+    await getStreamedLocation();
     if (currentUser.hasAccountLinked) {
       setState(() {
         _hasAccountLinked = true;
@@ -107,17 +120,46 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
       setState(() {
         _isAuth = false;
       });
-      Navigator.pushAndRemoveUntil(context,
+      Navigator.pushAndRemoveUntil(
+          context,
           MaterialPageRoute(builder: (BuildContext context) => InitialPage()),
-              (Route<dynamic> route) => false);
+          (Route<dynamic> route) => false);
     }
   }
 
-  getUserLocation({User currentUser}) async {
+  getCurrentLocation() async {
     GeolocationStatus geolocationStatus =
         await Geolocator().checkGeolocationPermissionStatus();
 
-    if (geolocationStatus == GeolocationStatus.granted) {
+    if (geolocationStatus != GeolocationStatus.granted) {
+      setState(() {
+        _locationLoading = false;
+        _locationEnabled = false;
+      });
+    } else {
+      Position position = await Geolocator()
+          .getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
+      setState(() {
+        _locationLoading = false;
+        _locationEnabled = true;
+        latitude = position.latitude;
+        longitude = position.longitude;
+      });
+      await setGeoFireData();
+      await setUserCityInFirestore();
+    }
+  }
+
+  getStreamedLocation() async {
+    GeolocationStatus geolocationStatus =
+        await Geolocator().checkGeolocationPermissionStatus();
+
+    if (geolocationStatus != GeolocationStatus.granted) {
+      setState(() {
+        _locationLoading = false;
+        _locationEnabled = false;
+      });
+    } else {
       LocationOptions locationOptions = LocationOptions(
         accuracy: LocationAccuracy.high,
         distanceFilter: 175, //updates every 0.1 miles
@@ -130,27 +172,26 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
           _locationEnabled = true;
           latitude = newPosition.latitude;
           longitude = newPosition.longitude;
+          currentLatitude = newPosition.latitude;
+          currentLongitude = newPosition.longitude;
         });
-        List<Placemark> placemark = await geolocator.placemarkFromCoordinates(latitude, longitude);
-        placemark.forEach((mark){
-          usersRef.document(currentUser.uid).updateData({
-            'city': mark.locality,
-          });
-        });
-        await setGeoFireData(
-            currentUser: currentUser,
-            latitude: newPosition.latitude,
-            longitude: newPosition.longitude);
-      });
-    } else {
-      setState(() {
-        _locationLoading = false;
-        _locationEnabled = false;
+        await setGeoFireData();
+        await setUserCityInFirestore();
       });
     }
   }
 
-  setGeoFireData({User currentUser, double latitude, double longitude}) async {
+  setUserCityInFirestore() async {
+    List<Placemark> placemark =
+        await geolocator.placemarkFromCoordinates(latitude, longitude);
+    placemark.forEach((mark) {
+      usersRef.document(currentUser.uid).updateData({
+        'city': mark.locality,
+      });
+    });
+  }
+
+  setGeoFireData() async {
     Geoflutterfire geo = Geoflutterfire();
     GeoFirePoint myLocation =
         geo.point(latitude: latitude, longitude: longitude);
@@ -167,30 +208,31 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
         : Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
-                Padding(
-                  padding: EdgeInsets.only(
-                      left: 8.0, top: 12.0, bottom: 8.0, right: 8.0),
-                  child: Text('Close By',
-                      style: kAppBarTextStyle.copyWith(
-                          fontSize: 18.0, fontWeight: FontWeight.w400)),
-                ),
-                Container(
-                  height: 100.0,
-                  child: Center(
-                    child: ReusableBottomActionSheetListTile(
-                      iconData: FontAwesomeIcons.link,
-                      title: 'Must Link an Account',
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (BuildContext context) => MediasList()),
-                        );
-                      },
-                    ),
+              Padding(
+                padding: EdgeInsets.only(
+                    left: 8.0, top: 12.0, bottom: 8.0, right: 8.0),
+                child: Text('Close By',
+                    style: kAppBarTextStyle.copyWith(
+                        fontSize: 18.0, fontWeight: FontWeight.w400)),
+              ),
+              Container(
+                height: 100.0,
+                child: Center(
+                  child: ReusableBottomActionSheetListTile(
+                    iconData: FontAwesomeIcons.link,
+                    title: 'Must Link an Account',
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (BuildContext context) => MediasList()),
+                      );
+                    },
                   ),
                 ),
-              ]);
+              ),
+            ],
+          );
   }
 
   streamCloseByUsers() {
@@ -230,7 +272,8 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
           }
           List<GridTile> gridTiles = [];
           usersAround.forEach((user) {
-            gridTiles.add(GridTile(child: UserResult(user: user, locationLabel: 'Nearby')));
+            gridTiles.add(GridTile(
+                child: UserResult(user: user, locationLabel: 'Nearby')));
           });
           if (usersAround.isNotEmpty) {
             return Column(
@@ -295,14 +338,119 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
         });
   }
 
-  enabledLocation() {
+  enabledLocationFetchUsers() {
     if (_locationLoading) {
+      getCurrentLocation();
       return circularProgress();
     } else if (_locationEnabled) {
       return showStreamedCloseByUsers();
     } else {
-      return _showFlushBar();
+      return _showNoLocationFlushBar();
     }
+  }
+
+  liveChatsCloseByHeader() {
+    return Padding(
+      padding: EdgeInsets.only(left: 8.0, top: 12.0, bottom: 8.0, right: 8.0),
+      child: Text('Live Chats By You',
+          style: kAppBarTextStyle.copyWith(
+              fontSize: 18.0, fontWeight: FontWeight.w400)),
+    );
+  }
+
+  enabledLocationFetchChats() {
+    if (_locationLoading) {
+      getCurrentLocation();
+      return circularProgress();
+    } else if (_locationEnabled) {
+      return showStreamedCloseByChats();
+    }
+  }
+
+  showStreamedCloseByChats() {
+    return _hasAccountLinked
+        ? streamCloseByChats()
+        : SizedBox();
+  }
+
+  streamCloseByChats() {
+    Geoflutterfire geo = Geoflutterfire();
+    Query collectionRef = liveChatLocationsRef.limit(3);
+    Stream<List<DocumentSnapshot>> stream =
+        geo.collection(collectionRef: collectionRef).within(
+              center: geo.point(latitude: latitude, longitude: longitude),
+              radius: 0.4,
+              field: 'position',
+              strictMode: true,
+            );
+
+    return StreamBuilder(
+        stream: stream,
+        builder: (context, snapshot) {
+          if (!snapshot.hasData ||
+              snapshot.connectionState == ConnectionState.waiting) {
+            return circularProgress();
+          }
+          List<LiveChatResult> chatsAround = [];
+          List<DocumentSnapshot> chats = [];
+          for (var data in snapshot.data) {
+            chats.add(data);
+          }
+          for (var chat in chats) {
+            final title = chat.data['title'];
+            final creationDate = chat.data['creationDate'];
+            final chatId = chat.data['chatId'];
+            final hostUsername = chat.data['hostUsername'] ?? '';
+            final hostUid = chat.data['uid'];
+
+            final displayedChat = LiveChatResult(
+              title: title,
+              creationDate: creationDate,
+              chatId: chatId,
+              chatHostUid: hostUid,
+              chatHostUsername: hostUsername,
+            );
+            chatsAround.add(displayedChat);
+//            if (currentUser.uid != uid) {
+//              chatsAround.add(displayedChat);
+//            }
+          }
+          if (chatsAround.isNotEmpty) {
+            return Container(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: <Widget>[
+                  Column(children: chatsAround),
+                  FlatButton.icon(
+                    icon: Icon(
+                      FontAwesomeIcons.chevronCircleRight,
+                      color: kColorBlack105,
+                    ),
+                    // use
+                    onPressed: () => print('to all chats nearby'),
+                    label: Text(
+                      'Within 1 mile',
+                      style: kDefaultTextStyle.copyWith(
+                          fontWeight: FontWeight.w300, fontSize: 16.0),
+                    ),
+                    splashColor: Colors.transparent,
+                    highlightColor: Colors.grey[200],
+                  )
+                ],
+              ),
+            );
+          } else {
+            return Container(
+              height: 150.0,
+              child: Center(
+                child: Text(
+                  'No Live Chats Nearby',
+                  style: kAppBarTextStyle.copyWith(fontWeight: FontWeight.w400),
+                ),
+              ),
+            );
+          }
+        });
   }
 
   buildTopViewed() {
@@ -338,7 +486,11 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
         }
         List<GridTile> gridTiles = [];
         topUsers.forEach((user) {
-          gridTiles.add(GridTile(child: UserResult(user: user, locationLabel: user.city,)));
+          gridTiles.add(GridTile(
+              child: UserResult(
+            user: user,
+            locationLabel: user.city,
+          )));
         });
         if (topUsers.isNotEmpty) {
           return Column(
@@ -392,7 +544,8 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
         }
         List<GridTile> gridTiles = [];
         topTotalViewedUsers.forEach((user) {
-          gridTiles.add(GridTile(child: UserResult(user: user, locationLabel: user.city)));
+          gridTiles.add(GridTile(
+              child: UserResult(user: user, locationLabel: user.city)));
         });
         if (topTotalViewedUsers.isNotEmpty) {
           return Column(
@@ -434,35 +587,25 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
     );
   }
 
-  buildLiveChatsCloseBy() {
-    return Padding(
-      padding: EdgeInsets.only(left: 8.0, top: 12.0, bottom: 8.0, right: 8.0),
-      child: Text('Live Chats By You',
-          style: kAppBarTextStyle.copyWith(
-              fontSize: 18.0, fontWeight: FontWeight.w400)),
-    );
-  }
-
   Widget build(BuildContext context) {
     super.build(context);
     final double screenWidth = MediaQuery.of(context).size.width;
     final double screenHeight = MediaQuery.of(context).size.height;
-    SystemChrome.setEnabledSystemUIOverlays([SystemUiOverlay.top]);
     SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle.dark);
+    SystemChrome.setEnabledSystemUIOverlays([SystemUiOverlay.top]);
     return Scaffold(
       backgroundColor: kColorOffWhite,
       appBar: AppBar(
         centerTitle: false,
         elevation: 2.0,
-        brightness: Brightness.light,
         backgroundColor: kColorOffWhite,
         title: new Text(
           "HereMe",
           textAlign: TextAlign.left,
           style: TextStyle(
             color: kColorPurple,
-            fontFamily: 'Montserrat',
-            fontSize: 25.0,
+            fontFamily: 'Arimo',
+            fontSize: 24.0,
             fontWeight: FontWeight.w600,
           ),
         ),
@@ -486,8 +629,7 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
         child: Theme(
           data: kTheme(context),
           child: RefreshIndicator(
-            onRefresh: () async =>
-                await getUserLocation(currentUser: currentUser),
+            onRefresh: () async => await getCurrentLocation(),
             child: Stack(
               children: <Widget>[
                 Container(
@@ -502,13 +644,11 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
                         SizedBox(height: 4.0),
                         buildTopViewed(),
                         Divider(color: Colors.grey[300]),
-                        enabledLocation(),
+                        enabledLocationFetchUsers(),
                         Divider(color: Colors.grey[300]),
-                        buildLiveChatsCloseBy(),
+                        liveChatsCloseByHeader(),
+                        enabledLocationFetchChats(),
                         Divider(color: Colors.grey[300]),
-//                        Container(height: 300, color: Colors.red),
-//                        Container(height: 300, color: Colors.pinkAccent),
-//                        Container(height: 300, color: Colors.purpleAccent),
                       ],
                     ),
                   ),
@@ -537,7 +677,7 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
     );
   }
 
-  _showFlushBar() {
+  _showNoLocationFlushBar() {
     return Flushbar(
       flushbarPosition: FlushbarPosition.TOP,
       flushbarStyle: FlushbarStyle.FLOATING,
@@ -564,7 +704,7 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
         style: kAppBarTextStyle,
       ),
       messageText: Text(
-        "In order to show what's happening around you we need access to your location. Please tap Open to enable your location in Settings",
+        "In order to show what's happening around you we need access to your location. Tap Open to enable your location in Settings",
         style: kDefaultTextStyle,
       ),
     );
