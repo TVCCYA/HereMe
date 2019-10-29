@@ -136,7 +136,7 @@ class _AddLiveChatState extends State<AddLiveChat> {
                         text: TextSpan(
                           children: [
                             TextSpan(
-                              text: '${usersAround.length}',
+                              text: '${usersAround.length}' ?? 0,
                               style: kAppBarTextStyle.copyWith(
                                   color: kColorPurple, fontSize: 16.0),
                             ),

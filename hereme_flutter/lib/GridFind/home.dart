@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:geoflutterfire/geoflutterfire.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:hereme_flutter/GridFind/all_live_chats_close_by.dart';
 import 'package:hereme_flutter/GridFind/all_users_close_by.dart';
 import 'package:hereme_flutter/SettingsMenu/SocialMediasList.dart';
 import 'package:hereme_flutter/live_chat/live_chat_result.dart';
@@ -57,6 +58,7 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
   var geolocator = Geolocator();
   StreamSubscription<Position> positionStream;
   Position position;
+  bool pageLoading = true;
 
   // if getCurrentLocation doesnt work in didChangeDependencies
   // replace getCurrentLocation with handleLoggedIn and
@@ -115,15 +117,17 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
       await getCurrentUser();
       setState(() {
         _isAuth = true;
+        pageLoading = false;
       });
     } else {
-      setState(() {
-        _isAuth = false;
-      });
       Navigator.pushAndRemoveUntil(
           context,
           MaterialPageRoute(builder: (BuildContext context) => InitialPage()),
-          (Route<dynamic> route) => false);
+              (Route<dynamic> route) => false);
+      setState(() {
+        _isAuth = false;
+        pageLoading = false;
+      });
     }
   }
 
@@ -364,6 +368,8 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
       return circularProgress();
     } else if (_locationEnabled) {
       return showStreamedCloseByChats();
+    } else {
+      return SizedBox();
     }
   }
 
@@ -411,30 +417,46 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
               chatHostUsername: hostUsername,
             );
             chatsAround.add(displayedChat);
-//            if (currentUser.uid != uid) {
+//            if (currentUser.uid != hostUid) {
 //              chatsAround.add(displayedChat);
 //            }
           }
           if (chatsAround.isNotEmpty) {
             return Container(
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
+                  Padding(
+                    padding: EdgeInsets.only(
+                        left: 8.0, top: 12.0, bottom: 8.0, right: 8.0),
+                    child: Text('Close By',
+                        style: kAppBarTextStyle.copyWith(
+                            fontSize: 18.0, fontWeight: FontWeight.w400)),
+                  ),
                   Column(children: chatsAround),
-                  FlatButton.icon(
-                    icon: Icon(
-                      FontAwesomeIcons.chevronCircleRight,
-                      color: kColorBlack105,
+                  Align(
+                    alignment: Alignment.bottomRight,
+                    child: FlatButton.icon(
+                      icon: Icon(
+                        FontAwesomeIcons.chevronCircleRight,
+                        color: kColorBlack105,
+                      ),
+                      // use
+                      onPressed: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => AllLiveChatsCloseBy(
+                                latitude: latitude,
+                                longitude: longitude,
+                              ))),
+                      label: Text(
+                        'Within 1 mile',
+                        style: kDefaultTextStyle.copyWith(
+                            fontWeight: FontWeight.w300, fontSize: 16.0),
+                      ),
+                      splashColor: Colors.transparent,
+                      highlightColor: Colors.grey[200],
                     ),
-                    // use
-                    onPressed: () => print('to all chats nearby'),
-                    label: Text(
-                      'Within 1 mile',
-                      style: kDefaultTextStyle.copyWith(
-                          fontWeight: FontWeight.w300, fontSize: 16.0),
-                    ),
-                    splashColor: Colors.transparent,
-                    highlightColor: Colors.grey[200],
                   )
                 ],
               ),
@@ -628,7 +650,7 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
       body: SafeArea(
         child: Theme(
           data: kTheme(context),
-          child: RefreshIndicator(
+          child: pageLoading ? circularProgress() : RefreshIndicator(
             onRefresh: () async => await getCurrentLocation(),
             child: Stack(
               children: <Widget>[
@@ -646,7 +668,7 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
                         Divider(color: Colors.grey[300]),
                         enabledLocationFetchUsers(),
                         Divider(color: Colors.grey[300]),
-                        liveChatsCloseByHeader(),
+//                        liveChatsCloseByHeader(),
                         enabledLocationFetchChats(),
                         Divider(color: Colors.grey[300]),
                       ],
@@ -692,6 +714,8 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
       ),
       mainButton: FlatButton(
         onPressed: () => PermissionHandler().openAppSettings(),
+        splashColor: Colors.grey[200],
+        highlightColor: Colors.transparent,
         child: Text(
           "Open",
           style: kAppBarTextStyle.copyWith(color: kColorBlue),

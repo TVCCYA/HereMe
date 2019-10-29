@@ -153,7 +153,7 @@ class _LiveChatScreenState extends State<LiveChatScreen> {
                             },
                             decoration: InputDecoration(
                               contentPadding: EdgeInsets.symmetric(vertical: 10.0, horizontal: 12.0),
-                              hintText: 'Join the convo...',
+                              hintText: '${currentUser.username}: Join the convo...',
                               hintStyle: kDefaultTextStyle.copyWith(color: kColorLightGray),
                               border: InputBorder.none,
                             ),
@@ -232,30 +232,6 @@ class LiveChatMessage extends StatelessWidget {
           ),
         ),
       ),
-    );
-    return Column(
-      children: <Widget>[
-        ListTile(
-          dense: true,
-          title: RichText(
-            overflow: TextOverflow.ellipsis,
-            text: TextSpan(
-              children: [
-                TextSpan(
-                  text: '$username: ',
-                  style: kDefaultTextStyle.copyWith(
-                      color: kColorPurple, fontWeight: FontWeight.w300),
-                ),
-                TextSpan(
-                  text: message,
-                  style: kDefaultTextStyle,
-                ),
-              ],
-            ),
-          ),
-        ),
-        Divider(color: Colors.grey[300]),
-      ],
     );
   }
 }
