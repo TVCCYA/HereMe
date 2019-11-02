@@ -5,7 +5,7 @@ import 'package:flushbar/flushbar.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:geoflutterfire/geoflutterfire.dart';
-import 'package:hereme_flutter/contants/constants.dart';
+import 'package:hereme_flutter/constants.dart';
 import 'package:hereme_flutter/models/user.dart';
 import 'package:hereme_flutter/widgets/user_result.dart';
 import 'home.dart';
@@ -58,12 +58,18 @@ class _AllUsersCloseByState extends State<AllUsersCloseBy> {
         for (var user in users) {
           final imageUrl = user.data['profileImageUrl'];
           final uid = user.data['uid'];
+          final hasAccountLinked = user.data['hasAccountLinked'];
 
           final displayedUser = User(
             profileImageUrl: imageUrl,
             uid: uid,
+            hasAccountLinked: hasAccountLinked,
           );
-          if (currentUser.uid != uid) {
+
+          if (currentUser.uid != uid &&
+              hasAccountLinked != null &&
+              hasAccountLinked &&
+              !currentUser.blockedUids.contains(uid)) {
             usersAround.add(displayedUser);
           }
         }
@@ -80,7 +86,7 @@ class _AllUsersCloseByState extends State<AllUsersCloseBy> {
                     left: 8.0, top: 12.0, bottom: 8.0, right: 8.0),
                 child: Text('Everyone Within 1/4 Mile',
                     style: kAppBarTextStyle.copyWith(
-                        fontSize: 18.0, fontWeight: FontWeight.w400)),
+                        fontSize: 18.0)),
               ),
               GridView.count(
                 physics: NeverScrollableScrollPhysics(),
@@ -100,7 +106,7 @@ class _AllUsersCloseByState extends State<AllUsersCloseBy> {
             child: Center(
               child: Text(
                 'Nobody Nearby',
-                style: kAppBarTextStyle.copyWith(fontWeight: FontWeight.w400),
+                style: kAppBarTextStyle,
               ),
             ),
           );
@@ -124,7 +130,7 @@ class _AllUsersCloseByState extends State<AllUsersCloseBy> {
           onPressed: () {
             Navigator.pop(context);
           },
-          color: kColorBlack105,
+          color: kColorBlack71,
           splashColor: Colors.grey[200],
           highlightColor: Colors.transparent,
         ),
@@ -137,7 +143,7 @@ class _AllUsersCloseByState extends State<AllUsersCloseBy> {
                 'Your feed will auto update as someone comes within or leaves your vicinity',
                 style: kDefaultTextStyle.copyWith(color: Colors.white, fontSize: 14.0),
               ),
-              backgroundColor: kColorBlack105,
+              backgroundColor: kColorBlack71,
               duration: Duration(seconds: 5),
             )..show(context);
           },

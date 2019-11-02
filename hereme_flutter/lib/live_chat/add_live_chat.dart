@@ -6,7 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:geoflutterfire/geoflutterfire.dart';
 import 'package:hereme_flutter/GridFind/home.dart';
-import 'package:hereme_flutter/contants/constants.dart';
+import 'package:hereme_flutter/constants.dart';
 import 'package:hereme_flutter/models/user.dart';
 import 'package:modal_progress_hud/modal_progress_hud.dart';
 import 'package:uuid/uuid.dart';
@@ -76,10 +76,13 @@ class _AddLiveChatState extends State<AddLiveChat> {
         }
         for (var user in users) {
           final uid = user.data['uid'];
+          final hasAccountLinked = user.data['hasAccountLinked'];
+
           final displayedUser = User(
             uid: uid,
+            hasAccountLinked: hasAccountLinked,
           );
-          if (currentUser.uid != uid) {
+          if (currentUser.uid != uid && hasAccountLinked != null && hasAccountLinked) {
             setState(() {
               usersAround.add(displayedUser);
               usersAroundUid.add(displayedUser.uid);
@@ -108,7 +111,7 @@ class _AddLiveChatState extends State<AddLiveChat> {
             onPressed: () {
               Navigator.pop(context);
             },
-            color: kColorBlack105,
+            color: kColorBlack71,
             splashColor: Colors.transparent,
             highlightColor: Colors.transparent,
           ),
@@ -173,7 +176,7 @@ class _AddLiveChatState extends State<AddLiveChat> {
                         labelStyle: kAppBarTextStyle.copyWith(fontSize: 16.0),
                         icon: Icon(
                           FontAwesomeIcons.penFancy,
-                          color: kColorBlack105,
+                          color: kColorBlack71,
                           size: 20.0,
                         ),
                       ),
@@ -220,7 +223,7 @@ class _AddLiveChatState extends State<AddLiveChat> {
                         labelStyle: kAppBarTextStyle.copyWith(fontSize: 16.0),
                         icon: Icon(
                           FontAwesomeIcons.hourglassHalf,
-                          color: kColorBlack105,
+                          color: kColorBlack71,
                           size: 20.0,
                         ),
                       ),
@@ -291,8 +294,13 @@ class _AddLiveChatState extends State<AddLiveChat> {
       'position': myLocation.data,
       'uid': currentUser.uid,
       'chatId': chatId,
+      'hostDisplayName': _isAnonymousChecked ? 'Anonymous' : currentUser.displayName,
       'creationDate': DateTime.now().millisecondsSinceEpoch * 1000,
       'title': title,
+      'hostRed': currentUser.red,
+      'hostGreen': currentUser.green,
+      'hostBlue': currentUser.blue,
+      'duration': int.parse(duration),
     });
   }
 
@@ -304,8 +312,8 @@ class _AddLiveChatState extends State<AddLiveChat> {
     Map<String, dynamic> liveChatData = <String, dynamic> {
       'title': title,
       'chatId': chatId,
-      'hostUsername': _isAnonymousChecked ? '': currentUser.username,
-      'duration': duration,
+      'hostDisplayName': _isAnonymousChecked ? 'Anonymous' : currentUser.displayName,
+      'duration': int.parse(duration),
       'uid': currentUser.uid,
       'invites': usersAroundUid,
       'creationDate': DateTime.now().millisecondsSinceEpoch * 1000,

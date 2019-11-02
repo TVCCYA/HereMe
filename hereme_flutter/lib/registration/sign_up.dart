@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:hereme_flutter/contants/constants.dart';
+import 'package:hereme_flutter/constants.dart';
 import 'package:hereme_flutter/registration/photo_add.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -8,7 +8,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:modal_progress_hud/modal_progress_hud.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:hereme_flutter/utils/reusable_registration_textfield.dart';
-import 'package:rflutter_alert/rflutter_alert.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class SignUp extends StatefulWidget {
@@ -19,13 +18,11 @@ class SignUp extends StatefulWidget {
 class _SignUpState extends State<SignUp> {
   final _auth = FirebaseAuth.instance;
   String firstName;
-  String username;
   String email;
   String password;
   bool _isButtonDisabled;
 
   final _firstNameFocus = FocusNode();
-  final _usernameFocus = FocusNode();
   final _emailFocus = FocusNode();
   final _passwordFocus = FocusNode();
 

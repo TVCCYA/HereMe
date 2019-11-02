@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:hereme_flutter/contants/constants.dart';
+import 'package:hereme_flutter/constants.dart';
 
 class ReusableButton extends StatelessWidget {
   ReusableButton({this.title, @required this.onPressed, this.textColor});

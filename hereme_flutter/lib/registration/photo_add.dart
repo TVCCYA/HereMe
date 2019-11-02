@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:hereme_flutter/GridFind/home.dart';
-import 'package:hereme_flutter/contants/constants.dart';
+import 'package:hereme_flutter/constants.dart';
 import 'package:hereme_flutter/utils/reusable_profile_card.dart';
 import 'dart:io';
 import 'dart:async';
@@ -13,7 +13,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:modal_progress_hud/modal_progress_hud.dart';
 import 'package:hereme_flutter/utils/reusable_bottom_sheet.dart';
-import 'package:uuid/uuid.dart';
 
 final _firestore = Firestore.instance;
 
@@ -197,7 +196,6 @@ class _PhotoAddState extends State<PhotoAdd> {
     final ref = _firestore.collection('users');
     final FirebaseStorage _storage = FirebaseStorage.instance;
     var succeed = true;
-    final filename = Uuid().v4();
 
     setState(() {
       showSpinner = true;
@@ -205,7 +203,7 @@ class _PhotoAddState extends State<PhotoAdd> {
     FirebaseUser user = await FirebaseAuth.instance.currentUser();
     final uid = user.uid;
     StorageUploadTask uploadFile =
-    _storage.ref().child('profile_images/$filename').putFile(mediaFile);
+    _storage.ref().child('profile_images/$uid').putFile(mediaFile);
 
     uploadFile.onComplete.catchError((error) {
       print(error);
@@ -216,14 +214,13 @@ class _PhotoAddState extends State<PhotoAdd> {
           final downloadUrl = await _storage
               .ref()
               .child('profile_images')
-              .child(filename)
+              .child(uid)
               .getDownloadURL();
 
           _savePhotoSharedPref(downloadUrl);
 
           Map<String, dynamic> photoUrl = <String, dynamic>{
             'profileImageUrl': downloadUrl,
-            'storageFilename': filename,
           };
           ref.document(uid)
               .updateData(photoUrl).whenComplete(() {

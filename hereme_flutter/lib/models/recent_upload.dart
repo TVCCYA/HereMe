@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:hereme_flutter/contants/constants.dart';
+import 'package:hereme_flutter/constants.dart';
 import 'package:time_ago_provider/time_ago_provider.dart';
 
 class RecentUpload extends StatelessWidget {

@@ -3,7 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 class LiveChat {
   String uid;
   String chatId;
-  String hostUsername;
+  String hostDisplayName;
   String title;
   String duration;
   List<String> invites;
@@ -12,7 +12,7 @@ class LiveChat {
   LiveChat({
     this.uid,
     this.chatId,
-    this.hostUsername,
+    this.hostDisplayName,
     this.title,
     this.duration,
     this.invites,
@@ -23,7 +23,7 @@ class LiveChat {
     return LiveChat(
       uid: doc['uid'],
       chatId: doc['chatId'],
-      hostUsername: doc['hostUsername'] ?? '',
+      hostDisplayName: doc['hostDisplayName'] ?? '',
       title: doc['title'],
       duration: doc['duration'],
       invites: doc['invites'],

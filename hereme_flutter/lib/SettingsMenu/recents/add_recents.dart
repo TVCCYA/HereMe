@@ -4,7 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:hereme_flutter/GridFind/home.dart';
-import 'package:hereme_flutter/contants/constants.dart';
+import 'package:hereme_flutter/constants.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:hereme_flutter/utils/reusable_profile_card.dart';
 import 'package:hereme_flutter/utils/reusable_registration_textfield.dart';
@@ -68,7 +68,7 @@ class _AddRecentState extends State<AddRecent> {
             onPressed: () {
               Navigator.pop(context);
             },
-            color: kColorBlack105,
+            color: kColorBlack71,
             splashColor: Colors.transparent,
             highlightColor: Colors.transparent,
           ),
@@ -250,7 +250,7 @@ class _AddRecentState extends State<AddRecent> {
     FirebaseUser user = await FirebaseAuth.instance.currentUser();
     final uid = user.uid;
     StorageUploadTask uploadFile =
-        _storage.ref().child('recent_upload_thumbnail/$filename').putFile(mediaFile);
+        _storage.ref().child('recent_upload_thumbnail/$uid/$filename').putFile(mediaFile);
 
     uploadFile.onComplete.catchError((error) {
       print(error);
@@ -261,6 +261,7 @@ class _AddRecentState extends State<AddRecent> {
           final downloadUrl = await _storage
               .ref()
               .child('recent_upload_thumbnail')
+              .child(uid)
               .child(filename)
               .getDownloadURL();
 

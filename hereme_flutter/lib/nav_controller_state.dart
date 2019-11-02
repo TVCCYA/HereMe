@@ -8,7 +8,7 @@ import 'package:hereme_flutter/registration/initial_page.dart';
 import 'package:hereme_flutter/user_profile/profile_page/profile.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'contants/constants.dart';
+import 'constants.dart';
 import 'models/user.dart';
 
 class NavController extends StatefulWidget {

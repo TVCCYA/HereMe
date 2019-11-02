@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'log_in.dart';
 import 'sign_up.dart';
-import 'package:hereme_flutter/contants/constants.dart';
+import 'package:hereme_flutter/constants.dart';
 import 'package:hereme_flutter/utils/reusable_button.dart';
 
 class InitialPage extends StatefulWidget {

@@ -3,7 +3,7 @@ import 'package:flushbar/flushbar.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:geoflutterfire/geoflutterfire.dart';
-import 'package:hereme_flutter/contants/constants.dart';
+import 'package:hereme_flutter/constants.dart';
 import 'package:hereme_flutter/live_chat/live_chat_result.dart';
 
 import 'home.dart';
@@ -52,17 +52,30 @@ class _AllLiveChatsCloseByState extends State<AllLiveChatsCloseBy> {
             final title = chat.data['title'];
             final creationDate = chat.data['creationDate'];
             final chatId = chat.data['chatId'];
-            final hostUsername = chat.data['hostUsername'] ?? '';
+            final hostDisplayName = chat.data['hostDisplayName'] ?? '';
             final hostUid = chat.data['uid'];
+            final hostRed = chat.data['hostRed'];
+            final hostGreen = chat.data['hostGreen'];
+            final hostBlue = chat.data['hostBlue'];
+            final duration = chat.data['duration'];
+            GeoPoint point = chat.data['position']['geopoint'];
+            double distance = geo.point(latitude: point.latitude, longitude: point.longitude)
+                .distance(lat: latitude, lng: longitude);
+            double distanceFromChat = distance / 1.609;
 
             final displayedChat = LiveChatResult(
               title: title,
               creationDate: creationDate,
               chatId: chatId,
               chatHostUid: hostUid,
-              chatHostUsername: hostUsername,
+              chatHostDisplayName: hostDisplayName,
+              hostRed: hostRed,
+              hostGreen: hostGreen,
+              hostBlue: hostBlue,
+              duration: duration,
+              distanceFromChat: distanceFromChat,
             );
-            if (currentUser.uid != hostUid) {
+            if(!currentUser.blockedUids.contains(hostUid)) {
               chatsAround.add(displayedChat);
             }
           }
@@ -76,7 +89,7 @@ class _AllLiveChatsCloseByState extends State<AllLiveChatsCloseBy> {
                         left: 8.0, top: 12.0, bottom: 8.0, right: 8.0),
                     child: Text('All Live Chats Within 1 Mile',
                         style: kAppBarTextStyle.copyWith(
-                            fontSize: 18.0, fontWeight: FontWeight.w400)),
+                            fontSize: 18.0)),
                   ),
                   Column(children: chatsAround),
                 ],
@@ -88,12 +101,13 @@ class _AllLiveChatsCloseByState extends State<AllLiveChatsCloseBy> {
               child: Center(
                 child: Text(
                   'No Live Chats Nearby',
-                  style: kAppBarTextStyle.copyWith(fontWeight: FontWeight.w400),
+                  style: kAppBarTextStyle,
                 ),
               ),
             );
           }
-        });
+        },
+    );
   }
 
 
@@ -112,7 +126,7 @@ class _AllLiveChatsCloseByState extends State<AllLiveChatsCloseBy> {
           onPressed: () {
             Navigator.pop(context);
           },
-          color: kColorBlack105,
+          color: kColorBlack71,
           splashColor: Colors.grey[200],
           highlightColor: Colors.transparent,
         ),
@@ -125,7 +139,7 @@ class _AllLiveChatsCloseByState extends State<AllLiveChatsCloseBy> {
                 'Your feed will auto update when a new Live Chat has started within your vicinity',
                 style: kDefaultTextStyle.copyWith(color: Colors.white, fontSize: 14.0),
               ),
-              backgroundColor: kColorBlack105,
+              backgroundColor: kColorBlack71,
               duration: Duration(seconds: 5),
             )..show(context);
           },

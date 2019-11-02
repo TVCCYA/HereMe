@@ -3,13 +3,15 @@ import 'package:flushbar/flushbar.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:rflutter_alert/rflutter_alert.dart';
 
-const kColorPurple = Color.fromRGBO(111, 89, 194, 1.0);
+import 'GridFind/home.dart';
+
+const kColorPurple = Color.fromRGBO(95, 71, 188, 1.0);
 const kColorBlue = Color.fromRGBO(71, 106, 188, 1.0);
 const kColorGreen = Color.fromRGBO(71, 188, 153, 1.0);
 
-const kColorBlack105 = Color.fromRGBO(105, 105, 105, 1.0);
+const kColorBlack71 = Color.fromRGBO(71, 71, 71, 1.0);
 const kColorOffWhite = Color.fromRGBO(245, 245, 245, 1.0);
-const kColorOffBlack = Color.fromRGBO(50, 50, 50, 1.0);
+const kColorOffBlack = Color.fromRGBO(11, 8, 19, 1.0);
 const kColorLightGray = Color.fromRGBO(188, 188, 188, 1.0);
 const kColorRed = Color.fromRGBO(188, 71, 89, 1.0);
 const kColorThistle = Color.fromRGBO(197, 188, 230, 1.0);
@@ -39,11 +41,17 @@ ThemeData kTheme(BuildContext context) {
   );
 }
 
+const kAppBarTextStyle = TextStyle(
+  fontFamily: 'Arimo',
+  fontSize: 18.0,
+  color: kColorBlack71,
+  fontWeight: FontWeight.bold,
+);
+
 const kDefaultTextStyle = TextStyle(
-  color: kColorBlack105,
+  color: kColorBlack71,
   fontFamily: 'Arimo',
   fontSize: 16.0,
-  fontWeight: FontWeight.w300
 );
 
 const kRegistrationInputDecoration = InputDecoration(
@@ -76,12 +84,23 @@ void kShowFlushBar(
   )..show(context);
 }
 
-const kAppBarTextStyle = TextStyle(
-  fontFamily: 'Arimo',
-  fontSize: 18.0,
-  color: kColorBlack105,
-  fontWeight: FontWeight.w600,
-);
+void kErrorFlushbar({BuildContext context, String errorText}) {
+  Flushbar(
+    flushbarPosition: FlushbarPosition.TOP,
+    backgroundColor: Colors.white,
+    messageText: Text(
+      errorText,
+      style: kDefaultTextStyle,
+    ),
+    icon: Icon(
+      FontAwesomeIcons.exclamation,
+      size: 28.0,
+      color: kColorRed,
+    ),
+    duration: Duration(seconds: 3),
+    leftBarIndicatorColor: kColorRed,
+  )..show(context);
+}
 
 void kShowAlert(
     {context: BuildContext,
@@ -95,11 +114,11 @@ void kShowAlert(
       backgroundColor: kColorOffWhite,
       overlayColor: Colors.black.withOpacity(0.75),
       titleStyle: kDefaultTextStyle.copyWith(
-        color: kColorBlack105,
+        color: kColorBlack71,
         fontSize: 24.0,
       ),
       descStyle: kDefaultTextStyle.copyWith(
-        color: kColorBlack105,
+        color: kColorBlack71,
         fontSize: 16.0,
       ),
     ),
@@ -124,25 +143,25 @@ void kShowAlert(
 
 void kShowAlertMultiButtons(
     {context: BuildContext,
-      title: String,
-      desc: String,
-      color1: Color,
-      color2: Color,
-      buttonText1: String,
-      buttonText2: String,
-      onPressed1: Function,
-      onPressed2: Function}) {
+    title: String,
+    desc: String,
+    color1: Color,
+    color2: Color,
+    buttonText1: String,
+    buttonText2: String,
+    onPressed1: Function,
+    onPressed2: Function}) {
   Alert(
     context: context,
     style: AlertStyle(
       backgroundColor: kColorOffWhite,
       overlayColor: Colors.black.withOpacity(0.75),
       titleStyle: kDefaultTextStyle.copyWith(
-        color: kColorBlack105,
+        color: kColorBlack71,
         fontSize: 24.0,
       ),
       descStyle: kDefaultTextStyle.copyWith(
-        color: kColorBlack105,
+        color: kColorBlack71,
         fontSize: 16.0,
       ),
     ),
@@ -191,24 +210,6 @@ void kActionSheet(context, sheets) {
       );
     },
   );
-}
-
-void kErrorFlushbar({BuildContext context, String errorText}) {
-  Flushbar(
-    flushbarPosition: FlushbarPosition.TOP,
-    backgroundColor: Colors.white,
-    messageText: Text(
-      errorText,
-      style: kDefaultTextStyle,
-    ),
-    icon: Icon(
-      FontAwesomeIcons.exclamation,
-      size: 28.0,
-      color: kColorRed,
-    ),
-    duration: Duration(seconds: 3),
-    leftBarIndicatorColor: kColorRed,
-  )..show(context);
 }
 
 const kRegistrationPurpleTextStyle = TextStyle(
@@ -300,4 +301,31 @@ Container linearProgress() {
       backgroundColor: kColorLightGray,
     ),
   );
+}
+
+void kConfirmBlock(BuildContext context, String displayName, String uid) {
+  Navigator.pop(context);
+  kShowAlert(
+      context: context,
+      title: 'Block $displayName?',
+      desc:
+          'They will not be able to see your content on HereMe. They will not know you blocked them.',
+      buttonText: 'Block',
+      onPressed: () {
+        kBlockUser(context, uid);
+        Navigator.pop(context);
+      },
+  );
+}
+
+void kBlockUser(BuildContext context, String uid) {
+  usersRef.document(currentUser.uid).updateData({
+    'blockedUsers.$uid': 1,
+  }).whenComplete(() {
+    kShowFlushBar(
+        context: context,
+        text: 'Successfully Blocked',
+        color: kColorGreen,
+        icon: FontAwesomeIcons.exclamation);
+  });
 }

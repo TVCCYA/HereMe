@@ -5,12 +5,13 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:hereme_flutter/SettingsMenu/SocialMediasList.dart';
 import 'package:hereme_flutter/SettingsMenu/recents/add_recents.dart';
-import 'package:hereme_flutter/contants/constants.dart';
+import 'package:hereme_flutter/constants.dart';
 import 'package:hereme_flutter/live_chat/add_live_chat.dart';
 import 'package:hereme_flutter/models/knock.dart';
 import 'package:hereme_flutter/models/linked_account.dart';
 import 'package:hereme_flutter/models/recent_upload.dart';
 import 'package:hereme_flutter/models/user.dart';
+import 'package:hereme_flutter/registration/create_display_name.dart';
 import 'package:hereme_flutter/utils/reusable_profile_card.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
@@ -28,6 +29,7 @@ import 'package:hereme_flutter/GridFind/home.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 final _firestore = Firestore.instance;
+final reportedUsersRef = Firestore.instance.collection('reportedUsers');
 
 class Profile extends StatefulWidget {
   final User user;
@@ -40,15 +42,20 @@ class Profile extends StatefulWidget {
 
   @override
   _ProfileState createState() => _ProfileState(
-    user: this.user,
-    locationLabel: this.locationLabel,
-  );
+        user: this.user,
+        locationLabel: this.locationLabel,
+      );
 }
 
 class _ProfileState extends State<Profile> {
+  String knockUsername = '';
+  String knockUrl = '';
+  String knockUid = '';
+
   bool showSpinner = false;
-  bool _isCurrentUser = true;
+  bool _isCurrentUser = false;
   String username;
+  String displayName;
   String userUid;
   String profileImageUrl;
   int weeklyVisitsCount;
@@ -65,7 +72,19 @@ class _ProfileState extends State<Profile> {
   void initState() {
     super.initState();
     _determinePage();
-    updateCurrentUserCounts();
+    if (_isCurrentUser) {
+      updateCurrentUserCounts();
+    }
+  }
+
+  getKnockInfo(String uid) {
+    usersRef.document(uid).snapshots().listen((snaps) {
+      setState(() {
+        knockUsername = snaps.data['username'];
+        knockUrl = snaps.data['profileImageUrl'];
+        print(knockUrl);
+      });
+    });
   }
 
   updateCurrentUserCounts() async {
@@ -75,7 +94,8 @@ class _ProfileState extends State<Profile> {
           weeklyVisitsCount = doc.data['weeklyVisitsCount'];
           totalVisitsCount = doc.data['totalVisitsCount'];
 
-          displayedWeeklyCount = NumberFormat.compact().format(weeklyVisitsCount);
+          displayedWeeklyCount =
+              NumberFormat.compact().format(weeklyVisitsCount);
           displayedTotalCount = NumberFormat.compact().format(totalVisitsCount);
         });
       });
@@ -109,28 +129,18 @@ class _ProfileState extends State<Profile> {
                         onPressed: () {
                           Navigator.pop(context);
                         },
-                        color: kColorBlack105,
+                        color: kColorBlack71,
                         splashColor: Colors.transparent,
                         highlightColor: Colors.grey[200],
                       ),
                       actions: <Widget>[
-                        _isCurrentUser
-                            ? IconButton(
-                                icon: Icon(FontAwesomeIcons.ellipsisV,
-                                    color: kColorBlack105),
-                                onPressed: () {
-                                  _quickSettings();
-                                },
-                              )
-                            : IconButton(
-                                icon: Icon(
-                                  FontAwesomeIcons.ban,
-                                  color: kColorBlack105,
-                                ),
-                                onPressed: () {
-                                  //TODO: BLOCK USER
-                                },
-                              )
+                        IconButton(
+                          icon: Icon(FontAwesomeIcons.ellipsisV,
+                              color: kColorBlack71),
+                          onPressed: () {
+                            _isCurrentUser ? _quickSettings() : _reportBlockSettings();
+                          },
+                        )
                       ],
                       elevation: 2.0,
                       expandedHeight: topProfileContainerHeight + 50.0,
@@ -141,11 +151,15 @@ class _ProfileState extends State<Profile> {
                       flexibleSpace: FlexibleSpaceBar(
                         background: FlexibleProfileAppBar(
                           userPhotoUrl: profileImageUrl,
-                          onTap: _isCurrentUser ? _changeUserPhoto : _fullScreenProfileImage,
+                          onTap: _isCurrentUser
+                              ? _changeUserPhoto
+                              : _fullScreenProfileImage,
                           topProfileContainerHeight: topProfileContainerHeight,
                           weeklyVisitsCount: displayedWeeklyCount,
                           totalVisitsCount: displayedTotalCount,
-                          locationLabel: _isCurrentUser ? 'Here' : locationLabel ?? 'Around',
+                          locationLabel: _isCurrentUser
+                              ? 'Here'
+                              : locationLabel ?? 'Around',
                         ),
                       ),
                     ),
@@ -159,7 +173,7 @@ class _ProfileState extends State<Profile> {
                 child: Padding(
                   padding: const EdgeInsets.only(left: 16.0, right: 16.0),
                   child: ListView.builder(
-                    itemCount: 3,
+                    itemCount: _isCurrentUser ? 3 : 3,
                     itemBuilder: (context, index) {
                       if (_isCurrentUser) {
                         if (index == 0) {
@@ -181,17 +195,22 @@ class _ProfileState extends State<Profile> {
                                   final knocks = snapshot.data.documents;
                                   List<Knock> displayedKnocks = [];
                                   for (var knock in knocks) {
-                                    final username = knock.data['username'];
-                                    final imageUrl = knock.data['profileImageUrl'];
-                                    final creationDate = knock.data['creationDate'];
+//                                    final username = knock.data['username'];
+//                                    final imageUrl = knock.data['profileImageUrl'];
+                                    final creationDate =
+                                        knock.data['creationDate'];
                                     final uid = knock.data['uid'];
+                                    print(uid);
+
+                                    getKnockInfo(uid);
 
                                     final displayedKnock = Knock(
-                                      username: username,
-                                      imageUrl: imageUrl,
+                                      username: knockUsername,
+                                      imageUrl: knockUrl,
                                       creationDate: creationDate,
                                       onTap: () {
-                                        _knocksActionSheet(context, uid, username);
+                                        _knocksActionSheet(
+                                            context, uid, knockUsername);
                                       },
                                     );
                                     displayedKnocks.add(displayedKnock);
@@ -202,7 +221,8 @@ class _ProfileState extends State<Profile> {
                                     );
                                   } else {
                                     return Padding(
-                                      padding: EdgeInsets.only(top: 2.0, bottom: 8.0),
+                                      padding: EdgeInsets.only(
+                                          top: 2.0, bottom: 8.0),
                                       child: Text(
                                         'No Knocks Yet',
                                         style: kDefaultTextStyle,
@@ -248,10 +268,10 @@ class _ProfileState extends State<Profile> {
                                             iconString: iconString,
                                             onTap: () {
                                               _linksActionSheet(
-                                                  context,
-                                                  accountUsername,
-                                                  iconString,
-                                                  url,
+                                                context,
+                                                accountUsername,
+                                                iconString,
+                                                url,
                                               );
                                             },
                                           );
@@ -309,6 +329,8 @@ class _ProfileState extends State<Profile> {
                                     final url = recent.data['url'];
                                     final creationDate =
                                         recent.data['creationDate'];
+                                    final storageFilename =
+                                        recent.data['storageFilename'];
 
                                     _determineUrl(title, '', url);
 
@@ -318,8 +340,8 @@ class _ProfileState extends State<Profile> {
                                       imageUrl: imageUrl,
                                       creationDate: creationDate,
                                       onTap: () {
-                                        _recentsActionSheet(
-                                            context, title, url);
+                                        _recentsActionSheet(context, title, url,
+                                            storageFilename);
                                       },
                                     );
                                     displayedRecents.add(displayedRecent);
@@ -405,7 +427,8 @@ class _ProfileState extends State<Profile> {
                                     );
                                   } else {
                                     return Padding(
-                                      padding: const EdgeInsets.only(top: 2.0, bottom: 8.0),
+                                      padding: const EdgeInsets.only(
+                                          top: 2.0, bottom: 8.0),
                                       child: Text(
                                         'No Accounts Linked',
                                         style: kDefaultTextStyle,
@@ -440,6 +463,8 @@ class _ProfileState extends State<Profile> {
                                     final url = recent.data['url'];
                                     final creationDate =
                                         recent.data['creationDate'];
+                                    final storageFilename =
+                                        recent.data['storageFilename'];
 
                                     _determineUrl(title, '', url);
 
@@ -449,8 +474,8 @@ class _ProfileState extends State<Profile> {
                                       imageUrl: imageUrl,
                                       creationDate: creationDate,
                                       onTap: () {
-                                        _recentsActionSheet(
-                                            context, title, url);
+                                        _recentsActionSheet(context, title, url,
+                                            storageFilename);
                                       },
                                     );
                                     displayedRecents.add(displayedRecent);
@@ -475,11 +500,13 @@ class _ProfileState extends State<Profile> {
                                             },
                                           )
                                         : Padding(
-                                        padding: EdgeInsets.only(top: 2.0, bottom: 8.0),
-                                        child: Text('No Recent Uploads',
-                                        style: kDefaultTextStyle,
-                                        ),
-                                      );
+                                            padding: EdgeInsets.only(
+                                                top: 2.0, bottom: 8.0),
+                                            child: Text(
+                                              'No Recent Uploads',
+                                              style: kDefaultTextStyle,
+                                            ),
+                                          );
                                   }
                                 },
                               ),
@@ -568,23 +595,89 @@ class _ProfileState extends State<Profile> {
           color: kColorGreen);
     }).catchError(
       (e) => kShowAlert(
-            context: context,
-            title: 'Knock Failed',
-            desc: 'Unable to knock $username, please try again later',
-            buttonText: 'Try Again',
-            onPressed: () => Navigator.pop(context),
-          ),
+        context: context,
+        title: 'Knock Failed',
+        desc: 'Unable to knock $username, please try again later',
+        buttonText: 'Try Again',
+        onPressed: () => Navigator.pop(context),
+      ),
     );
+  }
+
+  _knocksActionSheet(BuildContext context, String uid, String username) {
+    List<ReusableBottomActionSheetListTile> sheets = [];
+    sheets.add(
+      ReusableBottomActionSheetListTile(
+        title: 'Deny Knock',
+        iconData: FontAwesomeIcons.ban,
+        color: kColorRed,
+        onTap: () async {
+          _removeKnock(uid);
+          Navigator.pop(context);
+        },
+      ),
+    );
+    sheets.add(
+      ReusableBottomActionSheetListTile(
+        title: 'Knock back $username?',
+        iconData: FontAwesomeIcons.check,
+        onTap: () async {
+          _handleKnock(uid);
+          _removeKnock(uid);
+          Navigator.pop(context);
+        },
+      ),
+    );
+    sheets.add(
+      ReusableBottomActionSheetListTile(
+        title: 'Cancel',
+        iconData: FontAwesomeIcons.times,
+        onTap: () => Navigator.pop(context),
+      ),
+    );
+    kActionSheet(context, sheets);
+  }
+
+  _removeKnock(String uid) {
+    knocksRef
+        .document(currentUserUid)
+        .collection('receivedKnockFrom')
+        .document(uid)
+        .get()
+        .then((doc) {
+      if (doc.exists) {
+        doc.reference.delete();
+      }
+    });
   }
 
   _linksActionSheet(BuildContext context, String accountUsername,
       String iconString, String url) {
     String platform;
     for (var platformString
-        in _determineUrl(accountUsername, iconString, url).keys) {
+    in _determineUrl(accountUsername, iconString, url).keys) {
       platform = platformString;
     }
     List<ReusableBottomActionSheetListTile> sheets = [];
+    _isCurrentUser
+        ? sheets.add(ReusableBottomActionSheetListTile(
+      title: 'Unlink $accountUsername',
+      iconData: FontAwesomeIcons.unlink,
+      color: kColorRed,
+      onTap: () {
+        kShowAlert(
+          context: context,
+          title: "Unlink Account?",
+          desc: "Are you sure you want to unlink $accountUsername?",
+          buttonText: "Unlink",
+          onPressed: () {
+            Navigator.pop(context);
+            _handleRemoveData(accountUsername, 'socialMedias', 'socials');
+            Navigator.pop(context);
+          },
+        );
+      },
+    )) : SizedBox();
     sheets.add(
       ReusableBottomActionSheetListTile(
         title: 'Open in $platform',
@@ -610,26 +703,6 @@ class _ProfileState extends State<Profile> {
         },
       ),
     );
-    _isCurrentUser
-        ? sheets.add(ReusableBottomActionSheetListTile(
-            title: 'Unlink $accountUsername',
-            iconData: FontAwesomeIcons.unlink,
-            onTap: () {
-              kShowAlert(
-                  context: context,
-                  title: "Unlink Account?",
-                  desc: "Are you sure you want to unlink $accountUsername?",
-                  buttonText: "Unlink",
-                  onPressed: () {
-                    Navigator.pop(context);
-                    _handleRemoveData(context, accountUsername,
-                        'socialMedias', 'socials');
-                    Navigator.pop(context);
-                  },
-              );
-            },
-          ))
-        : SizedBox();
     sheets.add(
       ReusableBottomActionSheetListTile(
         title: 'Cancel',
@@ -640,12 +713,33 @@ class _ProfileState extends State<Profile> {
     kActionSheet(context, sheets);
   }
 
-  _recentsActionSheet(BuildContext context, String title, String url) {
+  _recentsActionSheet(
+      BuildContext context, String title, String url, String storageFilename) {
     String platform;
     for (var platformString in _determineUrl(title, '', url).keys) {
       platform = platformString;
     }
     List<ReusableBottomActionSheetListTile> sheets = [];
+    _isCurrentUser
+        ? sheets.add(ReusableBottomActionSheetListTile(
+      title: 'Remove $title',
+      iconData: FontAwesomeIcons.minusCircle,
+      color: kColorRed,
+      onTap: () {
+        kShowAlert(
+          context: context,
+          title: "Remove Recent?",
+          desc: "Are you sure you want to remove $title?",
+          buttonText: "Delete",
+          onPressed: () {
+            Navigator.pop(context);
+            _handleRemoveData(title, 'recentUploads', 'recents');
+            _handleRemoveRecentThumbnailFromStorage(storageFilename);
+            Navigator.pop(context);
+          },
+        );
+      },
+    )) : SizedBox();
     sheets.add(
       ReusableBottomActionSheetListTile(
         title: 'Open in $platform',
@@ -656,26 +750,6 @@ class _ProfileState extends State<Profile> {
         },
       ),
     );
-    _isCurrentUser
-        ? sheets.add(ReusableBottomActionSheetListTile(
-            title: 'Remove $title',
-            iconData: FontAwesomeIcons.minusCircle,
-            onTap: () {
-              kShowAlert(
-                  context: context,
-                  title: "Remove Recent?",
-                  desc: "Are you sure you want to remove $title?",
-                  buttonText: "Delete",
-                  onPressed: () {
-                    Navigator.pop(context);
-                    _handleRemoveData(
-                    context, title, 'recentUploads', 'recents');
-                    Navigator.pop(context);
-                  },
-              );
-            },
-          ))
-        : SizedBox();
     sheets.add(
       ReusableBottomActionSheetListTile(
         title: 'Cancel',
@@ -686,54 +760,21 @@ class _ProfileState extends State<Profile> {
     kActionSheet(context, sheets);
   }
 
-  _knocksActionSheet(BuildContext context, String uid, String username) {
-    List<ReusableBottomActionSheetListTile> sheets = [];
-    sheets.add(
-      ReusableBottomActionSheetListTile(
-        title: 'Knock back $username?',
-        iconData: FontAwesomeIcons.check,
-        onTap: () async {
-          _handleKnock(uid);
-          _deleteKnock(uid);
-          Navigator.pop(context);
-        },
-      ),
-    );
-    sheets.add(
-      ReusableBottomActionSheetListTile(
-        title: 'Deny Knock',
-        iconData: FontAwesomeIcons.ban,
-        onTap: () async {
-          _deleteKnock(uid);
-          Navigator.pop(context);
-        },
-      ),
-    );
-    sheets.add(
-      ReusableBottomActionSheetListTile(
-        title: 'Cancel',
-        iconData: FontAwesomeIcons.times,
-        onTap: () => Navigator.pop(context),
-      ),
-    );
-    kActionSheet(context, sheets);
+  _handleRemoveRecentThumbnailFromStorage(String storageFilename) {
+    final FirebaseStorage _storage = FirebaseStorage.instance;
+    try {
+      _storage
+          .ref()
+          .child('recent_upload_thumbnail')
+          .child(currentUserUid)
+          .child(storageFilename)
+          .delete();
+    } catch (e) {
+      print(e);
+    }
   }
 
-  _deleteKnock(String uid) {
-    knocksRef
-        .document(currentUserUid)
-        .collection('receivedKnockFrom')
-        .document(uid)
-        .get()
-        .then((doc) {
-          if (doc.exists) {
-            doc.reference.delete();
-          }
-    });
-  }
-
-  _handleRemoveData(
-      context, String key, String collection1, String collection2) async {
+  _handleRemoveData(String key, String collection1, String collection2) async {
     final ref = _firestore
         .collection(collection1)
         .document(currentUserUid)
@@ -782,12 +823,93 @@ class _ProfileState extends State<Profile> {
     }
   }
 
+  _reasonToReport() {
+    Navigator.pop(context);
+    List<ReusableBottomActionSheetListTile> sheets = [];
+    sheets.add(
+      ReusableBottomActionSheetListTile(
+        iconData: FontAwesomeIcons.mehRollingEyes,
+        title: 'Spam Account',
+        color: kColorRed,
+        onTap: () {
+          _reportUser(context, 'Spam');
+          Navigator.pop(context);
+        },
+      ),
+    );
+    sheets.add(
+      ReusableBottomActionSheetListTile(
+        iconData: FontAwesomeIcons.angry,
+        title: 'Innappropriate',
+        color: kColorRed,
+        onTap: () {
+          _reportUser(context, 'Innappropriate');
+          Navigator.pop(context);
+        },
+      ),
+    );
+    sheets.add(
+      ReusableBottomActionSheetListTile(
+        iconData: FontAwesomeIcons.times,
+        title: 'Cancel',
+        onTap: () => Navigator.pop(context),
+      ),
+    );
+    kActionSheet(context, sheets);
+  }
+
+  _reportUser(BuildContext context, String reason) {
+    bool canReport = userUid != null;
+    canReport ? reportedUsersRef.document(userUid).setData({
+      'uid': userUid,
+      'username': username,
+      'displayName': displayName,
+      'reason': reason,
+      'reportedByUid': currentUser.uid,
+    }).whenComplete(() {
+      kShowFlushBar(context: context, text: 'Successfully Reported', color: kColorGreen, icon: FontAwesomeIcons.exclamation);
+    }) : kErrorFlushbar(context: context, errorText: 'Unable to Report, please try again');
+  }
+
+  _reportBlockSettings() {
+    List<ReusableBottomActionSheetListTile> sheets = [];
+    sheets.add(
+      ReusableBottomActionSheetListTile(
+        iconData: FontAwesomeIcons.flag,
+        title: 'Report',
+        color: kColorRed,
+        onTap: () {
+          _reasonToReport();
+        },
+      ),
+    );
+    sheets.add(
+      ReusableBottomActionSheetListTile(
+        iconData: FontAwesomeIcons.ban,
+        title: 'Block',
+        color: kColorRed,
+        onTap: () {
+          kConfirmBlock(context, username, userUid);
+        },
+      ),
+    );
+    sheets.add(
+      ReusableBottomActionSheetListTile(
+        iconData: FontAwesomeIcons.times,
+        title: 'Cancel',
+        onTap: () => Navigator.pop(context),
+      ),
+    );
+    kActionSheet(context, sheets);
+  }
+
   _quickSettings() {
     List<ReusableBottomActionSheetListTile> sheets = [];
     sheets.add(
       ReusableBottomActionSheetListTile(
         iconData: FontAwesomeIcons.cog,
         title: 'View Settings',
+        color: kColorPurple,
         onTap: () {
           Navigator.pop(context);
           Navigator.push(
@@ -830,9 +952,11 @@ class _ProfileState extends State<Profile> {
         onTap: () {
           Navigator.pop(context);
           Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => AddLiveChat())
-          );
+              context,
+              MaterialPageRoute(
+                  builder: (context) => currentUser.displayName != null
+                      ? AddLiveChat()
+                      : CreateDisplayName()));
         },
       ),
     );
@@ -881,24 +1005,25 @@ class _ProfileState extends State<Profile> {
       });
       _getCurrentUserData();
     } else if (user.username != null) {
-        setState(() {
-          _isCurrentUser = false;
-          userUid = user.uid;
-          username = user.username;
-          profileImageUrl = user.profileImageUrl;
-          weeklyVisitsCount = user.weeklyVisitsCount + 1;
-          totalVisitsCount = user.totalVisitsCount + 1;
+      setState(() {
+        _isCurrentUser = false;
+        userUid = user.uid;
+        username = user.username;
+        displayName = user.displayName;
+        profileImageUrl = user.profileImageUrl;
+        weeklyVisitsCount = user.weeklyVisitsCount + 1;
+        totalVisitsCount = user.totalVisitsCount + 1;
 
-          displayedWeeklyCount = NumberFormat.compact().format(weeklyVisitsCount);
-          displayedTotalCount = NumberFormat.compact().format(totalVisitsCount);
-        });
-        usersRef.document(userUid).updateData({
-          'weeklyVisitsCount': user.weeklyVisitsCount + 1,
-          'totalVisitsCount': user.totalVisitsCount + 1,
-        });
-      } else {
-        getUserPageInfo();
-      }
+        displayedWeeklyCount = NumberFormat.compact().format(weeklyVisitsCount);
+        displayedTotalCount = NumberFormat.compact().format(totalVisitsCount);
+      });
+      usersRef.document(userUid).updateData({
+        'weeklyVisitsCount': user.weeklyVisitsCount + 1,
+        'totalVisitsCount': user.totalVisitsCount + 1,
+      });
+    } else {
+      getUserPageInfo();
+    }
   }
 
   getUserPageInfo() async {
@@ -908,6 +1033,7 @@ class _ProfileState extends State<Profile> {
         _isCurrentUser = false;
         userUid = user.uid;
         username = user.username;
+        displayName = user.displayName;
         profileImageUrl = user.profileImageUrl;
         weeklyVisitsCount = user.weeklyVisitsCount + 1;
         totalVisitsCount = user.totalVisitsCount + 1;
@@ -929,6 +1055,7 @@ class _ProfileState extends State<Profile> {
     setState(() {
       profileImageUrl = url;
       username = name;
+      displayName = currentUser.displayName;
     });
   }
 
@@ -988,13 +1115,12 @@ class _ProfileState extends State<Profile> {
           });
         }).catchError(
           (e) => kShowAlert(
-                context: context,
-                title: 'Upload Failed',
-                desc:
-                    'Unable to upload your profile image, please try again later',
-                buttonText: 'Try Again',
-                onPressed: () => Navigator.pop(context),
-              ),
+            context: context,
+            title: 'Upload Failed',
+            desc: 'Unable to upload your profile image, please try again later',
+            buttonText: 'Try Again',
+            onPressed: () => Navigator.pop(context),
+          ),
         );
       }
     });
@@ -1053,7 +1179,6 @@ class _ProfileState extends State<Profile> {
     }
     return retMap;
   }
-
 }
 
 class ReusableContentContainer extends StatelessWidget {
@@ -1104,14 +1229,13 @@ class FlexibleProfileAppBar extends StatelessWidget {
   final String totalVisitsCount;
   final String locationLabel;
 
-  const FlexibleProfileAppBar({
-        @required this.userPhotoUrl,
-        this.onTap,
-        this.topProfileContainerHeight,
-        this.weeklyVisitsCount,
-        this.totalVisitsCount,
-        this.locationLabel
-      });
+  const FlexibleProfileAppBar(
+      {@required this.userPhotoUrl,
+      this.onTap,
+      this.topProfileContainerHeight,
+      this.weeklyVisitsCount,
+      this.totalVisitsCount,
+      this.locationLabel});
 
   @override
   Widget build(BuildContext context) {

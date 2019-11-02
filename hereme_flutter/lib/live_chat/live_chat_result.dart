@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:hereme_flutter/contants/constants.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:hereme_flutter/GridFind/home.dart';
+import 'package:hereme_flutter/constants.dart';
+import 'package:hereme_flutter/registration/create_display_name.dart';
 import 'package:time_ago_provider/time_ago_provider.dart';
 
 import 'live_chat_screen.dart';
@@ -8,15 +11,26 @@ class LiveChatResult extends StatelessWidget {
   final String title;
   final int creationDate;
   final String chatId;
-  final String chatHostUsername;
+  final String chatHostDisplayName;
   final String chatHostUid;
+  final int hostRed;
+  final int hostGreen;
+  final int hostBlue;
+  final int duration;
+  final double distanceFromChat;
 
-  LiveChatResult(
-      {this.title,
-      this.creationDate,
-      this.chatId,
-      this.chatHostUid,
-      this.chatHostUsername});
+  LiveChatResult({
+    this.title,
+    this.creationDate,
+    this.chatId,
+    this.chatHostUid,
+    this.chatHostDisplayName,
+    this.hostRed,
+    this.hostGreen,
+    this.hostBlue,
+    this.duration,
+    this.distanceFromChat,
+  });
 
   String date() {
     final timeAgo = TimeAgo.getTimeAgo(creationDate ~/ 1000);
@@ -36,25 +50,49 @@ class LiveChatResult extends StatelessWidget {
             overflow: TextOverflow.fade,
             softWrap: false,
             style: kDefaultTextStyle.copyWith(
-                fontWeight: FontWeight.w600, fontSize: 18.0),
+                fontWeight: FontWeight.w400, fontSize: 18.0),
           ),
-          subtitle: Text(
-            'Last message goes here',
-            style: kDefaultTextStyle,
+          subtitle: Row(
+            children: <Widget>[
+              distanceFromChat == 0 ? Icon(
+                FontAwesomeIcons.mapMarkerAlt,
+                size: 14.0,
+                color: kColorPurple,
+              ) : Icon(
+                FontAwesomeIcons.searchLocation,
+                size: 14.0,
+                color: kColorBlue,
+              ),
+              SizedBox(width: 4.0),
+              Text(
+                distanceFromChat == 0 ? 'Here' : '${distanceFromChat.toStringAsFixed(5)} miles away',
+                style: kDefaultTextStyle,
+              ),
+            ],
           ),
-          onTap: () =>  Navigator.push(context, MaterialPageRoute(builder: (context) => LiveChatScreen(
-            title: title ?? '',
-            chatId: chatId,
-            chatHostUsername: chatHostUsername,
-            chatHostUid: chatHostUid,
-          ))),
+          onTap: () {
+            Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => currentUser.displayName != null
+                        ? LiveChatScreen(
+                            title: title ?? '',
+                            chatId: chatId,
+                            chatHostDisplayName: chatHostDisplayName,
+                            chatHostUid: chatHostUid,
+                            hostRed: hostRed,
+                            hostGreen: hostGreen,
+                            hostBlue: hostBlue,
+                          )
+                        : CreateDisplayName()));
+          },
           trailing: Text(
-            date(),
+            duration == 1 ? '$duration hour left' : '$duration hours left',
             overflow: TextOverflow.fade,
             softWrap: false,
             style: kDefaultTextStyle.copyWith(
               fontSize: 12.0,
-              color: kColorLightGray,
+              color: kColorRed,
             ),
           ),
         ),

@@ -3,10 +3,9 @@ import 'package:flutter/services.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:hereme_flutter/GridFind/home.dart';
-import 'package:hereme_flutter/contants/constants.dart';
+import 'package:hereme_flutter/constants.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:hereme_flutter/models/user.dart';
-import 'package:hereme_flutter/nav_controller_state.dart';
 import 'package:modal_progress_hud/modal_progress_hud.dart';
 import 'package:rflutter_alert/rflutter_alert.dart';
 import 'package:hereme_flutter/utils/reusable_registration_textfield.dart';
@@ -177,11 +176,11 @@ class _LogInState extends State<LogIn> {
                                               overlayColor:
                                                   Colors.black.withOpacity(0.75),
                                               titleStyle: kDefaultTextStyle.copyWith(
-                                                color: kColorBlack105,
+                                                color: kColorBlack71,
                                                 fontSize: 24.0,
                                               ),
                                               descStyle: kDefaultTextStyle.copyWith(
-                                                color: kColorBlack105,
+                                                color: kColorBlack71,
                                                 fontSize: 16.0,
                                               ),
                                             ),
@@ -210,7 +209,7 @@ class _LogInState extends State<LogIn> {
                                                 ),
                                                 icon: Icon(
                                                   FontAwesomeIcons.at,
-                                                  color: kColorBlack105,
+                                                  color: kColorBlack71,
                                                 ),
                                               ),
                                             ),

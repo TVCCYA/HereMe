@@ -11,6 +11,11 @@ class User {
   String storageFilename;
   String displayName;
   String city;
+  int red;
+  int green;
+  int blue;
+  Map<dynamic, dynamic> blockedUserUids;
+  List<String> blockedUids;
 
   User({
     this.username,
@@ -23,6 +28,11 @@ class User {
     this.storageFilename,
     this.displayName,
     this.city,
+    this.red,
+    this.green,
+    this.blue,
+    this.blockedUserUids,
+    this.blockedUids,
   });
 
   factory User.fromDocument(DocumentSnapshot doc) {
@@ -37,6 +47,10 @@ class User {
       storageFilename: doc['storageFilename'],
       displayName: doc['displayName'],
       city: doc['city'],
+      red: doc['red'],
+      green: doc['green'],
+      blue: doc['blue'],
+      blockedUserUids: doc['blockedUsers'],
     );
   }
 }

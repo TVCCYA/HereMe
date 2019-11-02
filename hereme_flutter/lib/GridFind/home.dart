@@ -21,7 +21,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../registration/initial_page.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:hereme_flutter/contants/constants.dart';
+import 'package:hereme_flutter/constants.dart';
 import 'package:flushbar/flushbar.dart';
 
 final usersRef = Firestore.instance.collection('users');
@@ -59,22 +59,18 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
   StreamSubscription<Position> positionStream;
   Position position;
   bool pageLoading = true;
-
-  // if getCurrentLocation doesnt work in didChangeDependencies
-  // replace getCurrentLocation with handleLoggedIn and
-  // remove handleLoggedIn from initState
+  List<String> blockedUids = [];
 
   @override
   void initState() {
     super.initState();
     getTopTotalViewedUsers();
-    handleLoggedIn();
   }
 
   @override
   void didChangeDependencies() async {
     super.didChangeDependencies();
-    getCurrentLocation();
+    handleLoggedIn();
   }
 
   @override
@@ -87,6 +83,10 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
     final user = await auth.currentUser();
     DocumentSnapshot doc = await usersRef.document(user.uid).get();
     currentUser = User.fromDocument(doc);
+    fetchBlockedUsers();
+    if (blockedUids != null) {
+      currentUser.blockedUids = blockedUids;
+    }
 
     if (currentUser.profileImageUrl == null) {
       Navigator.pushAndRemoveUntil(
@@ -112,6 +112,22 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
     }
   }
 
+  fetchBlockedUsers() {
+    List<String> uids = [];
+    if (currentUser.blockedUserUids != null) {
+      currentUser.blockedUserUids.forEach((uid, val) {
+        uids.add(uid);
+        setState(() {
+          uids.forEach((i) {
+            if (!blockedUids.contains(i)) {
+              this.blockedUids.add(i);
+            }
+          });
+        });
+      });
+    }
+  }
+
   handleLoggedIn() async {
     if (await auth.currentUser() != null) {
       await getCurrentUser();
@@ -123,7 +139,7 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
       Navigator.pushAndRemoveUntil(
           context,
           MaterialPageRoute(builder: (BuildContext context) => InitialPage()),
-              (Route<dynamic> route) => false);
+          (Route<dynamic> route) => false);
       setState(() {
         _isAuth = false;
         pageLoading = false;
@@ -203,6 +219,7 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
       'position': myLocation.data,
       'profileImageUrl': currentUser.profileImageUrl,
       'uid': currentUser.uid,
+      'hasAccountLinked': _hasAccountLinked,
     });
   }
 
@@ -215,7 +232,7 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
               Padding(
                 padding: EdgeInsets.only(
                     left: 8.0, top: 12.0, bottom: 8.0, right: 8.0),
-                child: Text('Close By',
+                child: Text('People Close By',
                     style: kAppBarTextStyle.copyWith(
                         fontSize: 18.0, fontWeight: FontWeight.w400)),
               ),
@@ -241,7 +258,7 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
 
   streamCloseByUsers() {
     Geoflutterfire geo = Geoflutterfire();
-    Query collectionRef = userLocationsRef.limit(5);
+    Query collectionRef = userLocationsRef;
     Stream<List<DocumentSnapshot>> stream =
         geo.collection(collectionRef: collectionRef).within(
               center: geo.point(latitude: latitude, longitude: longitude),
@@ -265,15 +282,23 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
           for (var user in users) {
             final imageUrl = user.data['profileImageUrl'];
             final uid = user.data['uid'];
+            final hasAccountLinked = user.data['hasAccountLinked'];
 
             final displayedUser = User(
               profileImageUrl: imageUrl,
               uid: uid,
+              hasAccountLinked: hasAccountLinked,
             );
-            if (currentUser.uid != uid) {
+
+            if (currentUser.uid != uid &&
+                hasAccountLinked != null &&
+                hasAccountLinked &&
+                usersAround.length < 4 &&
+                !blockedUids.contains(uid)) {
               usersAround.add(displayedUser);
             }
           }
+
           List<GridTile> gridTiles = [];
           usersAround.forEach((user) {
             gridTiles.add(GridTile(
@@ -286,9 +311,8 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
                 Padding(
                   padding: EdgeInsets.only(
                       left: 8.0, top: 12.0, bottom: 8.0, right: 8.0),
-                  child: Text('Close By',
-                      style: kAppBarTextStyle.copyWith(
-                          fontSize: 18.0, fontWeight: FontWeight.w400)),
+                  child: Text('People Close By',
+                      style: kAppBarTextStyle.copyWith(fontSize: 18.0)),
                 ),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
@@ -306,7 +330,7 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
                     FlatButton.icon(
                       icon: Icon(
                         FontAwesomeIcons.chevronCircleRight,
-                        color: kColorBlack105,
+                        color: kColorBlack71,
                       ),
                       // use
                       onPressed: () => Navigator.push(
@@ -334,7 +358,7 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
               child: Center(
                 child: Text(
                   'Nobody Nearby',
-                  style: kAppBarTextStyle.copyWith(fontWeight: FontWeight.w400),
+                  style: kAppBarTextStyle,
                 ),
               ),
             );
@@ -353,15 +377,6 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
     }
   }
 
-  liveChatsCloseByHeader() {
-    return Padding(
-      padding: EdgeInsets.only(left: 8.0, top: 12.0, bottom: 8.0, right: 8.0),
-      child: Text('Live Chats By You',
-          style: kAppBarTextStyle.copyWith(
-              fontSize: 18.0, fontWeight: FontWeight.w400)),
-    );
-  }
-
   enabledLocationFetchChats() {
     if (_locationLoading) {
       getCurrentLocation();
@@ -374,14 +389,12 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
   }
 
   showStreamedCloseByChats() {
-    return _hasAccountLinked
-        ? streamCloseByChats()
-        : SizedBox();
+    return _hasAccountLinked ? streamCloseByChats() : SizedBox();
   }
 
   streamCloseByChats() {
     Geoflutterfire geo = Geoflutterfire();
-    Query collectionRef = liveChatLocationsRef.limit(3);
+    Query collectionRef = liveChatLocationsRef;
     Stream<List<DocumentSnapshot>> stream =
         geo.collection(collectionRef: collectionRef).within(
               center: geo.point(latitude: latitude, longitude: longitude),
@@ -406,20 +419,35 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
             final title = chat.data['title'];
             final creationDate = chat.data['creationDate'];
             final chatId = chat.data['chatId'];
-            final hostUsername = chat.data['hostUsername'] ?? '';
+            final hostDisplayName = chat.data['hostDisplayName'] ?? '';
             final hostUid = chat.data['uid'];
+            final hostRed = chat.data['hostRed'];
+            final hostGreen = chat.data['hostGreen'];
+            final hostBlue = chat.data['hostBlue'];
+            final duration = chat.data['duration'];
+            GeoPoint point = chat.data['position']['geopoint'];
+            double distance = geo
+                .point(latitude: point.latitude, longitude: point.longitude)
+                .distance(lat: latitude, lng: longitude);
+            double distanceFromChat = distance / 1.609;
 
             final displayedChat = LiveChatResult(
               title: title,
               creationDate: creationDate,
               chatId: chatId,
               chatHostUid: hostUid,
-              chatHostUsername: hostUsername,
+              chatHostDisplayName: hostDisplayName,
+              hostRed: hostRed,
+              hostGreen: hostGreen,
+              hostBlue: hostBlue,
+              duration: duration,
+              distanceFromChat: distanceFromChat,
             );
-            chatsAround.add(displayedChat);
-//            if (currentUser.uid != hostUid) {
-//              chatsAround.add(displayedChat);
-//            }
+            if (currentUser.uid != hostUid &&
+                !currentUser.blockedUids.contains(hostUid) &&
+                chatsAround.length < 3) {
+              chatsAround.add(displayedChat);
+            }
           }
           if (chatsAround.isNotEmpty) {
             return Container(
@@ -429,9 +457,8 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
                   Padding(
                     padding: EdgeInsets.only(
                         left: 8.0, top: 12.0, bottom: 8.0, right: 8.0),
-                    child: Text('Close By',
-                        style: kAppBarTextStyle.copyWith(
-                            fontSize: 18.0, fontWeight: FontWeight.w400)),
+                    child: Text('Live Chats Close By',
+                        style: kAppBarTextStyle.copyWith(fontSize: 18.0)),
                   ),
                   Column(children: chatsAround),
                   Align(
@@ -439,16 +466,16 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
                     child: FlatButton.icon(
                       icon: Icon(
                         FontAwesomeIcons.chevronCircleRight,
-                        color: kColorBlack105,
+                        color: kColorBlack71,
                       ),
                       // use
                       onPressed: () => Navigator.push(
                           context,
                           MaterialPageRoute(
                               builder: (context) => AllLiveChatsCloseBy(
-                                latitude: latitude,
-                                longitude: longitude,
-                              ))),
+                                    latitude: latitude,
+                                    longitude: longitude,
+                                  ))),
                       label: Text(
                         'Within 1 mile',
                         style: kDefaultTextStyle.copyWith(
@@ -467,7 +494,7 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
               child: Center(
                 child: Text(
                   'No Live Chats Nearby',
-                  style: kAppBarTextStyle.copyWith(fontWeight: FontWeight.w400),
+                  style: kAppBarTextStyle,
                 ),
               ),
             );
@@ -495,16 +522,21 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
           final weeklyVisitsCount = user.data['weeklyVisitsCount'];
           final totalVisitsCount = user.data['totalVisitsCount'];
           final city = user.data['city'];
+          final hasAccountLinked = user.data['hasAccountLinked'];
 
           final displayedUser = User(
-            username: username,
-            profileImageUrl: imageUrl,
-            uid: uid,
-            weeklyVisitsCount: weeklyVisitsCount,
-            totalVisitsCount: totalVisitsCount,
-            city: city,
-          );
-          topUsers.add(displayedUser);
+              username: username,
+              profileImageUrl: imageUrl,
+              uid: uid,
+              weeklyVisitsCount: weeklyVisitsCount,
+              totalVisitsCount: totalVisitsCount,
+              city: city,
+              hasAccountLinked: hasAccountLinked);
+          if (hasAccountLinked != null &&
+              hasAccountLinked &&
+              !currentUser.blockedUids.contains(uid)) {
+            topUsers.add(displayedUser);
+          }
         }
         List<GridTile> gridTiles = [];
         topUsers.forEach((user) {
@@ -521,8 +553,7 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
               Padding(
                 padding: EdgeInsets.all(8.0),
                 child: Text('Most Viewed This Week',
-                    style: kAppBarTextStyle.copyWith(
-                        fontSize: 18.0, fontWeight: FontWeight.w400)),
+                    style: kAppBarTextStyle.copyWith(fontSize: 18.0)),
               ),
               Container(
                 height: 150,
@@ -566,8 +597,12 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
         }
         List<GridTile> gridTiles = [];
         topTotalViewedUsers.forEach((user) {
-          gridTiles.add(GridTile(
-              child: UserResult(user: user, locationLabel: user.city)));
+          if (user.hasAccountLinked != null &&
+              user.hasAccountLinked &&
+              !currentUser.blockedUids.contains(user.uid)) {
+            gridTiles.add(GridTile(
+                child: UserResult(user: user, locationLabel: user.city)));
+          }
         });
         if (topTotalViewedUsers.isNotEmpty) {
           return Column(
@@ -576,8 +611,7 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
               Padding(
                 padding: EdgeInsets.all(8.0),
                 child: Text('Top Viewed All Time',
-                    style: kAppBarTextStyle.copyWith(
-                        fontSize: 18.0, fontWeight: FontWeight.w400)),
+                    style: kAppBarTextStyle.copyWith(fontSize: 18.0)),
               ),
               Container(
                 height: 150,
@@ -650,50 +684,52 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
       body: SafeArea(
         child: Theme(
           data: kTheme(context),
-          child: pageLoading ? circularProgress() : RefreshIndicator(
-            onRefresh: () async => await getCurrentLocation(),
-            child: Stack(
-              children: <Widget>[
-                Container(
-                  height: screenHeight,
-                  width: screenWidth,
-                  child: SingleChildScrollView(
-                    padding: EdgeInsets.only(bottom: 50.0),
-                    physics: AlwaysScrollableScrollPhysics(),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: <Widget>[
-                        SizedBox(height: 4.0),
-                        buildTopViewed(),
-                        Divider(color: Colors.grey[300]),
-                        enabledLocationFetchUsers(),
-                        Divider(color: Colors.grey[300]),
-//                        liveChatsCloseByHeader(),
-                        enabledLocationFetchChats(),
-                        Divider(color: Colors.grey[300]),
-                      ],
-                    ),
-                  ),
+          child: pageLoading
+              ? circularProgress()
+              : RefreshIndicator(
+                  onRefresh: () async => await getCurrentLocation(),
+                  child: Stack(
+                    children: <Widget>[
+                      Container(
+                        height: screenHeight,
+                        width: screenWidth,
+                        child: SingleChildScrollView(
+                          padding: EdgeInsets.only(bottom: 50.0),
+                          physics: AlwaysScrollableScrollPhysics(),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: <Widget>[
+                              SizedBox(height: 4.0),
+                              buildTopViewed(),
+                              Divider(color: Colors.grey[300]),
+                              enabledLocationFetchUsers(),
+                              Divider(color: Colors.grey[300]),
+                              enabledLocationFetchChats(),
+                              Divider(color: Colors.grey[300]),
+                            ],
+                          ),
+                        ),
 
-                  /* If you don't do the bottom scroll notification...
+                        /* If you don't do the bottom scroll notification...
                          REMOVE padding from SingleChildScrollView and
                          REPLACE the Stack wrapping with just the
                          SingleChildScrollView Widget
                        */
-                ),
-                Align(
-                  child: Container(
-                    height: 50.0,
-                    width: screenWidth,
-                    color: Colors.yellow,
-                    child: Center(
-                        child: Text('BOTTOM SCROLLY NOTIFICATION GOES HERE')),
+                      ),
+                      Align(
+                        child: Container(
+                          height: 50.0,
+                          width: screenWidth,
+                          color: Colors.yellow,
+                          child: Center(
+                              child: Text(
+                                  'BOTTOM SCROLLY NOTIFICATION GOES HERE')),
+                        ),
+                        alignment: Alignment.bottomCenter,
+                      ),
+                    ],
                   ),
-                  alignment: Alignment.bottomCenter,
                 ),
-              ],
-            ),
-          ),
         ),
       ),
     );

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:hereme_flutter/contants/constants.dart';
+import 'package:hereme_flutter/constants.dart';
 
 class LinkedAccount extends StatelessWidget {
   LinkedAccount(
