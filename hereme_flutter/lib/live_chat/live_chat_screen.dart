@@ -143,15 +143,22 @@ class _LiveChatScreenState extends State<LiveChatScreen> {
       'displayName': currentUser.displayName,
       'message': message,
       'creationDate': DateTime.now().millisecondsSinceEpoch * 1000,
-      'red': currentUser.red ?? 111,
-      'green': currentUser.green ?? 89,
-      'blue': currentUser.blue ?? 194,
+      'red': currentUser.red,
+      'green': currentUser.green,
+      'blue': currentUser.blue,
       'messageId': messageId,
     }).whenComplete(() {
       liveChatController.clear();
       setState(() {
         _hasStartedTyping = false;
       });
+    });
+    liveChatsRef.document(chatHostUid).collection('chats').document(chatId).updateData({
+      'lastMessage': message,
+      'lastMessageDisplayName': currentUser.displayName,
+      'lastRed': currentUser.red,
+      'lastGreen': currentUser.green,
+      'lastBlue': currentUser.blue,
     });
 //    bool isNotPostOwner = postOwnerId != currentUser.id;
 //    if (isNotPostOwner) {
@@ -229,16 +236,16 @@ class _LiveChatScreenState extends State<LiveChatScreen> {
                           style: kAppBarTextStyle.copyWith(
                               color: kColorBlack71, fontSize: 16.0),
                         ),
-                        TextSpan(
-                          text: _hostAnonymous
-                              ? 'Anonymous'
-                              : chatHostDisplayName,
+                        _hostAnonymous ? TextSpan(
+                          text: 'Anonymous',
                           style: kAppBarTextStyle.copyWith(
-                              color: _hostAnonymous
-                                  ? kColorLightGray
-                                  : Color.fromRGBO(
-                                      hostRed ?? 111, hostGreen ?? 89, hostBlue ?? 194, 1.0),
-                              fontSize: 16.0),
+                              color: kColorLightGray,
+                          )
+                        ) : TextSpan(
+                          text: chatHostDisplayName,
+                          style: kAppBarTextStyle.copyWith(color: Color.fromRGBO(
+                              hostRed ?? 95, hostGreen ?? 71, hostBlue ?? 188, 1.0),
+                          )
                         ),
                       ],
                     ),
@@ -371,6 +378,7 @@ class _LiveChatScreenState extends State<LiveChatScreen> {
     return Scaffold(
       backgroundColor: kColorOffWhite,
       appBar: AppBar(
+        brightness: Brightness.light,
         title: FlatButton(
           onPressed: () => _settingsActionSheet(context),
           child: Text(title, style: kAppBarTextStyle),
@@ -524,9 +532,9 @@ class LiveChatMessage extends StatelessWidget {
       uid: doc['uid'],
       message: doc['message'],
       creationDate: doc['creationDate'],
-      red: doc['red'] ?? 111,
-      green: doc['green'] ?? 89,
-      blue: doc['blue'] ?? 194,
+      red: doc['red'] ?? 95,
+      green: doc['green'] ?? 71,
+      blue: doc['blue'] ?? 188,
       messageId: doc['messageId'],
     );
   }

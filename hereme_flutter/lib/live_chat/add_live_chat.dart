@@ -294,7 +294,7 @@ class _AddLiveChatState extends State<AddLiveChat> {
       'position': myLocation.data,
       'uid': currentUser.uid,
       'chatId': chatId,
-      'hostDisplayName': _isAnonymousChecked ? 'Anonymous' : currentUser.displayName,
+      'hostDisplayName': _isAnonymousChecked ? '' : currentUser.displayName,
       'creationDate': DateTime.now().millisecondsSinceEpoch * 1000,
       'title': title,
       'hostRed': currentUser.red,
@@ -310,11 +310,15 @@ class _AddLiveChatState extends State<AddLiveChat> {
     final ref = liveChatsRef.document(uid).collection('chats').document(chatId);
 
     Map<String, dynamic> liveChatData = <String, dynamic> {
-      'title': title,
-      'chatId': chatId,
-      'hostDisplayName': _isAnonymousChecked ? 'Anonymous' : currentUser.displayName,
-      'duration': int.parse(duration),
       'uid': currentUser.uid,
+      'chatId': chatId,
+      'hostDisplayName': _isAnonymousChecked ? '' : currentUser.displayName,
+      'creationDate': DateTime.now().millisecondsSinceEpoch * 1000,
+      'title': title,
+      'hostRed': currentUser.red,
+      'hostGreen': currentUser.green,
+      'hostBlue': currentUser.blue,
+      'duration': int.parse(duration),
       'invites': usersAroundUid,
       'creationDate': DateTime.now().millisecondsSinceEpoch * 1000,
     };

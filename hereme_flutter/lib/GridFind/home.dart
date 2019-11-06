@@ -8,11 +8,11 @@ import 'package:geoflutterfire/geoflutterfire.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:hereme_flutter/GridFind/all_live_chats_close_by.dart';
 import 'package:hereme_flutter/GridFind/all_users_close_by.dart';
-import 'package:hereme_flutter/SettingsMenu/SocialMediasList.dart';
+import 'package:hereme_flutter/settings//add_account.dart';
 import 'package:hereme_flutter/live_chat/live_chat_result.dart';
 import 'package:hereme_flutter/models/user.dart';
 import 'package:hereme_flutter/registration/photo_add.dart';
-import 'package:hereme_flutter/user_profile/profile_page/profile.dart';
+import 'package:hereme_flutter/user_profile/profile.dart';
 import 'package:hereme_flutter/utils/custom_image.dart';
 import 'package:hereme_flutter/utils/reusable_bottom_sheet.dart';
 import 'package:hereme_flutter/widgets/user_result.dart';
@@ -64,7 +64,9 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
   @override
   void initState() {
     super.initState();
-    getTopTotalViewedUsers();
+    if (_isAuth) {
+      getTopTotalViewedUsers();
+    }
   }
 
   @override
@@ -75,7 +77,9 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
 
   @override
   void dispose() {
-    positionStream.cancel();
+    if (positionStream != null) {
+      positionStream.cancel();
+    }
     super.dispose();
   }
 
@@ -110,6 +114,11 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
     } else {
       _hasAccountLinked = false;
     }
+
+    final usersTheyKnocked = knocksRef.where('uid', isEqualTo: currentUser.uid).snapshots();
+    usersTheyKnocked.forEach((snap) {
+      print(snap.documents.length);
+    });
   }
 
   fetchBlockedUsers() {
@@ -173,6 +182,7 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
   getStreamedLocation() async {
     GeolocationStatus geolocationStatus =
         await Geolocator().checkGeolocationPermissionStatus();
+    geolocationStatus = GeolocationStatus.granted;
 
     if (geolocationStatus != GeolocationStatus.granted) {
       setState(() {
@@ -246,7 +256,7 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                            builder: (BuildContext context) => MediasList()),
+                            builder: (BuildContext context) => AddAccount()),
                       );
                     },
                   ),
@@ -448,6 +458,10 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
                 chatsAround.length < 3) {
               chatsAround.add(displayedChat);
             }
+
+            if (chatsAround.isNotEmpty) {
+
+            }
           }
           if (chatsAround.isNotEmpty) {
             return Container(
@@ -516,20 +530,14 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
         List<User> topUsers = [];
         final users = snapshot.data.documents;
         for (var user in users) {
-          final username = user.data['username'];
           final imageUrl = user.data['profileImageUrl'];
           final uid = user.data['uid'];
-          final weeklyVisitsCount = user.data['weeklyVisitsCount'];
-          final totalVisitsCount = user.data['totalVisitsCount'];
-          final city = user.data['city'];
           final hasAccountLinked = user.data['hasAccountLinked'];
+          final city = user.data['city'];
 
           final displayedUser = User(
-              username: username,
               profileImageUrl: imageUrl,
               uid: uid,
-              weeklyVisitsCount: weeklyVisitsCount,
-              totalVisitsCount: totalVisitsCount,
               city: city,
               hasAccountLinked: hasAccountLinked);
           if (hasAccountLinked != null &&
@@ -647,11 +655,11 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
     super.build(context);
     final double screenWidth = MediaQuery.of(context).size.width;
     final double screenHeight = MediaQuery.of(context).size.height;
-    SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle.dark);
     SystemChrome.setEnabledSystemUIOverlays([SystemUiOverlay.top]);
     return Scaffold(
       backgroundColor: kColorOffWhite,
       appBar: AppBar(
+        brightness: Brightness.light,
         centerTitle: false,
         elevation: 2.0,
         backgroundColor: kColorOffWhite,

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hereme_flutter/GridFind/home.dart';
 import 'package:hereme_flutter/models/user.dart';
-import 'package:hereme_flutter/user_profile/profile_page/profile.dart';
+import 'package:hereme_flutter/user_profile/profile.dart';
 import 'package:hereme_flutter/utils/custom_image.dart';
 
 class UserResult extends StatelessWidget {

@@ -5,7 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:hereme_flutter/GridFind/home.dart';
 import 'package:hereme_flutter/registration/initial_page.dart';
-import 'package:hereme_flutter/user_profile/profile_page/profile.dart';
+import 'package:hereme_flutter/user_profile/profile.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'constants.dart';

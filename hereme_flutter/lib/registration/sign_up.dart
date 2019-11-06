@@ -137,7 +137,7 @@ class _SignUpState extends State<SignUp> {
                                         keyboardType:
                                             TextInputType.emailAddress,
                                         textInputAction: TextInputAction.next,
-                                        icon: FontAwesomeIcons.at,
+                                        icon: FontAwesomeIcons.envelope,
                                         onSubmitted: (v) {
                                           FocusScope.of(context)
                                               .requestFocus(_emailFocus);

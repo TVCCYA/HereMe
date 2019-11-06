@@ -24,7 +24,7 @@ class LinkedAccount extends StatelessWidget {
             accountUsername,
             overflow: TextOverflow.fade,
             softWrap: false,
-            style: kDefaultTextStyle.copyWith(fontWeight: FontWeight.w500),
+            style: kDefaultTextStyle,
           ),
           subtitle: Text(
             accountUrl,

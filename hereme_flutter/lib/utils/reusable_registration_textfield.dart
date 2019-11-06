@@ -10,7 +10,10 @@ class ReusableRegistrationTextField extends StatelessWidget {
         this.textInputAction,
         this.hintText,
         this.icon,
-        this.obscureText});
+        this.obscureText,
+        this.maxLength,
+        this.color
+      });
 
   final FocusNode focusNode;
   final Function onChanged;
@@ -20,17 +23,20 @@ class ReusableRegistrationTextField extends StatelessWidget {
   final String hintText;
   final IconData icon;
   final bool obscureText;
+  final int maxLength;
+  final Color color;
 
   @override
   Widget build(BuildContext context) {
     return TextField(
+      maxLength: maxLength,
       onChanged: onChanged,
       autofocus: true,
       focusNode: focusNode,
       onSubmitted: onSubmitted,
       cursorColor: kColorPurple,
       keyboardType: keyboardType,
-      style: kDefaultTextStyle,
+      style: kDefaultTextStyle.copyWith(color: color ?? kColorBlack71),
       autocorrect: false,
       textInputAction: textInputAction,
       obscureText: obscureText ?? false,

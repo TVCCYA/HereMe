@@ -15,12 +15,12 @@ class SocialMedias {
   SocialMedias({this.media, this.icon});
 }
 
-class MediasList extends StatefulWidget {
+class AddAccount extends StatefulWidget {
   @override
-  _MediasListState createState() => _MediasListState();
+  _AddAccountState createState() => _AddAccountState();
 }
 
-class _MediasListState extends State<MediasList> {
+class _AddAccountState extends State<AddAccount> {
   String mediaTitle;
   final usernameInput = TextEditingController();
   final FocusNode usernameFocus = FocusNode();

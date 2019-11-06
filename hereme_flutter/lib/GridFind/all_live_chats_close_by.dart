@@ -118,6 +118,7 @@ class _AllLiveChatsCloseByState extends State<AllLiveChatsCloseBy> {
     return Scaffold(
       backgroundColor: kColorOffWhite,
       appBar: AppBar(
+        brightness: Brightness.light,
         backgroundColor: kColorOffWhite,
         elevation: 2.0,
         title: Text('Close By', style: kAppBarTextStyle),

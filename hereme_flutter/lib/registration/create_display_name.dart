@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:hereme_flutter/GridFind/home.dart';
 import 'package:hereme_flutter/constants.dart';
@@ -17,9 +18,35 @@ class _CreateDisplayNameState extends State<CreateDisplayName> {
   String displayName;
   bool _isButtonDisabled = true;
   bool showSpinner = false;
+  int red;
+  int green;
+  int blue;
+
+  @override
+  void initState() {
+    super.initState();
+    createRandomColor();
+  }
+
+  createRandomColor() {
+    Random rnd;
+    int min = 1;
+    int max = 255;
+    int bMax = 188;
+    rnd = new Random();
+    final r = min + rnd.nextInt(max - min);
+    final g = min + rnd.nextInt(max - min);
+    final b = min + rnd.nextInt(bMax - min);
+
+    setState(() {
+      red = r;
+      green = g;
+      blue = b;
+    });
+  }
 
   isValid() {
-    if (displayName.isNotEmpty && displayName.length > 3) {
+    if (displayName.isNotEmpty && displayName.length > 2) {
       setState(() {
         _isButtonDisabled = false;
       });
@@ -102,7 +129,7 @@ class _CreateDisplayNameState extends State<CreateDisplayName> {
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: <Widget>[
                           Container(
-                            height: screenHeight / 3,
+                            height: screenHeight / 2.2,
                             decoration: BoxDecoration(
                               color: Colors.white,
                               borderRadius:
@@ -128,20 +155,22 @@ class _CreateDisplayNameState extends State<CreateDisplayName> {
                                 MainAxisAlignment.spaceEvenly,
                                 children: <Widget>[
                                   Text(
-                                    'Choose a Username',
+                                    currentUser.displayName == null ? 'Choose a Username' : 'Change Username',
                                     textAlign: TextAlign.center,
                                     style: kRegistrationPurpleTextStyle,
                                   ),
                                   Column(
                                     children: <Widget>[
                                       ReusableRegistrationTextField(
-                                        hintText: 'Your username',
+                                        hintText: currentUser.displayName == null ? 'Your username' : currentUser.displayName,
+                                        maxLength: 16,
                                         keyboardType:
                                         TextInputType.text,
                                         textInputAction: TextInputAction.done,
                                         icon: FontAwesomeIcons.at,
+                                        color: Color.fromRGBO(red, green, blue, 1.0),
                                         onSubmitted: (v) {
-                                          _isButtonDisabled ? print('shit not good') : handleAddDisplayName();
+                                          _isButtonDisabled ? print('not good') : handleAddDisplayName();
                                         },
                                         onChanged: (value) {
                                           displayName = value;
@@ -150,10 +179,20 @@ class _CreateDisplayNameState extends State<CreateDisplayName> {
                                         },
                                       ),
                                       SizedBox(height: 8.0),
+                                      RaisedButton(
+                                        color: kColorDarkThistle,
+                                        onPressed: () => createRandomColor(),
+                                        child: Text(
+                                          'Randomize Display Color',
+                                          style: kDefaultTextStyle.copyWith(color: Colors.white),
+                                        ),
+                                        splashColor: Colors.grey[200],
+                                        highlightColor: Colors.transparent,
+                                      ),
                                       Align(
                                         alignment: Alignment.topRight,
                                         child: FlatButton.icon(
-                                          onPressed: () => _isButtonDisabled ? print('shit not good') : handleAddDisplayName(),
+                                          onPressed: () => _isButtonDisabled ? print('not good') : handleAddDisplayName(),
                                           splashColor: _isButtonDisabled
                                               ? Colors.transparent
                                               : kColorOffWhite,
@@ -200,23 +239,14 @@ class _CreateDisplayNameState extends State<CreateDisplayName> {
   }
 
   handleAddDisplayName() {
-    Random rnd;
-    int min = 1;
-    int max = 255;
-    int bMax = 188;
-    rnd = new Random();
-    final r = min + rnd.nextInt(max - min);
-    final g = min + rnd.nextInt(max - min);
-    final b = min + rnd.nextInt(bMax - min);
-
     setState(() {
       showSpinner = true;
     });
     usersRef.document(currentUser.uid).updateData({
       'displayName': displayName,
-      'red': r,
-      'green': g,
-      'blue': b,
+      'red': red,
+      'green': green,
+      'blue': blue,
     }).whenComplete(() {
       setState(() {
         showSpinner = false;

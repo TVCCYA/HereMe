@@ -3,8 +3,9 @@ import 'dart:io';
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
-import 'package:hereme_flutter/SettingsMenu/SocialMediasList.dart';
-import 'package:hereme_flutter/SettingsMenu/recents/add_recents.dart';
+import 'package:hereme_flutter/live_chat/live_chat.dart';
+import 'package:hereme_flutter/live_chat/live_chat_screen.dart';
+import 'package:hereme_flutter/settings//recents/add_recents.dart';
 import 'package:hereme_flutter/constants.dart';
 import 'package:hereme_flutter/live_chat/add_live_chat.dart';
 import 'package:hereme_flutter/models/knock.dart';
@@ -12,6 +13,8 @@ import 'package:hereme_flutter/models/linked_account.dart';
 import 'package:hereme_flutter/models/recent_upload.dart';
 import 'package:hereme_flutter/models/user.dart';
 import 'package:hereme_flutter/registration/create_display_name.dart';
+import 'package:hereme_flutter/settings/add_account.dart';
+import 'package:hereme_flutter/user_profile/profile_image_full_screen.dart';
 import 'package:hereme_flutter/utils/reusable_profile_card.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
@@ -24,7 +27,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:hereme_flutter/utils/reusable_bottom_sheet.dart';
 import 'package:modal_progress_hud/modal_progress_hud.dart';
 
-import 'package:hereme_flutter/SettingsMenu/MenuListPage.dart';
+import 'package:hereme_flutter/settings//menu_list.dart';
 import 'package:hereme_flutter/GridFind/home.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
@@ -57,6 +60,9 @@ class _ProfileState extends State<Profile> {
   String username;
   String displayName;
   String userUid;
+  int red;
+  int green;
+  int blue;
   String profileImageUrl;
   int weeklyVisitsCount;
   String displayedWeeklyCount;
@@ -77,12 +83,21 @@ class _ProfileState extends State<Profile> {
     }
   }
 
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _determinePage();
+    if (_isCurrentUser) {
+      updateCurrentUserCounts();
+    }
+  }
+
   getKnockInfo(String uid) {
     usersRef.document(uid).snapshots().listen((snaps) {
       setState(() {
         knockUsername = snaps.data['username'];
         knockUrl = snaps.data['profileImageUrl'];
-        print(knockUrl);
+//        print(knockUrl);
       });
     });
   }
@@ -90,21 +105,23 @@ class _ProfileState extends State<Profile> {
   updateCurrentUserCounts() async {
     if (_isCurrentUser) {
       usersRef.document(currentUserUid).snapshots().listen((doc) {
-        setState(() {
-          weeklyVisitsCount = doc.data['weeklyVisitsCount'];
-          totalVisitsCount = doc.data['totalVisitsCount'];
+        if (this.mounted) {
+          setState(() {
+            weeklyVisitsCount = doc.data['weeklyVisitsCount'];
+            totalVisitsCount = doc.data['totalVisitsCount'];
 
-          displayedWeeklyCount =
-              NumberFormat.compact().format(weeklyVisitsCount);
-          displayedTotalCount = NumberFormat.compact().format(totalVisitsCount);
-        });
+            displayedWeeklyCount =
+                NumberFormat.compact().format(weeklyVisitsCount);
+            displayedTotalCount = NumberFormat.compact().format(totalVisitsCount);
+          });
+        }
       });
     }
   }
 
   Widget build(BuildContext context) {
     double screenHeight = MediaQuery.of(context).size.height;
-    double topProfileContainerHeight = screenHeight / 4 + 16;
+    double topProfileContainerHeight = screenHeight / 4 + 20;
 
     return Scaffold(
       backgroundColor: kColorOffWhite,
@@ -120,6 +137,7 @@ class _ProfileState extends State<Profile> {
                       NestedScrollView.sliverOverlapAbsorberHandleFor(context),
                   child: SliverSafeArea(
                     sliver: SliverAppBar(
+                      brightness: Brightness.light,
                       backgroundColor: kColorOffWhite,
                       floating: false,
                       pinned: true,
@@ -138,7 +156,9 @@ class _ProfileState extends State<Profile> {
                           icon: Icon(FontAwesomeIcons.ellipsisV,
                               color: kColorBlack71),
                           onPressed: () {
-                            _isCurrentUser ? _quickSettings() : _reportBlockSettings();
+                            _isCurrentUser
+                                ? _quickSettings()
+                                : _reportBlockSettings();
                           },
                         )
                       ],
@@ -160,6 +180,11 @@ class _ProfileState extends State<Profile> {
                           locationLabel: _isCurrentUser
                               ? 'Here'
                               : locationLabel ?? 'Around',
+                          displayName: displayName,
+                          red: red,
+                          green: green,
+                          blue: blue,
+                          isCurrentUser: _isCurrentUser,
                         ),
                       ),
                     ),
@@ -173,7 +198,7 @@ class _ProfileState extends State<Profile> {
                 child: Padding(
                   padding: const EdgeInsets.only(left: 16.0, right: 16.0),
                   child: ListView.builder(
-                    itemCount: _isCurrentUser ? 3 : 3,
+                    itemCount: _isCurrentUser ? 4 : 4,
                     itemBuilder: (context, index) {
                       if (_isCurrentUser) {
                         if (index == 0) {
@@ -197,10 +222,9 @@ class _ProfileState extends State<Profile> {
                                   for (var knock in knocks) {
 //                                    final username = knock.data['username'];
 //                                    final imageUrl = knock.data['profileImageUrl'];
-                                    final creationDate =
-                                        knock.data['creationDate'];
+                                    final creationDate = knock.data['creationDate'];
                                     final uid = knock.data['uid'];
-                                    print(uid);
+//                                    print(uid);
 
                                     getKnockInfo(uid);
 
@@ -295,7 +319,7 @@ class _ProfileState extends State<Profile> {
                                           context,
                                           MaterialPageRoute(
                                               builder: (BuildContext context) =>
-                                                  MediasList()),
+                                                  AddAccount()),
                                         );
                                       },
                                     );
@@ -303,6 +327,81 @@ class _ProfileState extends State<Profile> {
                                 },
                               ),
 //                        ReusableSectionLabel(title: 'Recents'),
+                            ],
+                          );
+                        } else if (index == 2) {
+                          //Current User Created Live Chats
+                          return ExpansionTile(
+                            title: ReusableSectionLabel(title: 'Live Chats'),
+                            children: <Widget>[
+                              StreamBuilder(
+                                stream: liveChatsRef
+                                    .document(currentUserUid)
+                                    .collection('chats')
+                                    .orderBy('creationDate', descending: true)
+                                    .snapshots(),
+                                builder: (context, snapshot) {
+                                  if (!snapshot.hasData) {
+                                    return circularProgress();
+                                  }
+                                  final chats = snapshot.data.documents;
+                                  List<LiveChat> displayedChats = [];
+                                  for (var chat in chats) {
+                                    final title = chat.data['title'];
+                                    final creationDate = chat.data['creationDate'];
+                                    final chatId = chat.data['chatId'];
+                                    final duration = chat.data['duration'];
+                                    final hostDisplayName = chat.data['hostDisplayName'] ?? '';
+                                    final lastMessage = chat.data['lastMessage'];
+                                    final lastMessageDisplayName = chat.data['lastMessageDisplayName'];
+                                    final lastRed = chat.data['lastRed'];
+                                    final lastGreen = chat.data['lastGreen'];
+                                    final lastBlue = chat.data['lastBlue'];
+
+                                    final displayedChat = LiveChat(
+                                      title: title,
+                                      creationDate: creationDate,
+                                      duration: duration,
+                                      chatId: chatId,
+                                      chatHostDisplayName: hostDisplayName,
+                                      chatHostUid: currentUserUid,
+                                      hostRed: red,
+                                      hostGreen: green,
+                                      hostBlue: blue,
+                                      lastMessage: lastMessage,
+                                      lastMessageDisplayName: lastMessageDisplayName,
+                                      lastRed: lastRed,
+                                      lastGreen: lastGreen,
+                                      lastBlue: lastBlue,
+                                      onTap: () {
+                                        _liveChatsActionSheet(context, title, chatId,
+                                            hostDisplayName, red, green, blue,
+                                            currentUserUid);
+                                      },
+                                    );
+                                    displayedChats.add(displayedChat);
+                                  }
+                                  if (displayedChats.isNotEmpty) {
+                                    return ReusableContentContainer(
+                                        content: displayedChats,
+                                    );
+                                  } else {
+                                    return ReusableBottomActionSheetListTile(
+                                      iconData: FontAwesomeIcons.comments,
+                                      title: 'Create Live Chat',
+                                      onTap: () {
+                                        Navigator.push(
+                                          context,
+                                            MaterialPageRoute(
+                                                builder: (context) => currentUser.displayName != null
+                                                    ? AddLiveChat()
+                                                    : CreateDisplayName()),
+                                        );
+                                      },
+                                    );
+                                  }
+                                },
+                              )
                             ],
                           );
                         } else {
@@ -351,8 +450,7 @@ class _ProfileState extends State<Profile> {
                                       content: displayedRecents,
                                     );
                                   } else {
-                                    return _isCurrentUser
-                                        ? ReusableBottomActionSheetListTile(
+                                    return ReusableBottomActionSheetListTile(
                                             iconData: FontAwesomeIcons.upload,
                                             title: 'Add Recent',
                                             onTap: () {
@@ -364,16 +462,14 @@ class _ProfileState extends State<Profile> {
                                                         AddRecent()),
                                               );
                                             },
-                                          )
-                                        : Text('No Recent Uploads',
-                                            style: kDefaultTextStyle);
+                                          );
                                   }
                                 },
                               ),
                             ],
                           );
                         }
-                      } else {
+                      }  else {
                         if (index == 0) {
                           //User Links
                           return ExpansionTile(
@@ -440,6 +536,86 @@ class _ProfileState extends State<Profile> {
                             ],
                           );
                         } else if (index == 1) {
+                          //User Created Live Chats
+                          return ExpansionTile(
+                            title: ReusableSectionLabel(title: 'Live Chats'),
+                            children: <Widget>[
+                              StreamBuilder(
+                                stream: liveChatsRef
+                                    .document(userUid)
+                                    .collection('chats')
+                                    .orderBy('creationDate', descending: true)
+                                    .snapshots(),
+                                builder: (context, snapshot) {
+                                  if (!snapshot.hasData) {
+                                    return circularProgress();
+                                  }
+                                  final chats = snapshot.data.documents;
+                                  List<LiveChat> displayedChats = [];
+                                  for (var chat in chats) {
+                                    final title = chat.data['title'];
+                                    final creationDate = chat.data['creationDate'];
+                                    final chatId = chat.data['chatId'];
+                                    final duration = chat.data['duration'];
+                                    final hostDisplayName = chat.data['hostDisplayName'] ?? '';
+                                    final lastMessage = chat.data['lastMessage'];
+                                    final lastMessageDisplayName = chat.data['lastMessageDisplayName'];
+                                    final lastRed = chat.data['lastRed'];
+                                    final lastGreen = chat.data['lastGreen'];
+                                    final lastBlue = chat.data['lastBlue'];
+
+                                    final displayedChat = LiveChat(
+                                      title: title,
+                                      creationDate: creationDate,
+                                      duration: duration,
+                                      chatId: chatId,
+                                      chatHostDisplayName: hostDisplayName,
+                                      chatHostUid: userUid,
+                                      hostRed: red,
+                                      hostGreen: green,
+                                      hostBlue: blue,
+                                      lastMessage: lastMessage,
+                                      lastMessageDisplayName: lastMessageDisplayName,
+                                      lastRed: lastRed,
+                                      lastGreen: lastGreen,
+                                      lastBlue: lastBlue,
+                                      onTap: () {
+                                        Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                                builder: (context) => currentUser.displayName != null
+                                                    ? LiveChatScreen(
+                                                  title: title ?? '',
+                                                  chatId: chatId,
+                                                  chatHostDisplayName: hostDisplayName,
+                                                  chatHostUid: userUid,
+                                                  hostRed: red,
+                                                  hostGreen: green,
+                                                  hostBlue: blue,
+                                                ) : CreateDisplayName()));
+                                      },
+                                    );
+                                    displayedChats.add(displayedChat);
+                                  }
+                                  if (displayedChats.isNotEmpty) {
+                                    return ReusableContentContainer(
+                                      content: displayedChats,
+                                    );
+                                  } else {
+                                    return Padding(
+                                      padding: EdgeInsets.only(
+                                          top: 2.0, bottom: 8.0),
+                                      child: Text(
+                                        'No Live Chats',
+                                        style: kDefaultTextStyle,
+                                      ),
+                                    );
+                                  }
+                                },
+                              )
+                            ],
+                          );
+                        } else if (index == 2) {
                           //User Recents
                           return ExpansionTile(
                             title: ReusableSectionLabel(title: 'Recents'),
@@ -458,13 +634,13 @@ class _ProfileState extends State<Profile> {
                                   List<RecentUpload> displayedRecents = [];
                                   for (var recent in recents) {
                                     final imageUrl =
-                                        recent.data['thumbnailImageUrl'];
+                                    recent.data['thumbnailImageUrl'];
                                     final title = recent.data['title'];
                                     final url = recent.data['url'];
                                     final creationDate =
-                                        recent.data['creationDate'];
+                                    recent.data['creationDate'];
                                     final storageFilename =
-                                        recent.data['storageFilename'];
+                                    recent.data['storageFilename'];
 
                                     _determineUrl(title, '', url);
 
@@ -485,28 +661,14 @@ class _ProfileState extends State<Profile> {
                                       content: displayedRecents,
                                     );
                                   } else {
-                                    return _isCurrentUser
-                                        ? ReusableBottomActionSheetListTile(
-                                            iconData: FontAwesomeIcons.upload,
-                                            title: 'Add Recent',
-                                            onTap: () {
-                                              Navigator.push(
-                                                context,
-                                                MaterialPageRoute(
-                                                    builder: (BuildContext
-                                                            context) =>
-                                                        AddRecent()),
-                                              );
-                                            },
-                                          )
-                                        : Padding(
-                                            padding: EdgeInsets.only(
-                                                top: 2.0, bottom: 8.0),
-                                            child: Text(
-                                              'No Recent Uploads',
-                                              style: kDefaultTextStyle,
-                                            ),
-                                          );
+                                    return Padding(
+                                      padding: EdgeInsets.only(
+                                          top: 2.0, bottom: 8.0),
+                                      child: Text(
+                                        'No Recent Uploads',
+                                        style: kDefaultTextStyle,
+                                      ),
+                                    );
                                   }
                                 },
                               ),
@@ -552,7 +714,7 @@ class _ProfileState extends State<Profile> {
   }
 
   _fullScreenProfileImage() {
-    print('full screen');
+    Navigator.push(context, SizeRoute(page: ProfileImageFullScreen(profileImageUrl)));
   }
 
   _updateFirestoreHasAccountLinked() {
@@ -655,29 +817,30 @@ class _ProfileState extends State<Profile> {
       String iconString, String url) {
     String platform;
     for (var platformString
-    in _determineUrl(accountUsername, iconString, url).keys) {
+        in _determineUrl(accountUsername, iconString, url).keys) {
       platform = platformString;
     }
     List<ReusableBottomActionSheetListTile> sheets = [];
     _isCurrentUser
         ? sheets.add(ReusableBottomActionSheetListTile(
-      title: 'Unlink $accountUsername',
-      iconData: FontAwesomeIcons.unlink,
-      color: kColorRed,
-      onTap: () {
-        kShowAlert(
-          context: context,
-          title: "Unlink Account?",
-          desc: "Are you sure you want to unlink $accountUsername?",
-          buttonText: "Unlink",
-          onPressed: () {
-            Navigator.pop(context);
-            _handleRemoveData(accountUsername, 'socialMedias', 'socials');
-            Navigator.pop(context);
-          },
-        );
-      },
-    )) : SizedBox();
+            title: 'Unlink $accountUsername',
+            iconData: FontAwesomeIcons.unlink,
+            color: kColorRed,
+            onTap: () {
+              kShowAlert(
+                context: context,
+                title: "Unlink Account?",
+                desc: "Are you sure you want to unlink $accountUsername?",
+                buttonText: "Unlink",
+                onPressed: () {
+                  Navigator.pop(context);
+                  _handleRemoveData(url, 'socialMedias', 'socials');
+                  Navigator.pop(context);
+                },
+              );
+            },
+          ))
+        : SizedBox();
     sheets.add(
       ReusableBottomActionSheetListTile(
         title: 'Open in $platform',
@@ -713,6 +876,72 @@ class _ProfileState extends State<Profile> {
     kActionSheet(context, sheets);
   }
 
+  _liveChatsActionSheet(BuildContext context, String title, String chatId, String hostDisplayName,
+      int hostRed, int hostGreen, int hostBlue, String chatHostUid) {
+    List<ReusableBottomActionSheetListTile> sheets = [];
+    _isCurrentUser
+        ? sheets.add(ReusableBottomActionSheetListTile(
+      title: 'Delete $title',
+      iconData: FontAwesomeIcons.minusCircle,
+      color: kColorRed,
+      onTap: () {
+        kShowAlert(
+          context: context,
+          title: "Delete Live Chat?",
+          desc: "Are you sure you want to delete $title?",
+          buttonText: "Delete",
+          onPressed: () {
+            Navigator.pop(context);
+            _handleRemoveData(chatId, 'liveChats', 'chats');
+            _removeLiveChatMessages(chatId);
+            liveChatLocationsRef.document(chatId).delete();
+            Navigator.pop(context);
+          },
+        );
+      },
+    )) : SizedBox();
+    sheets.add(
+      ReusableBottomActionSheetListTile(
+        title: 'Enter Live Chat',
+        iconData: FontAwesomeIcons.externalLinkAlt,
+        onTap: () async {
+          Navigator.pop(context);
+          Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (context) => currentUser.displayName != null
+                      ? LiveChatScreen(
+                    title: title ?? '',
+                    chatId: chatId,
+                    chatHostDisplayName: hostDisplayName,
+                    chatHostUid: chatHostUid,
+                    hostRed: hostRed,
+                    hostGreen: hostGreen,
+                    hostBlue: hostBlue,
+                  ) : CreateDisplayName()));
+        },
+      ),
+    );
+    sheets.add(
+      ReusableBottomActionSheetListTile(
+        title: 'Cancel',
+        iconData: FontAwesomeIcons.times,
+        onTap: () => Navigator.pop(context),
+      ),
+    );
+    kActionSheet(context, sheets);
+  }
+  
+  _removeLiveChatMessages(String chatId) {
+    final ref = liveChatMessagesRef.document(chatId).collection('messages');
+    ref.getDocuments().then((snapshot) {
+      snapshot.documents.forEach((doc) {
+        final messageId = doc.data['messageId'];
+        ref.document(messageId).delete();
+      });
+    });
+  }
+
   _recentsActionSheet(
       BuildContext context, String title, String url, String storageFilename) {
     String platform;
@@ -722,24 +951,25 @@ class _ProfileState extends State<Profile> {
     List<ReusableBottomActionSheetListTile> sheets = [];
     _isCurrentUser
         ? sheets.add(ReusableBottomActionSheetListTile(
-      title: 'Remove $title',
-      iconData: FontAwesomeIcons.minusCircle,
-      color: kColorRed,
-      onTap: () {
-        kShowAlert(
-          context: context,
-          title: "Remove Recent?",
-          desc: "Are you sure you want to remove $title?",
-          buttonText: "Delete",
-          onPressed: () {
-            Navigator.pop(context);
-            _handleRemoveData(title, 'recentUploads', 'recents');
-            _handleRemoveRecentThumbnailFromStorage(storageFilename);
-            Navigator.pop(context);
-          },
-        );
-      },
-    )) : SizedBox();
+            title: 'Remove $title',
+            iconData: FontAwesomeIcons.minusCircle,
+            color: kColorRed,
+            onTap: () {
+              kShowAlert(
+                context: context,
+                title: "Remove Recent?",
+                desc: "Are you sure you want to remove $title?",
+                buttonText: "Delete",
+                onPressed: () {
+                  Navigator.pop(context);
+                  _handleRemoveData(storageFilename, 'recentUploads', 'recents');
+                  _handleRemoveRecentThumbnailFromStorage(storageFilename);
+                  Navigator.pop(context);
+                },
+              );
+            },
+          ))
+        : SizedBox();
     sheets.add(
       ReusableBottomActionSheetListTile(
         title: 'Open in $platform',
@@ -860,15 +1090,22 @@ class _ProfileState extends State<Profile> {
 
   _reportUser(BuildContext context, String reason) {
     bool canReport = userUid != null;
-    canReport ? reportedUsersRef.document(userUid).setData({
-      'uid': userUid,
-      'username': username,
-      'displayName': displayName,
-      'reason': reason,
-      'reportedByUid': currentUser.uid,
-    }).whenComplete(() {
-      kShowFlushBar(context: context, text: 'Successfully Reported', color: kColorGreen, icon: FontAwesomeIcons.exclamation);
-    }) : kErrorFlushbar(context: context, errorText: 'Unable to Report, please try again');
+    canReport
+        ? reportedUsersRef.document(userUid).setData({
+            'uid': userUid,
+            'username': username,
+            'displayName': displayName,
+            'reason': reason,
+            'reportedByUid': currentUser.uid,
+          }).whenComplete(() {
+            kShowFlushBar(
+                context: context,
+                text: 'Successfully Reported',
+                color: kColorGreen,
+                icon: FontAwesomeIcons.exclamation);
+          })
+        : kErrorFlushbar(
+            context: context, errorText: 'Unable to Report, please try again');
   }
 
   _reportBlockSettings() {
@@ -927,7 +1164,7 @@ class _ProfileState extends State<Profile> {
           Navigator.pop(context);
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (BuildContext context) => MediasList()),
+            MaterialPageRoute(builder: (BuildContext context) => AddAccount()),
           );
         },
       ),
@@ -1000,40 +1237,56 @@ class _ProfileState extends State<Profile> {
 
   _determinePage() async {
     if (currentUserUid == user.uid) {
-      setState(() {
-        _isCurrentUser = true;
-      });
+      if (this.mounted) {
+        setState(() {
+          _isCurrentUser = true;
+        });
+      }
       _getCurrentUserData();
     } else if (user.username != null) {
-      setState(() {
-        _isCurrentUser = false;
-        userUid = user.uid;
-        username = user.username;
-        displayName = user.displayName;
-        profileImageUrl = user.profileImageUrl;
-        weeklyVisitsCount = user.weeklyVisitsCount + 1;
-        totalVisitsCount = user.totalVisitsCount + 1;
-
-        displayedWeeklyCount = NumberFormat.compact().format(weeklyVisitsCount);
-        displayedTotalCount = NumberFormat.compact().format(totalVisitsCount);
-      });
-      usersRef.document(userUid).updateData({
-        'weeklyVisitsCount': user.weeklyVisitsCount + 1,
-        'totalVisitsCount': user.totalVisitsCount + 1,
-      });
+      _getOtherUserData();
     } else {
-      getUserPageInfo();
+      _getUserPageInfo();
     }
   }
 
-  getUserPageInfo() async {
+  _getUserPageInfo() async {
     await usersRef.document(widget.user.uid).get().then((doc) {
       User user = User.fromDocument(doc);
+      if (this.mounted) {
+        setState(() {
+          _isCurrentUser = false;
+          userUid = user.uid;
+          username = user.username;
+          displayName = user.displayName;
+          red = user.red;
+          green = user.green;
+          blue = user.blue;
+          profileImageUrl = user.profileImageUrl;
+          weeklyVisitsCount = user.weeklyVisitsCount + 1;
+          totalVisitsCount = user.totalVisitsCount + 1;
+
+          displayedWeeklyCount = NumberFormat.compact().format(weeklyVisitsCount);
+          displayedTotalCount = NumberFormat.compact().format(totalVisitsCount);
+        });
+      }
+      usersRef.document(userUid).updateData({
+        'weeklyVisitsCount': user.weeklyVisitsCount + 1,
+        'totalVisitsCount': user.totalVisitsCount + 1,
+      });
+    });
+  }
+
+  _getOtherUserData() {
+    if (this.mounted) {
       setState(() {
         _isCurrentUser = false;
         userUid = user.uid;
         username = user.username;
         displayName = user.displayName;
+        red = user.red;
+        green = user.green;
+        blue = user.blue;
         profileImageUrl = user.profileImageUrl;
         weeklyVisitsCount = user.weeklyVisitsCount + 1;
         totalVisitsCount = user.totalVisitsCount + 1;
@@ -1041,10 +1294,10 @@ class _ProfileState extends State<Profile> {
         displayedWeeklyCount = NumberFormat.compact().format(weeklyVisitsCount);
         displayedTotalCount = NumberFormat.compact().format(totalVisitsCount);
       });
-      usersRef.document(userUid).updateData({
-        'weeklyVisitsCount': user.weeklyVisitsCount + 1,
-        'totalVisitsCount': user.totalVisitsCount + 1,
-      });
+    }
+    usersRef.document(userUid).updateData({
+      'weeklyVisitsCount': user.weeklyVisitsCount + 1,
+      'totalVisitsCount': user.totalVisitsCount + 1,
     });
   }
 
@@ -1052,11 +1305,16 @@ class _ProfileState extends State<Profile> {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String url = prefs.getString('profileImageUrl');
     String name = prefs.getString('username');
-    setState(() {
-      profileImageUrl = url;
-      username = name;
-      displayName = currentUser.displayName;
-    });
+    if (this.mounted) {
+      setState(() {
+        profileImageUrl = url;
+        username = name;
+        displayName = currentUser.displayName;
+        red = currentUser.red;
+        green = currentUser.green;
+        blue = currentUser.blue;
+      });
+    }
   }
 
   _savePhotoSharedPref(String downloadUrl) async {
@@ -1228,14 +1486,25 @@ class FlexibleProfileAppBar extends StatelessWidget {
   final String weeklyVisitsCount;
   final String totalVisitsCount;
   final String locationLabel;
+  final String displayName;
+  final int red;
+  final int green;
+  final int blue;
+  final bool isCurrentUser;
 
-  const FlexibleProfileAppBar(
-      {@required this.userPhotoUrl,
-      this.onTap,
-      this.topProfileContainerHeight,
-      this.weeklyVisitsCount,
-      this.totalVisitsCount,
-      this.locationLabel});
+  const FlexibleProfileAppBar({
+    @required this.userPhotoUrl,
+    this.onTap,
+    this.topProfileContainerHeight,
+    this.weeklyVisitsCount,
+    this.totalVisitsCount,
+    this.locationLabel,
+    this.displayName,
+    this.red,
+    this.green,
+    this.blue,
+    this.isCurrentUser,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -1262,6 +1531,16 @@ class FlexibleProfileAppBar extends StatelessWidget {
                       imageUrl: userPhotoUrl,
                       cardSize: topProfileContainerHeight,
                       onTap: onTap,
+                    ),
+                    GestureDetector(
+                      onTap: () => isCurrentUser ? goToCreateDisplayName(context) : print('do nothing'),
+                      child: Text(
+                        displayName ?? '',
+                        style: kDefaultTextStyle.copyWith(
+                            color: Color.fromRGBO(red ?? 95, green ?? 71, blue ?? 188, 1.0,),
+                          fontSize: 18.0
+                        ),
+                      ),
                     ),
                     Text('Visits this week: $weeklyVisitsCount',
                         style: kAppBarTextStyle.copyWith(
@@ -1296,5 +1575,9 @@ class FlexibleProfileAppBar extends StatelessWidget {
         color: kColorOffWhite,
       ),
     );
+  }
+
+  goToCreateDisplayName(BuildContext context) {
+    Navigator.push(context, MaterialPageRoute(builder: (context) => CreateDisplayName()));
   }
 }

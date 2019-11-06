@@ -44,7 +44,7 @@ class Knock extends StatelessWidget {
             username,
             overflow: TextOverflow.fade,
             softWrap: false,
-            style: kDefaultTextStyle.copyWith(fontWeight: FontWeight.w500),
+            style: kDefaultTextStyle,
           ),
           leading: ClipRRect(
             borderRadius: BorderRadius.circular(10.0),

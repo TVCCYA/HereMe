@@ -44,48 +44,31 @@ class LiveChatResult extends StatelessWidget {
         ListTile(
           dense: true,
           contentPadding:
-              EdgeInsets.only(left: 16.0, right: 16.0, top: 8.0, bottom: 8.0),
+              EdgeInsets.only(left: 12.0, right: 16.0, top: 4.0, bottom: 4.0),
           title: Text(
             title,
             overflow: TextOverflow.fade,
             softWrap: false,
-            style: kDefaultTextStyle.copyWith(
-                fontWeight: FontWeight.w400, fontSize: 18.0),
+            style: kDefaultTextStyle.copyWith(fontSize: 18.0),
           ),
           subtitle: Row(
             children: <Widget>[
               distanceFromChat == 0 ? Icon(
                 FontAwesomeIcons.mapMarkerAlt,
-                size: 14.0,
+                size: 12.0,
                 color: kColorPurple,
               ) : Icon(
                 FontAwesomeIcons.searchLocation,
-                size: 14.0,
+                size: 12.0,
                 color: kColorBlue,
               ),
-              SizedBox(width: 4.0),
+              SizedBox(width: 2.0),
               Text(
                 distanceFromChat == 0 ? 'Here' : '${distanceFromChat.toStringAsFixed(5)} miles away',
-                style: kDefaultTextStyle,
+                style: kDefaultTextStyle.copyWith(fontSize: 14.0),
               ),
             ],
           ),
-          onTap: () {
-            Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (context) => currentUser.displayName != null
-                        ? LiveChatScreen(
-                            title: title ?? '',
-                            chatId: chatId,
-                            chatHostDisplayName: chatHostDisplayName,
-                            chatHostUid: chatHostUid,
-                            hostRed: hostRed,
-                            hostGreen: hostGreen,
-                            hostBlue: hostBlue,
-                          )
-                        : CreateDisplayName()));
-          },
           trailing: Text(
             duration == 1 ? '$duration hour left' : '$duration hours left',
             overflow: TextOverflow.fade,
@@ -95,6 +78,22 @@ class LiveChatResult extends StatelessWidget {
               color: kColorRed,
             ),
           ),
+          onTap: () {
+            Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => currentUser.displayName != null
+                        ? LiveChatScreen(
+                      title: title ?? '',
+                      chatId: chatId,
+                      chatHostDisplayName: chatHostDisplayName ?? '',
+                      chatHostUid: chatHostUid ?? '',
+                      hostRed: hostRed ?? 95,
+                      hostGreen: hostGreen ?? 71,
+                      hostBlue: hostBlue ?? 188,
+                    )
+                        : CreateDisplayName()));
+          },
         ),
         // separator line
         Padding(

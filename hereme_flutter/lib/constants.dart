@@ -295,7 +295,7 @@ Container circularProgress() {
 
 Container linearProgress() {
   return Container(
-    padding: EdgeInsets.only(bottom: 10.0),
+    padding: EdgeInsets.all(10.0),
     child: LinearProgressIndicator(
       valueColor: AlwaysStoppedAnimation(kColorPurple),
       backgroundColor: kColorLightGray,
@@ -306,15 +306,15 @@ Container linearProgress() {
 void kConfirmBlock(BuildContext context, String displayName, String uid) {
   Navigator.pop(context);
   kShowAlert(
-      context: context,
-      title: 'Block $displayName?',
-      desc:
-          'They will not be able to see your content on HereMe. They will not know you blocked them.',
-      buttonText: 'Block',
-      onPressed: () {
-        kBlockUser(context, uid);
-        Navigator.pop(context);
-      },
+    context: context,
+    title: 'Block $displayName?',
+    desc:
+        'They will not be able to see your content on HereMe. They will not know you blocked them.',
+    buttonText: 'Block',
+    onPressed: () {
+      kBlockUser(context, uid);
+      Navigator.pop(context);
+    },
   );
 }
 
@@ -322,10 +322,14 @@ void kBlockUser(BuildContext context, String uid) {
   usersRef.document(currentUser.uid).updateData({
     'blockedUsers.$uid': 1,
   }).whenComplete(() {
-    kShowFlushBar(
-        context: context,
-        text: 'Successfully Blocked',
-        color: kColorGreen,
-        icon: FontAwesomeIcons.exclamation);
+    usersRef.document(uid).updateData({
+      'blockedUsers.$uid': 0,
+    }).whenComplete(() {
+      kShowFlushBar(
+          context: context,
+          text: 'Successfully Blocked',
+          color: kColorGreen,
+          icon: FontAwesomeIcons.exclamation);
+    });
   });
 }

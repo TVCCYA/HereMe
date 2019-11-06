@@ -122,6 +122,7 @@ class _AllUsersCloseByState extends State<AllUsersCloseBy> {
     return Scaffold(
       backgroundColor: kColorOffWhite,
       appBar: AppBar(
+        brightness: Brightness.light,
         backgroundColor: kColorOffWhite,
         elevation: 2.0,
         title: Text('Close By', style: kAppBarTextStyle),
