@@ -1,8 +1,10 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:hereme_flutter/GridFind/home.dart';
 import 'package:hereme_flutter/constants.dart';
 import 'package:hereme_flutter/models/user.dart';
+import 'package:hereme_flutter/utils/reusable_bottom_sheet.dart';
 import 'package:hereme_flutter/widgets/user_result.dart';
 
 class BlockedProfiles extends StatefulWidget {
@@ -11,12 +13,18 @@ class BlockedProfiles extends StatefulWidget {
 }
 
 class _BlockedProfilesState extends State<BlockedProfiles> {
-  List<UserResult> blockedUsers = [];
   String name;
-  List<User> users = [];
+  List<User> blockedUsers = [];
 
-  buildBlockedList() {
+  @override
+  void initState() {
+    super.initState();
+    fetchBlockedUsers();
+  }
+
+  fetchBlockedUsers() {
     if (currentUser.blockedUserUids != null) {
+      List<User> listUser = [];
       currentUser.blockedUserUids.forEach((key, val) {
         if (val == 1) {
           usersRef.document(key).snapshots().forEach((snapshot) {
@@ -27,37 +35,90 @@ class _BlockedProfilesState extends State<BlockedProfiles> {
               username: username,
               profileImageUrl: profileImageUrl,
             );
-            List<UserResult> listResult = [];
-            UserResult result = UserResult(user: displayUser);
-            listResult.add(result);
-            print(username);
-            print(profileImageUrl);
+            listUser.add(displayUser);
             setState(() {
-              name = username;
+              listUser.forEach((i) {
+                if (!blockedUsers.contains(i)) {
+                  this.blockedUsers.add(i);
+                }
+              });
             });
           });
         }
       });
+    }
+  }
+
+  buildBlockedList() {
+    List<GridTile> gridTiles = [];
+    blockedUsers.forEach((user) {
+      gridTiles.add(GridTile(
+          child: BlockedUserResult(
+        user: user,
+        onTap: () => _blockedActionSheet(user.uid),
+      )));
+    });
+    if (blockedUsers.isNotEmpty) {
       return Column(
+        crossAxisAlignment: CrossAxisAlignment.end,
         children: <Widget>[
-          Text(
-            name,
+          GridView.count(
+            physics: NeverScrollableScrollPhysics(),
+            padding: EdgeInsets.only(left: 1.0, right: 1.0),
+            crossAxisCount: 4,
+            childAspectRatio: 1.0,
+            mainAxisSpacing: 1.0,
+            crossAxisSpacing: 1.0,
+            shrinkWrap: true,
+            children: gridTiles,
           ),
         ],
       );
+    } else {
+      return Container(
+        height: 150.0,
+        child: Center(
+          child: Text(
+            'No Blocked Profiles',
+            style: kAppBarTextStyle,
+          ),
+        ),
+      );
     }
+  }
 
-//    print(blockedUsers.length);
-//    return FutureBuilder(
-//      future: usersRef.document(currentUser.uid).get(),
-//      builder: (context, snapshot) {
-//        if (snapshot.data['blockedUsers'] == null) {
-//          return SizedBox();
-//        }
-//        final blockedUsers = snapshot.data['blockedUsers'];
-//        return Column();
-//      },
-//    );
+  _blockedActionSheet(String uid) {
+    List<ReusableBottomActionSheetListTile> sheets = [];
+    sheets.add(
+      ReusableBottomActionSheetListTile(
+        title: 'Unblock',
+        iconData: FontAwesomeIcons.ban,
+        color: kColorBlue,
+        onTap: () async {
+          unblockUser(uid);
+          Navigator.pop(context);
+        },
+      ),
+    );
+    sheets.add(
+      ReusableBottomActionSheetListTile(
+        title: 'Cancel',
+        iconData: FontAwesomeIcons.times,
+        onTap: () => Navigator.pop(context),
+      ),
+    );
+    kActionSheet(context, sheets);
+  }
+
+  unblockUser(String uid) {
+    usersRef.document(currentUser.uid).updateData(
+        {'blockedUsers.$uid': FieldValue.delete()}).whenComplete(() {
+      kShowFlushBar(
+          text: 'Successfully Unblocked',
+          icon: FontAwesomeIcons.exclamation,
+          context: context,
+          color: kColorGreen);
+    });
   }
 
   @override
@@ -82,7 +143,9 @@ class _BlockedProfilesState extends State<BlockedProfiles> {
           highlightColor: Colors.transparent,
         ),
       ),
-      body: buildBlockedList(),
+      body: SafeArea(
+        child: buildBlockedList(),
+      ),
     );
   }
 }

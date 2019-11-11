@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:hereme_flutter/settings/choose_account.dart';
 import 'package:hereme_flutter/utils/settings_tile.dart';
 import 'package:hereme_flutter/registration/initial_page.dart';
 import 'package:hereme_flutter/settings//help_support.dart';
@@ -38,7 +39,7 @@ class ListPage extends StatelessWidget {
           onTap: () => Navigator.push(
               context,
               MaterialPageRoute(
-                  builder: (BuildContext context) => AddAccount())),
+                  builder: (BuildContext context) => ChooseAccount())),
         ),
         SettingsTile(
           label: 'Saved Them',

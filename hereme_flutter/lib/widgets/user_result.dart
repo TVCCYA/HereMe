@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:hereme_flutter/GridFind/home.dart';
 import 'package:hereme_flutter/models/user.dart';
 import 'package:hereme_flutter/user_profile/profile.dart';
 import 'package:hereme_flutter/utils/custom_image.dart';
@@ -17,16 +16,6 @@ class UserResult extends StatelessWidget {
         builder: (context) => Profile(user: user, locationLabel: locationLabel),
       ),
     );
-//    incrementViewCount();
-  }
-
-  incrementViewCount() {
-    if (currentUser.uid != user.uid) {
-      usersRef.document(user.uid).updateData({
-        'weeklyVisitsCount': user.weeklyVisitsCount + 1,
-        'totalVisitsCount': user.totalVisitsCount + 1,
-      });
-    }
   }
 
   @override
@@ -37,3 +26,18 @@ class UserResult extends StatelessWidget {
     );
   }
 }
+
+class BlockedUserResult extends StatelessWidget {
+  final User user;
+  final Function onTap;
+  BlockedUserResult({this.user, this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: cachedNetworkImage(user.profileImageUrl),
+    );
+  }
+}
+

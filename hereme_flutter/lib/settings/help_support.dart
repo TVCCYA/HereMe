@@ -8,11 +8,12 @@ import 'package:hereme_flutter/constants.dart';
 import 'package:hereme_flutter/registration/initial_page.dart';
 import 'package:hereme_flutter/settings/blocked_profiles.dart';
 import 'package:hereme_flutter/utils/settings_tile.dart';
+import 'package:rflutter_alert/rflutter_alert.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class SupportPage extends StatelessWidget {
-  final TextEditingController _textFieldController = TextEditingController();
+  final TextEditingController _nameChangeController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
@@ -39,7 +40,8 @@ class SupportPage extends StatelessWidget {
         SettingsTile(
           label: 'Blocked Profiles',
           color: kColorBlue.withOpacity(1.0),
-          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => BlockedProfiles())),
+          onTap: () => Navigator.push(context,
+              MaterialPageRoute(builder: (context) => BlockedProfiles())),
         ),
         SettingsTile(
           label: 'Privacy Policy',
@@ -54,12 +56,12 @@ class SupportPage extends StatelessWidget {
         SettingsTile(
           label: 'Change First Name',
           color: kColorBlue.withOpacity(0.7),
-          onTap: () => _jankAlert(context),
+          onTap: () => _nameChangeAlert(context),
         ),
         SettingsTile(
           label: 'Reset Password',
           color: kColorBlue.withOpacity(0.6),
-          onTap: () => print('pword'),
+          onTap: () => showResetPasswordAlert(context),
         ),
         InkWell(
           onTap: () => _deleteAlert(context),
@@ -86,34 +88,117 @@ class SupportPage extends StatelessWidget {
     );
   }
 
-  _jankAlert(BuildContext context) async {
-    return showDialog(
-        context: context,
-        builder: (context) {
-          return AlertDialog(
-            title: Text('TextField in Dialog'),
-            content: TextField(
-              controller: _textFieldController,
-              decoration: InputDecoration(hintText: "TextField in Dialog"),
-              onSubmitted: (_) {
-                if (_textFieldController.text.length > 1) {
-                  _handleNameChange(context);
-                } else {
-                  print(
-                      "alert the user their name must be a minimum of 3 characters");
-                }
-              },
+  _nameChangeAlert(BuildContext context) async {
+    Alert(
+      context: context,
+      title: 'Change Name',
+      style: AlertStyle(
+        backgroundColor: kColorOffWhite,
+        overlayColor: Colors.black.withOpacity(0.75),
+        titleStyle: kDefaultTextStyle.copyWith(
+          color: kColorBlack71,
+          fontSize: 24.0,
+        ),
+        descStyle: kDefaultTextStyle.copyWith(
+          color: kColorBlack71,
+          fontSize: 16.0,
+        ),
+      ),
+      content: Column(
+        children: <Widget>[
+          TextField(
+            controller: _nameChangeController,
+            style: kDefaultTextStyle,
+            onSubmitted: (v) => _submitUpdateNameChange(context),
+            cursorColor: kColorPurple,
+            decoration: kRegistrationInputDecoration
+                .copyWith(
+              labelText: 'First Name',
+              labelStyle:
+              kDefaultTextStyle.copyWith(
+                color: kColorLightGray,
+              ),
+              icon: Icon(
+                FontAwesomeIcons.signature,
+                color: kColorBlack71,
+              ),
             ),
-            actions: <Widget>[
-              new FlatButton(
-                child: new Text('CANCEL'),
-                onPressed: () {
-                  Navigator.pop(context);
-                },
-              )
-            ],
-          );
-        });
+          ),
+        ],
+      ),
+      buttons: [
+        DialogButton(
+          onPressed: () => _submitUpdateNameChange(context),
+          child: Text(
+            'Update',
+            style: kDefaultTextStyle.copyWith(color: Colors.white),
+          ),
+          color: kColorBlue,
+        )
+      ]).show();
+  }
+
+  _submitUpdateNameChange(context) {
+    _nameChangeController.text.length > 0
+        ? _handleNameChange(context)
+        : kErrorFlushbar(context: context, errorText: 'Name cannot be empty');
+  }
+
+  _handleNameChange(BuildContext context) async {
+    final userReference = usersRef.document(currentUser.uid);
+    Map<String, String> nameData = <String, String>{
+      'username': _nameChangeController.text,
+    };
+    userReference.updateData(nameData).whenComplete(() {
+      print('Name Changed');
+      _updatePreferences(context);
+    }).catchError((e) => print(e));
+  }
+
+  _updatePreferences(BuildContext context) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs
+        .setString('username', _nameChangeController.text)
+        .whenComplete(() {
+      Navigator.pop(context);
+    });
+  }
+
+  showResetPasswordAlert(BuildContext context) async {
+    final auth = FirebaseAuth.instance;
+    FirebaseUser user = await auth.currentUser();
+    String email = user.email;
+    kShowAlertMultiButtons(
+        context: context,
+        title: 'Send Email?',
+        desc: 'We will email you a link to your HereMe email account ($email) for you to change your password',
+        buttonText1: 'Send It',
+        color1: kColorGreen,
+        buttonText2: 'Cancel',
+        color2: kColorLightGray,
+        onPressed1: () => _forgotPassword(context, email),
+        onPressed2: () => Navigator.pop(context));
+  }
+
+  
+  _forgotPassword(BuildContext context, String email) async {
+    final auth = FirebaseAuth.instance;
+    try {
+      await auth.sendPasswordResetEmail(email: email);
+      Navigator.pop(context);
+      kShowFlushBar(
+          text: 'Check the link sent to $email',
+          icon: FontAwesomeIcons.check,
+          color: kColorGreen,
+          context: context);
+    } catch (e) {
+      Navigator.pop(context);
+      kShowFlushBar(
+          text: 'Unable to send link to $email, please try again later',
+          icon: FontAwesomeIcons.times,
+          color: kColorRed,
+          context: context);
+    }
   }
 
   _openPrivacyPolicy() async {
@@ -138,54 +223,18 @@ class SupportPage extends StatelessWidget {
     }
   }
 
-  _handleNameChange(BuildContext context) async {
-    FirebaseUser user = await FirebaseAuth.instance.currentUser();
-
-    final userReference = usersRef.document(user.uid);
-
-    Map<String, String> nameData = <String, String>{
-      'username': _textFieldController.text,
-    };
-
-    userReference.updateData(nameData).whenComplete(() {
-      print("Name Changed");
-//      _updatePreferences(context);
-    }).catchError((e) => print(e));
-  }
-
-  _updatePreferences(BuildContext context) async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.setString('username', _textFieldController.text).whenComplete(() {
-      Navigator.pop(context);
-    });
-  }
-
   _deleteAlert(BuildContext context) async {
-    return showDialog(
+    kShowAlertMultiButtons(
         context: context,
-        builder: (context) {
-          return AlertDialog(
-            title: Text('TextField in Dialog'),
-            content: FlatButton(
-              child: new Text('OKAYYY'),
-              onPressed: () {
-                _handleAccountDelete();
-                Navigator.pushAndRemoveUntil(context,
-                    MaterialPageRoute(builder: (context) => InitialPage()),
-                        (Route<dynamic> route) => false);
-              },
-            ),
-            actions: <Widget>[
-              new FlatButton(
-                child: new Text('CANCEL'),
-                onPressed: () {
-                  Navigator.pop(context);
-                },
-              )
-            ],
-          );
-        },
-    );
+        title: 'Delete Account?',
+        desc:
+            'Are you sure you want to delete everything you have done on HereMe?',
+        color1: kColorRed,
+        color2: kColorLightGray,
+        buttonText1: 'Delete',
+        buttonText2: 'Cancel',
+        onPressed1: () => _handleAccountDelete(),
+        onPressed2: () => Navigator.pop(context));
   }
 
   _handleAccountDelete() async {
@@ -197,25 +246,19 @@ class SupportPage extends StatelessWidget {
     final userAccounts = socialMediasRef.document(uid);
     final currentUsersKnocks = knocksRef.document(uid);
     final recentUploads = recentUploadsRef.document(uid);
-    final usersTheyKnocked = knocksRef.where('uid', isEqualTo: uid).snapshots();
-    // get live chat id to query then delete
-    final liveChatsCreated = liveChatLocationsRef.where('uid', isEqualTo: currentUser.uid).snapshots();
 
-    _storage.ref().child('profile_images/$uid').delete().whenComplete((){
+    _storage.ref().child('profile_images/$uid').delete().whenComplete(() {
       _storage.ref().child('recent_upload_thumbnail/$uid').delete();
       userReference.delete();
       userLocation.delete();
       userAccounts.delete();
+      kDeleteSentKnocks(uid);
       recentUploads.delete();
       currentUsersKnocks.delete();
-
-      // still need to delete:
-      // users messages in live chats
-      // users created live chats
-      // maybe not tho bc these should eventually just delete automatically
+      // live chats/messages should eventually just delete automatically
 
       user.delete().whenComplete(() {
-
+        print('all deleted');
       });
     });
   }

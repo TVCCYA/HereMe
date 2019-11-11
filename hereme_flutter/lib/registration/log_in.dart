@@ -199,6 +199,7 @@ class _LogInState extends State<LogIn> {
                                               textInputAction: TextInputAction.send,
                                               autofocus: true,
                                               style: kDefaultTextStyle,
+                                              cursorColor: kColorPurple,
                                               decoration:
                                                   kRegistrationInputDecoration
                                                       .copyWith(
@@ -215,7 +216,7 @@ class _LogInState extends State<LogIn> {
                                             ),
                                             buttons: [
                                               DialogButton(
-                                                onPressed: forgotPassword,
+                                                onPressed: () => forgotPassword(),
                                                 child: Text('Send It',
                                                     style: kDefaultTextStyle.copyWith(
                                                       color: Colors.white,

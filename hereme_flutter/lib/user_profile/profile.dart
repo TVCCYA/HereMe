@@ -13,7 +13,7 @@ import 'package:hereme_flutter/models/linked_account.dart';
 import 'package:hereme_flutter/models/recent_upload.dart';
 import 'package:hereme_flutter/models/user.dart';
 import 'package:hereme_flutter/registration/create_display_name.dart';
-import 'package:hereme_flutter/settings/add_account.dart';
+import 'package:hereme_flutter/settings/choose_account.dart';
 import 'package:hereme_flutter/user_profile/profile_image_full_screen.dart';
 import 'package:hereme_flutter/utils/reusable_profile_card.dart';
 import 'package:image_picker/image_picker.dart';
@@ -220,13 +220,13 @@ class _ProfileState extends State<Profile> {
                                   final knocks = snapshot.data.documents;
                                   List<Knock> displayedKnocks = [];
                                   for (var knock in knocks) {
-//                                    final username = knock.data['username'];
-//                                    final imageUrl = knock.data['profileImageUrl'];
+                                    final knockUsername = knock.data['username'];
+                                    final knockUrl = knock.data['profileImageUrl'];
                                     final creationDate = knock.data['creationDate'];
                                     final uid = knock.data['uid'];
 //                                    print(uid);
 
-                                    getKnockInfo(uid);
+//                                    getKnockInfo(uid);
 
                                     final displayedKnock = Knock(
                                       username: knockUsername,
@@ -281,6 +281,7 @@ class _ProfileState extends State<Profile> {
                                           final iconString = key;
                                           final accountUsername = value;
                                           final url = account.data['url'];
+                                          final linkId = account.data['linkId'];
 
                                           _determineUrl(
                                               accountUsername, iconString, url);
@@ -296,6 +297,7 @@ class _ProfileState extends State<Profile> {
                                                 accountUsername,
                                                 iconString,
                                                 url,
+                                                linkId
                                               );
                                             },
                                           );
@@ -319,7 +321,7 @@ class _ProfileState extends State<Profile> {
                                           context,
                                           MaterialPageRoute(
                                               builder: (BuildContext context) =>
-                                                  AddAccount()),
+                                                  ChooseAccount()),
                                         );
                                       },
                                     );
@@ -494,6 +496,7 @@ class _ProfileState extends State<Profile> {
                                           final iconString = key;
                                           final accountUsername = value;
                                           final url = account.data['url'];
+                                          final linkId = account.data['linkId'];
 
                                           _determineUrl(
                                               accountUsername, iconString, url);
@@ -508,7 +511,9 @@ class _ProfileState extends State<Profile> {
                                                   context,
                                                   accountUsername,
                                                   iconString,
-                                                  url);
+                                                  url,
+                                                linkId,
+                                              );
                                             },
                                           );
                                           displayedAccounts
@@ -731,7 +736,7 @@ class _ProfileState extends State<Profile> {
     final newRef = ref.get();
     newRef.then((doc) {
       if (!doc.exists) {
-        _sendKnock(ref);
+        _sendKnock(ref, uid);
       } else {
         kShowFlushBar(
             text: 'Already Knocked $username',
@@ -742,7 +747,7 @@ class _ProfileState extends State<Profile> {
     });
   }
 
-  _sendKnock(DocumentReference ref) {
+  _sendKnock(DocumentReference ref, String uid) {
     Map<String, dynamic> knockData = <String, dynamic>{
       'uid': currentUserUid,
       'profileImageUrl': currentUser?.profileImageUrl ?? '',
@@ -750,6 +755,9 @@ class _ProfileState extends State<Profile> {
       'creationDate': DateTime.now().millisecondsSinceEpoch * 1000,
     };
     ref.setData(knockData).whenComplete(() {
+      knocksRef.document(currentUserUid).collection('sentKnockTo').document(uid).setData({
+        'uid': uid
+      });
       kShowFlushBar(
           text: 'Successfully sent Knock',
           context: context,
@@ -808,13 +816,20 @@ class _ProfileState extends State<Profile> {
         .get()
         .then((doc) {
       if (doc.exists) {
-        doc.reference.delete();
+        doc.reference.delete().whenComplete(() {
+          knocksRef.document(uid).collection('sentKnockTo').document(currentUserUid).get().then((doc) {
+            if (doc.exists) {
+              doc.reference.delete();
+            }
+          });
+        });
       }
     });
   }
 
   _linksActionSheet(BuildContext context, String accountUsername,
-      String iconString, String url) {
+      String iconString, String url, String linkId) {
+    print(linkId ?? 'nope');
     String platform;
     for (var platformString
         in _determineUrl(accountUsername, iconString, url).keys) {
@@ -834,7 +849,7 @@ class _ProfileState extends State<Profile> {
                 buttonText: "Unlink",
                 onPressed: () {
                   Navigator.pop(context);
-                  _handleRemoveData(url, 'socialMedias', 'socials');
+                  _handleRemoveData(linkId, 'socialMedias', 'socials');
                   Navigator.pop(context);
                 },
               );
@@ -893,7 +908,7 @@ class _ProfileState extends State<Profile> {
           onPressed: () {
             Navigator.pop(context);
             _handleRemoveData(chatId, 'liveChats', 'chats');
-            _removeLiveChatMessages(chatId);
+            kRemoveLiveChatMessages(chatId);
             liveChatLocationsRef.document(chatId).delete();
             Navigator.pop(context);
           },
@@ -930,16 +945,6 @@ class _ProfileState extends State<Profile> {
       ),
     );
     kActionSheet(context, sheets);
-  }
-  
-  _removeLiveChatMessages(String chatId) {
-    final ref = liveChatMessagesRef.document(chatId).collection('messages');
-    ref.getDocuments().then((snapshot) {
-      snapshot.documents.forEach((doc) {
-        final messageId = doc.data['messageId'];
-        ref.document(messageId).delete();
-      });
-    });
   }
 
   _recentsActionSheet(
@@ -1012,8 +1017,10 @@ class _ProfileState extends State<Profile> {
 
     ref.getDocuments().then((snapshot) {
       for (final doc in snapshot.documents) {
-        if (doc.data.containsValue(key)) {
-          ref.document(doc.documentID).delete();
+        if (doc.exists) {
+          if (doc.data.containsValue(key)) {
+            ref.document(doc.documentID).delete();
+          }
         }
       }
     });
@@ -1164,7 +1171,7 @@ class _ProfileState extends State<Profile> {
           Navigator.pop(context);
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (BuildContext context) => AddAccount()),
+            MaterialPageRoute(builder: (BuildContext context) => ChooseAccount()),
           );
         },
       ),
@@ -1407,7 +1414,6 @@ class _ProfileState extends State<Profile> {
   Map<String, String> _determineUrl(
       String accountUsername, String iconString, String url) {
     final icon = iconString;
-    //TODO: firebase pull url if key contains URL and put that value in socialMedUrl
     Map<String, String> retMap;
 
     if (icon.contains('twitter')) {

@@ -43,11 +43,6 @@ class _AddLiveChatState extends State<AddLiveChat> {
     }
   }
 
-  isLoading() {
-    // if location values are loading -> showSpinner = true
-    // else location values have loaded completely showSpinner = false
-  }
-
   @override
   void initState() {
     super.initState();

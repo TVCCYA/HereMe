@@ -9,12 +9,6 @@ import 'package:hereme_flutter/constants.dart';
 
 final _firestore = Firestore.instance;
 
-class SocialMedias {
-  final String media;
-  final String icon;
-  SocialMedias({this.media, this.icon});
-}
-
 class AddAccount extends StatefulWidget {
   @override
   _AddAccountState createState() => _AddAccountState();
@@ -228,7 +222,7 @@ class _AddAccountState extends State<AddAccount> {
                       onSelectedItemChanged: (index) {
                         setState(() {
                           selectedSocialIndex = index;
-                          mediaTitle = allMedias[index].media;
+                          mediaTitle = allMedias[index].platform;
                         });
                         _determineUrl();
                       },
@@ -285,127 +279,10 @@ class _AddAccountState extends State<AddAccount> {
       });
     });
     Navigator.pop(context);
-
-    bool notValid;
-
-//    final newRef = ref.snapshots();
-//    newRef.listen((snapshot) {
-//      snapshot.documents.forEach((doc) {
-//        print('keys + ${doc.data.keys}');
-//        if (doc.data.containsKey('${platform}Username')) {
-//          if (doc.data.containsValue(username)) {
-//            print('CANNOT LINK ACCOUNT BC DUPLICATE');
-//            setState(() {
-//              notValid = true;
-//            });
-//          }
-//        } else {
-//          setState(() {
-//            notValid = true;
-//          });
-//        }
-//      });
-//    });
-
-//    final userReference =
-//        Firestore.instance.collection("users").document("${user.uid}");
-//    final socialMediasRefWithId = Firestore.instance
-//        .collection("socialMedias")
-//        .document("${user.uid}")
-//        .collection('socials')
-//        .document(randomAutoId());
-//    String socialUsername =
-//        allMedias[selectedSocialIndex].media.toLowerCase() + 'Username';
-//    String socialURL = allMedias[selectedSocialIndex].media.toLowerCase() + 'URL';
-//    Map<String, String> socialMediaData;
-//
-////  bool isDuplicate = await _checkForDuplicateLink(socialUsername);
-//
-//
-//      Firestore.instance
-//          .collection('users')
-//          .document(user.uid)
-//          .get()
-//          .then((userInstance) {
-//        print(userInstance.data["numberOfSocialMedias"]);
-//
-//        if (userInstance.data["numberOfSocialMedias"] == null) {
-//          Map<String, int> numberOfMediaData = <String, int>{
-//            "numberOfSocialMedias": 1,
-//          };
-//          userReference
-//              .updateData(numberOfMediaData)
-//              .catchError((e) => print(e))
-//              .then((_) => print("number of social medias node created"));
-//        } else {
-//          int incrementedNum = userInstance.data["numberOfSocialMedias"] + 1;
-//          Map<String, int> numberOfMediaData = <String, int>{
-//            "numberOfSocialMedias": incrementedNum,
-//          };
-//          userReference
-//              .updateData(numberOfMediaData)
-//              .catchError((e) => print(e))
-//              .then((_) => print("number of social medias incremented"));
-//        }
-//      });
-//
-//      if(urlInput.text.isEmpty) {
-//        socialMediaData = <String, String>{
-//          "$socialUsername": usernameInput.text.trim(),
-//        };
-//      } else {
-//        socialMediaData = <String, String>{
-//          "$socialUsername": usernameInput.text.trim(),
-//          "$socialURL": urlInput.text.trim()
-//        };
-//      }
-//
-//
-//      socialMediasRefWithId.updateData(socialMediaData).whenComplete(() {
-//        print("Social Media Updated");
-//
-//        linkedAccounts.clear();
-//
-//        Navigator.pop(context);
-//        Navigator.pop(context);
-//      }).catchError((e) {
-//        print(e.toString());
-//        String error = e.toString();
-//        if (error.contains('No document to update')) {
-//          socialMediasRefWithId.setData(socialMediaData).whenComplete(() {
-//            print("social Media Set");
-//          }).catchError((e) => print(e));
-//        }
-//      });
-  }
-
-  Future<bool> _hasDuplicates(
-      String accountUsername, String platform, String uid) async {
-    print("ACC USERNAME " + accountUsername);
-    print("platformmmm " + platform);
-    var isDuplicate;
-
-    final ref = await _firestore
-        .collection('socialMedias')
-        .document(uid)
-        .collection('socials')
-        .getDocuments();
-    ref.documents.forEach((doc) {
-      print('keys + ${doc.data.keys}');
-      if (doc.data.containsKey('${platform}Username')) {
-        if (doc.data.containsValue(accountUsername)) {
-          isDuplicate = true;
-          print('CANNOT LINK ACCOUNT BC DUPLICATE');
-        }
-      } else {
-        isDuplicate = false;
-      }
-    });
-    return isDuplicate;
   }
 
   Map<String, String> _determineAccount() {
-    final account = allMedias[selectedSocialIndex].media.toLowerCase();
+    final account = allMedias[selectedSocialIndex].platform.toLowerCase();
     final username = usernameInput.text.trim();
     Map<String, String> retMap;
 
@@ -439,20 +316,20 @@ class _AddAccountState extends State<AddAccount> {
   }
 
   List<SocialMedias> allMedias = [
-    SocialMedias(media: 'Twitter', icon: 'images/SocialMedias/twitter120.png'),
+    SocialMedias(platform: 'Twitter', icon: 'images/SocialMedias/twitter120.png'),
     SocialMedias(
-        media: 'Snapchat', icon: 'images/SocialMedias/snapchat120.png'),
+        platform: 'Snapchat', icon: 'images/SocialMedias/snapchat120.png'),
     SocialMedias(
-        media: 'Instagram', icon: 'images/SocialMedias/instagram120.png'),
-    SocialMedias(media: 'YouTube', icon: 'images/SocialMedias/youtube120.png'),
+        platform: 'Instagram', icon: 'images/SocialMedias/instagram120.png'),
+    SocialMedias(platform: 'YouTube', icon: 'images/SocialMedias/youtube120.png'),
     SocialMedias(
-        media: 'SoundCloud', icon: 'images/SocialMedias/soundcloud120.png'),
-    SocialMedias(media: 'Venmo', icon: 'images/SocialMedias/venmo120.png'),
-    SocialMedias(media: 'Spotify', icon: 'images/SocialMedias/spotify120.png'),
-    SocialMedias(media: 'Twitch', icon: 'images/SocialMedias/twitch120.png'),
-    SocialMedias(media: 'Tumblr', icon: 'images/SocialMedias/tumblr120.png'),
-    SocialMedias(media: 'Reddit', icon: 'images/SocialMedias/reddit120.png'),
-    SocialMedias(media: 'Facebook', icon: 'images/SocialMedias/facebook120.png')
+        platform: 'SoundCloud', icon: 'images/SocialMedias/soundcloud120.png'),
+    SocialMedias(platform: 'Venmo', icon: 'images/SocialMedias/venmo120.png'),
+    SocialMedias(platform: 'Spotify', icon: 'images/SocialMedias/spotify120.png'),
+    SocialMedias(platform: 'Twitch', icon: 'images/SocialMedias/twitch120.png'),
+    SocialMedias(platform: 'Tumblr', icon: 'images/SocialMedias/tumblr120.png'),
+    SocialMedias(platform: 'Reddit', icon: 'images/SocialMedias/reddit120.png'),
+    SocialMedias(platform: 'Facebook', icon: 'images/SocialMedias/facebook120.png')
   ];
 
   void _determineUrl() {
@@ -542,31 +419,6 @@ class _AddAccountState extends State<AddAccount> {
         }
     }
   }
-
-  Future<bool> _checkForDuplicateLink(String socialUsername) async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    String userUid = await prefs.get("uid");
-
-    final socialMediasReference = Firestore.instance
-        .collection("socialMedias")
-        .document(userUid)
-        .collection('socials');
-
-    socialMediasReference.snapshots().listen((snapshot) {
-      for (int i = 0; i < snapshot.documents.length; i++) {
-//        print("print this cunt : ...${snapshot.documents[i].data.keys.first.toString()}....");
-//        print("with this cunt: ...$socialUsername.....");
-        if (snapshot.documents[i].data.values.first.toString() ==
-                usernameInput.text.trim() &&
-            snapshot.documents[i].data.keys.first.toString() ==
-                socialUsername) {
-          print("ERROR: double link occured");
-          return true;
-        }
-      }
-    });
-    return false;
-  }
 }
 
 String randomAutoId() {
@@ -596,4 +448,12 @@ String randomAutoId() {
   }
 
   return autoId;
+}
+
+
+class SocialMedias {
+  final String platform;
+  final String icon;
+  final Color color;
+  SocialMedias({this.platform, this.icon, this.color});
 }

@@ -114,11 +114,6 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
     } else {
       _hasAccountLinked = false;
     }
-
-    final usersTheyKnocked = knocksRef.where('uid', isEqualTo: currentUser.uid).snapshots();
-    usersTheyKnocked.forEach((snap) {
-      print(snap.documents.length);
-    });
   }
 
   fetchBlockedUsers() {

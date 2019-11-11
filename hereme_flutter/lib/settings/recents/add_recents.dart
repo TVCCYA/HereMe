@@ -24,14 +24,8 @@ class _AddRecentState extends State<AddRecent> {
   final _titleFocus = FocusNode();
   String url;
   String title;
-  bool _isButtonDisabled;
+  bool _isButtonDisabled = true;
   File mediaFile;
-
-  @override
-  void initState() {
-    super.initState();
-    _isButtonDisabled = true;
-  }
 
   void isValid() {
     if ((url.isNotEmpty && !url.contains(' ') && url.contains('https://')) && title.isNotEmpty && mediaFile != null) {

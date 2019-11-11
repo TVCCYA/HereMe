@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flushbar/flushbar.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -17,10 +18,10 @@ const kColorRed = Color.fromRGBO(188, 71, 89, 1.0);
 const kColorThistle = Color.fromRGBO(197, 188, 230, 1.0);
 const kColorDarkThistle = Color.fromRGBO(164, 150, 216, 1.0);
 // SOCIAL MEDIA COLORS
-const kColorInstagramColor = Color.fromRGBO(131, 58, 180, 1.0);
+const kColorInstagramColor = Color.fromRGBO(185, 0, 180, 1.0);
 const kColorSnapchatColor = Color.fromRGBO(255, 252, 0, 1.0);
 const kColorTwitterColor = Color.fromRGBO(29, 161, 242, 1.0);
-const kColorFacebookColor = Color.fromRGBO(59, 89, 152, 1.0);
+const kColorFacebookColor = Color.fromRGBO(21, 120, 242, 1.0);
 const kColorYoutubeColor = Color.fromRGBO(255, 0, 0, 1.0);
 const kColorSoundcloudColor = Color.fromRGBO(255, 136, 0, 1.0);
 const kColorPinterestColor = Color.fromRGBO(189, 8, 28, 1.0);
@@ -29,7 +30,7 @@ const kColorVenmoColor = Color.fromRGBO(61, 149, 206, 1.0);
 const kColorTumblrColor = Color.fromRGBO(53, 70, 92, 1.0);
 const kColorRedditColor = Color.fromRGBO(255, 69, 0, 1.0);
 const kColorLinkedInColor = Color.fromRGBO(0, 119, 181, 1.0);
-const kColorTwitchColor = Color.fromRGBO(100, 65, 164, 1.0);
+const kColorTwitchColor = Color.fromRGBO(145, 70, 255, 1.0);
 
 ThemeData kTheme(BuildContext context) {
   return Theme.of(context).copyWith(
@@ -330,6 +331,32 @@ void kBlockUser(BuildContext context, String uid) {
           text: 'Successfully Blocked',
           color: kColorGreen,
           icon: FontAwesomeIcons.exclamation);
+    });
+  });
+}
+
+void kRemoveLiveChatMessages(String chatId) {
+  final ref = liveChatMessagesRef.document(chatId).collection('messages');
+  ref.getDocuments().then((snapshot) {
+    snapshot.documents.forEach((doc) {
+      final messageId = doc.data['messageId'];
+      ref.document(messageId).delete();
+    });
+  });
+}
+
+void kDeleteSentKnocks(String currentUserUid) {
+  final ref = knocksRef.document(currentUserUid).collection('sentKnockTo');
+  ref.getDocuments().then((snapshot) {
+    snapshot.documents.forEach((doc) {
+      final sentKnockUid = doc.data['uid'];
+      knocksRef.document(sentKnockUid).collection('receivedKnockFrom').document(currentUserUid).get().then((doc){
+        if (doc.exists) {
+          doc.reference.delete().whenComplete(() {
+            ref.document(sentKnockUid).delete();
+          });
+        }
+      });
     });
   });
 }
