@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:hereme_flutter/GridFind/home.dart';
+import 'package:hereme_flutter/home/home.dart';
 import 'package:hereme_flutter/constants.dart';
-import 'package:hereme_flutter/registration/create_display_name.dart';
-
-import 'live_chat_screen.dart';
 
 class LiveChat extends StatelessWidget {
   final String title;

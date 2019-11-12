@@ -5,7 +5,6 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:geoflutterfire/geoflutterfire.dart';
 import 'package:hereme_flutter/constants.dart';
 import 'package:hereme_flutter/live_chat/live_chat_result.dart';
-
 import 'home.dart';
 
 class AllLiveChatsCloseBy extends StatefulWidget {
@@ -133,24 +132,27 @@ class _AllLiveChatsCloseByState extends State<AllLiveChatsCloseBy> {
         ),
       ),
       body: SafeArea(
-        child: RefreshIndicator(
-          onRefresh: () async {
-            Flushbar(
-              messageText: Text(
-                'Your feed will auto update when a new Live Chat has started within your vicinity',
-                style: kDefaultTextStyle.copyWith(color: Colors.white, fontSize: 14.0),
+        child: Theme(
+          data: kTheme(context),
+          child: RefreshIndicator(
+            onRefresh: () async {
+              Flushbar(
+                messageText: Text(
+                  'Your feed will auto update when a new Live Chat has started within your vicinity',
+                  style: kDefaultTextStyle.copyWith(color: Colors.white, fontSize: 14.0),
+                ),
+                backgroundColor: kColorBlack71,
+                duration: Duration(seconds: 5),
+              )..show(context);
+            },
+            child: Container(
+              height: screenHeight,
+              width: screenWidth,
+              child: SingleChildScrollView(
+                padding: EdgeInsets.only(bottom: 50.0),
+                physics: AlwaysScrollableScrollPhysics(),
+                child: streamCloseByChats(),
               ),
-              backgroundColor: kColorBlack71,
-              duration: Duration(seconds: 5),
-            )..show(context);
-          },
-          child: Container(
-            height: screenHeight,
-            width: screenWidth,
-            child: SingleChildScrollView(
-              padding: EdgeInsets.only(bottom: 50.0),
-              physics: AlwaysScrollableScrollPhysics(),
-              child: streamCloseByChats(),
             ),
           ),
         ),

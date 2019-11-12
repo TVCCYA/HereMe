@@ -16,6 +16,7 @@ import 'package:hereme_flutter/registration/create_display_name.dart';
 import 'package:hereme_flutter/settings/choose_account.dart';
 import 'package:hereme_flutter/user_profile/profile_image_full_screen.dart';
 import 'package:hereme_flutter/utils/reusable_profile_card.dart';
+import 'package:hereme_flutter/widgets/activity_feed_item.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -26,9 +27,8 @@ import 'package:image_cropper/image_cropper.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:hereme_flutter/utils/reusable_bottom_sheet.dart';
 import 'package:modal_progress_hud/modal_progress_hud.dart';
-
 import 'package:hereme_flutter/settings//menu_list.dart';
-import 'package:hereme_flutter/GridFind/home.dart';
+import 'package:hereme_flutter/home/home.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 final _firestore = Firestore.instance;
@@ -80,6 +80,19 @@ class _ProfileState extends State<Profile> {
     _determinePage();
     if (_isCurrentUser) {
       updateCurrentUserCounts();
+    }
+  }
+
+  recentProfileVisitUpdate() {
+    if (!_isCurrentUser) {
+      activityRef.document(currentUserUid).collection('feedItems').document(currentUserUid).setData({
+        'type': 'recentProfileVisit',
+        'uid': userUid,
+        'username': username,
+        'city': locationLabel,
+        'profileImageUrl': profileImageUrl,
+        'creationDate': DateTime.now().millisecondsSinceEpoch * 1000,
+      });
     }
   }
 
@@ -198,13 +211,89 @@ class _ProfileState extends State<Profile> {
                 child: Padding(
                   padding: const EdgeInsets.only(left: 16.0, right: 16.0),
                   child: ListView.builder(
-                    itemCount: _isCurrentUser ? 4 : 4,
+                    itemCount: _isCurrentUser ? 5 : 4,
                     itemBuilder: (context, index) {
                       if (_isCurrentUser) {
                         if (index == 0) {
-                          //Current User Knocks
+                          //Current User Activity Feed
                           return ExpansionTile(
                             initiallyExpanded: true,
+                            title: ReusableSectionLabel(title: 'Activity'),
+                            children: <Widget>[
+                              StreamBuilder(
+                                stream: activityRef
+                                    .document(currentUserUid)
+                                    .collection('feedItems')
+                                    .orderBy('creationDate', descending: true)
+                                    .snapshots(),
+                                builder: (context, snapshot) {
+                                  if (!snapshot.hasData) {
+                                    return circularProgress();
+                                  }
+                                  final activityItems = snapshot.data.documents;
+                                  List<ActivityFeedItem> displayedItems = [];
+                                  for (var item in activityItems) {
+                                    final type = item.data['type'];
+                                    final username = item.data['username'] ?? '';
+                                    final uid = item.data['uid'];
+                                    final city = item.data['city'] ?? '';
+                                    final profileImageUrl = item.data['profileImageUrl'] ?? '';
+                                    final creationDate = item.data['creationDate'];
+
+                                    final title = item.data['title'] ?? '';
+                                    final chatId = item.data['chatId'] ?? '';
+                                    final chatHostDisplayName = item.data['hostDisplayName'] ?? '';
+                                    final hostRed = item.data['hostRed'] ?? 0;
+                                    final hostGreen = item.data['hostGreen'] ?? 0;
+                                    final hostBlue = item.data['hostBlue'] ?? 0;
+                                    final duration = item.data['duration'] ?? 0;
+                                    final lastMessage = item.data['message'] ?? '';
+
+                                    final displayedItem = ActivityFeedItem(
+                                      type: type,
+                                      uid: uid,
+                                      username: username,
+                                      city: city,
+                                      imageUrl: profileImageUrl,
+                                      onTap: () => _pendingKnocksActionSheet(
+                                        context: context,
+                                        uid: uid,
+                                      ),
+                                      creationDate: creationDate,
+
+                                      title: title,
+                                      chatId: chatId,
+                                      chatHostDisplayName: chatHostDisplayName,
+                                      hostRed: hostRed,
+                                      hostGreen: hostGreen,
+                                      hostBlue: hostBlue,
+                                      duration: duration,
+                                      lastMessage: lastMessage,
+                                    );
+                                    displayedItems.add(displayedItem);
+                                  }
+                                  if (displayedItems.isNotEmpty) {
+                                    return ReusableContentContainer(
+                                      content: displayedItems,
+                                    );
+                                  } else {
+                                    return Padding(
+                                      padding: EdgeInsets.only(
+                                          top: 2.0, bottom: 8.0),
+                                      child: Text(
+                                        'No Activity Yet',
+                                        style: kDefaultTextStyle,
+                                      ),
+                                    );
+                                  }
+                                },
+                              )
+                            ],
+                          );
+                        } else if (index == 1) {
+                          //Current User Knocks
+                          return ExpansionTile(
+                            initiallyExpanded: false,
                             title: ReusableSectionLabel(title: 'Knocks'),
                             children: <Widget>[
                               StreamBuilder<QuerySnapshot>(
@@ -221,20 +310,23 @@ class _ProfileState extends State<Profile> {
                                   List<Knock> displayedKnocks = [];
                                   for (var knock in knocks) {
                                     final knockUsername = knock.data['username'];
-                                    final knockUrl = knock.data['profileImageUrl'];
+                                    final knockProfileImageUrl = knock.data['profileImageUrl'];
                                     final creationDate = knock.data['creationDate'];
                                     final uid = knock.data['uid'];
-//                                    print(uid);
 
 //                                    getKnockInfo(uid);
 
                                     final displayedKnock = Knock(
                                       username: knockUsername,
-                                      imageUrl: knockUrl,
+                                      imageUrl: knockProfileImageUrl,
                                       creationDate: creationDate,
                                       onTap: () {
                                         _knocksActionSheet(
-                                            context, uid, knockUsername);
+                                          context: context,
+                                          uid: uid,
+                                          username: knockUsername,
+                                          profileImageUrl: knockProfileImageUrl
+                                        );
                                       },
                                     );
                                     displayedKnocks.add(displayedKnock);
@@ -257,7 +349,7 @@ class _ProfileState extends State<Profile> {
                               ),
                             ],
                           );
-                        } else if (index == 1) {
+                        } else if (index == 2) {
                           //Current User Links
                           return ExpansionTile(
                             initiallyExpanded: false,
@@ -276,7 +368,7 @@ class _ProfileState extends State<Profile> {
                                   List<LinkedAccount> displayedAccounts = [];
                                   for (var account in accounts) {
                                     account.data.forEach(
-                                      (key, value) {
+                                          (key, value) {
                                         if (key.contains('Username')) {
                                           final iconString = key;
                                           final accountUsername = value;
@@ -287,17 +379,17 @@ class _ProfileState extends State<Profile> {
                                               accountUsername, iconString, url);
 
                                           final displayedAccount =
-                                              LinkedAccount(
+                                          LinkedAccount(
                                             accountUsername: accountUsername,
                                             accountUrl: url,
                                             iconString: iconString,
                                             onTap: () {
                                               _linksActionSheet(
-                                                context,
-                                                accountUsername,
-                                                iconString,
-                                                url,
-                                                linkId
+                                                  context,
+                                                  accountUsername,
+                                                  iconString,
+                                                  url,
+                                                  linkId
                                               );
                                             },
                                           );
@@ -331,7 +423,7 @@ class _ProfileState extends State<Profile> {
 //                        ReusableSectionLabel(title: 'Recents'),
                             ],
                           );
-                        } else if (index == 2) {
+                        } else if (index == 3) {
                           //Current User Created Live Chats
                           return ExpansionTile(
                             title: ReusableSectionLabel(title: 'Live Chats'),
@@ -385,7 +477,7 @@ class _ProfileState extends State<Profile> {
                                   }
                                   if (displayedChats.isNotEmpty) {
                                     return ReusableContentContainer(
-                                        content: displayedChats,
+                                      content: displayedChats,
                                     );
                                   } else {
                                     return ReusableBottomActionSheetListTile(
@@ -394,10 +486,10 @@ class _ProfileState extends State<Profile> {
                                       onTap: () {
                                         Navigator.push(
                                           context,
-                                            MaterialPageRoute(
-                                                builder: (context) => currentUser.displayName != null
-                                                    ? AddLiveChat()
-                                                    : CreateDisplayName()),
+                                          MaterialPageRoute(
+                                              builder: (context) => currentUser.displayName != null
+                                                  ? AddLiveChat()
+                                                  : CreateDisplayName()),
                                         );
                                       },
                                     );
@@ -471,7 +563,7 @@ class _ProfileState extends State<Profile> {
                             ],
                           );
                         }
-                      }  else {
+                      } else {
                         if (index == 0) {
                           //User Links
                           return ExpansionTile(
@@ -697,7 +789,7 @@ class _ProfileState extends State<Profile> {
                                   buttonText2: 'Cancel',
                                   color2: kColorLightGray,
                                   onPressed1: () {
-                                    _handleKnock(userUid);
+                                    _handleKnock(uid: userUid, username: username, profileImageUrl: profileImageUrl);
                                     Navigator.pop(context);
                                   },
                                   onPressed2: () {
@@ -728,7 +820,7 @@ class _ProfileState extends State<Profile> {
     });
   }
 
-  _handleKnock(String uid) async {
+  _handleKnock({String uid, String username, String profileImageUrl}) {
     final ref = knocksRef
         .document(uid)
         .collection('receivedKnockFrom')
@@ -736,7 +828,7 @@ class _ProfileState extends State<Profile> {
     final newRef = ref.get();
     newRef.then((doc) {
       if (!doc.exists) {
-        _sendKnock(ref, uid);
+        _sendKnock(ref, uid, username, profileImageUrl);
       } else {
         kShowFlushBar(
             text: 'Already Knocked $username',
@@ -747,34 +839,55 @@ class _ProfileState extends State<Profile> {
     });
   }
 
-  _sendKnock(DocumentReference ref, String uid) {
+  _sendKnock(DocumentReference ref, String uid, String knockUsername, String knockImageUrl) {
+    int creationDate = DateTime.now().millisecondsSinceEpoch * 1000;
     Map<String, dynamic> knockData = <String, dynamic>{
       'uid': currentUserUid,
-      'profileImageUrl': currentUser?.profileImageUrl ?? '',
-      'username': currentUser?.username ?? '',
-      'creationDate': DateTime.now().millisecondsSinceEpoch * 1000,
+      'profileImageUrl': currentUser.profileImageUrl,
+      'username': currentUser.username,
+      'creationDate': creationDate,
     };
     ref.setData(knockData).whenComplete(() {
-      knocksRef.document(currentUserUid).collection('sentKnockTo').document(uid).setData({
-        'uid': uid
+      // current users activity feed updates
+      activityRef.document(currentUserUid).collection('feedItems').document(uid).setData({
+        'type': 'pendingKnock',
+        'uid': uid,
+        'username': knockUsername,
+        'profileImageUrl': knockImageUrl,
+        'creationDate': creationDate,
+      }).whenComplete(() {
+        _updateKnockedUsersActivityFeed(uid);
       });
+
       kShowFlushBar(
           text: 'Successfully sent Knock',
           context: context,
           icon: FontAwesomeIcons.paperPlane,
           color: kColorGreen);
-    }).catchError(
-      (e) => kShowAlert(
-        context: context,
-        title: 'Knock Failed',
-        desc: 'Unable to knock $username, please try again later',
-        buttonText: 'Try Again',
-        onPressed: () => Navigator.pop(context),
-      ),
-    );
+    }).catchError((e) => kShowAlert(
+      context: context,
+      title: 'Knock Failed',
+      desc: 'Unable to knock $knockUsername, please try again later',
+      buttonText: 'Try Again',
+      onPressed: () => Navigator.pop(context),
+    ));
   }
 
-  _knocksActionSheet(BuildContext context, String uid, String username) {
+  _updateKnockedUsersActivityFeed(String uid) {
+    // knocked users activity feed updates by removing pending knock
+    activityRef.document(uid).collection('feedItems').getDocuments().then((snapshot) {
+      snapshot.documents.forEach((doc) {
+        if (doc.exists) {
+          final type = doc.data['type'];
+          if (type == 'pendingKnock') {
+            doc.reference.delete();
+          }
+        }
+      });
+    });
+  }
+
+  _knocksActionSheet({BuildContext context, String uid, String username, String profileImageUrl}) {
     List<ReusableBottomActionSheetListTile> sheets = [];
     sheets.add(
       ReusableBottomActionSheetListTile(
@@ -792,8 +905,31 @@ class _ProfileState extends State<Profile> {
         title: 'Knock back $username?',
         iconData: FontAwesomeIcons.check,
         onTap: () async {
-          _handleKnock(uid);
+          _handleKnock(uid: uid, username: username, profileImageUrl: profileImageUrl);
           _removeKnock(uid);
+          Navigator.pop(context);
+        },
+      ),
+    );
+    sheets.add(
+      ReusableBottomActionSheetListTile(
+        title: 'Cancel',
+        iconData: FontAwesomeIcons.times,
+        onTap: () => Navigator.pop(context),
+      ),
+    );
+    kActionSheet(context, sheets);
+  }
+
+  _pendingKnocksActionSheet({BuildContext context, String uid}) {
+    List<ReusableBottomActionSheetListTile> sheets = [];
+    sheets.add(
+      ReusableBottomActionSheetListTile(
+        title: 'Cancel Knock',
+        iconData: FontAwesomeIcons.ban,
+        color: kColorRed,
+        onTap: () {
+          _removePendingKnock(uid);
           Navigator.pop(context);
         },
       ),
@@ -816,12 +952,21 @@ class _ProfileState extends State<Profile> {
         .get()
         .then((doc) {
       if (doc.exists) {
+        doc.reference.delete();
+      }
+    });
+  }
+
+  _removePendingKnock(String uid) {
+    knocksRef
+        .document(uid)
+        .collection('receivedKnockFrom')
+        .document(currentUserUid)
+        .get()
+        .then((doc) {
+      if (doc.exists) {
         doc.reference.delete().whenComplete(() {
-          knocksRef.document(uid).collection('sentKnockTo').document(currentUserUid).get().then((doc) {
-            if (doc.exists) {
-              doc.reference.delete();
-            }
-          });
+          _updateKnockedUsersActivityFeed(currentUserUid);
         });
       }
     });
@@ -1282,6 +1427,7 @@ class _ProfileState extends State<Profile> {
         'totalVisitsCount': user.totalVisitsCount + 1,
       });
     });
+    recentProfileVisitUpdate();
   }
 
   _getOtherUserData() {
@@ -1306,6 +1452,7 @@ class _ProfileState extends State<Profile> {
       'weeklyVisitsCount': user.weeklyVisitsCount + 1,
       'totalVisitsCount': user.totalVisitsCount + 1,
     });
+    recentProfileVisitUpdate();
   }
 
   _getCurrentUserData() async {

@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:hereme_flutter/GridFind/home.dart';
+import 'package:hereme_flutter/home/home.dart';
 import 'package:hereme_flutter/constants.dart';
 import 'package:hereme_flutter/models/user.dart';
 import 'package:hereme_flutter/utils/reusable_bottom_sheet.dart';

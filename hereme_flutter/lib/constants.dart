@@ -1,10 +1,8 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flushbar/flushbar.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:rflutter_alert/rflutter_alert.dart';
-
-import 'GridFind/home.dart';
+import 'home/home.dart';
 
 const kColorPurple = Color.fromRGBO(95, 71, 188, 1.0);
 const kColorBlue = Color.fromRGBO(71, 106, 188, 1.0);
@@ -346,17 +344,22 @@ void kRemoveLiveChatMessages(String chatId) {
 }
 
 void kDeleteSentKnocks(String currentUserUid) {
-  final ref = knocksRef.document(currentUserUid).collection('sentKnockTo');
+  final ref = activityRef.document(currentUserUid).collection('feedItems');
   ref.getDocuments().then((snapshot) {
     snapshot.documents.forEach((doc) {
-      final sentKnockUid = doc.data['uid'];
-      knocksRef.document(sentKnockUid).collection('receivedKnockFrom').document(currentUserUid).get().then((doc){
-        if (doc.exists) {
-          doc.reference.delete().whenComplete(() {
-            ref.document(sentKnockUid).delete();
+      if (doc.exists) {
+        final type = doc.data['type'];
+        if (type == 'pendingKnock') {
+          final sentKnockUid = doc.data['uid'];
+          knocksRef.document(sentKnockUid).collection('receivedKnockFrom').document(currentUserUid).get().then((doc){
+            if (doc.exists) {
+              doc.reference.delete().whenComplete(() {
+                ref.document(sentKnockUid).delete();
+              });
+            }
           });
         }
-      });
+      }
     });
   });
 }

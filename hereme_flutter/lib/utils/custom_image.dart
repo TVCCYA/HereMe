@@ -1,18 +1,28 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
-Widget cachedNetworkImage(mediaUrl) {
+import '../constants.dart';
+
+Widget cachedNetworkImage(String imageUrl) {
+  return imageUrl != null ? CachedNetworkImage(
+    imageUrl: imageUrl,
+    errorWidget: (context, url, error) => Icon(FontAwesomeIcons.userAlt, color: kColorLightGray),
+  ) : Icon(FontAwesomeIcons.exclamationCircle, color: kColorRed);
+}
+
+Widget cachedUserResultImage(imageUrl) {
   return ClipRRect(
     borderRadius: BorderRadius.circular(5),
-    child: CachedNetworkImage(
-      imageUrl: mediaUrl,
+    child: imageUrl != null ? CachedNetworkImage(
+      imageUrl: imageUrl,
       fit: BoxFit.cover,
       placeholder: (context, url) => Padding(
             child: Container(color: Colors.grey[200]),
             padding: EdgeInsets.all(0.0),
           ),
-      errorWidget: (context, url, error) => Icon(Icons.error),
-    ),
+      errorWidget: (context, url, error) => Icon(FontAwesomeIcons.userAlt, color: kColorLightGray,),
+    ) : Icon(FontAwesomeIcons.exclamationCircle, color: kColorRed),
   );
 }
 

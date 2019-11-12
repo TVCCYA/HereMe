@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:hereme_flutter/GridFind/home.dart';
+import 'package:hereme_flutter/home/home.dart';
 
 void main() {
   runApp(

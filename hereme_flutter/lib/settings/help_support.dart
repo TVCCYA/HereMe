@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:hereme_flutter/GridFind/home.dart';
+import 'package:hereme_flutter/home/home.dart';
 import 'package:hereme_flutter/constants.dart';
-import 'package:hereme_flutter/registration/initial_page.dart';
 import 'package:hereme_flutter/settings/blocked_profiles.dart';
 import 'package:hereme_flutter/utils/settings_tile.dart';
 import 'package:rflutter_alert/rflutter_alert.dart';

@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:hereme_flutter/GridFind/home.dart';
+import 'package:hereme_flutter/home/home.dart';
 import 'package:hereme_flutter/constants.dart';
 import 'package:animator/animator.dart';
 import 'package:hereme_flutter/models/user.dart';
@@ -72,7 +72,6 @@ class _LiveChatScreenState extends State<LiveChatScreen> {
   void initState() {
     super.initState();
     isHostAnonymous();
-//    userCountInChat();
     streamUserCountInChat();
     setState(() {
       chatIdentifier = chatId;
@@ -160,19 +159,22 @@ class _LiveChatScreenState extends State<LiveChatScreen> {
       'lastGreen': currentUser.green,
       'lastBlue': currentUser.blue,
     });
-//    bool isNotPostOwner = postOwnerId != currentUser.id;
-//    if (isNotPostOwner) {
-//      activityFeedRef.document(postOwnerId).collection('feedItems').add({
-//        'type': 'comment',
-//        'commentData': commentController.text,
-//        'username': currentUser.username,
-//        'userId': currentUser.id,
-//        'userProfileImage': currentUser.photoUrl,
-//        'postId': postId,
-//        'mediaUrl': postMediaUrl,
-//        'timestamp': timestamp,
-//      });
-//    }
+    bool isNotChatHost = chatHostUid != currentUser.uid;
+    if (isNotChatHost) {
+      activityRef.document(currentUser.uid).collection('feedItems').document(chatId).setData({
+        'type': 'liveChatMessage',
+        'title': title,
+        'chatId': chatId,
+        'message': message,
+        'messageId': messageId,
+        'creationDate': DateTime.now().millisecondsSinceEpoch * 1000,
+        'uid': chatHostUid,
+        'hostDisplayName': chatHostDisplayName,
+        'hostRed': hostRed,
+        'hostGreen': hostGreen,
+        'hostBlue': hostBlue
+      });
+    }
   }
 
   streamUserCountInChat() {

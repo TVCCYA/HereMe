@@ -3,8 +3,7 @@ import 'package:flutter/services.dart';
 import 'dart:math';
 import 'package:circle_wheel_scroll/circle_wheel_scroll_view.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:hereme_flutter/GridFind/home.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:hereme_flutter/home/home.dart';
 import 'package:hereme_flutter/constants.dart';
 
 final _firestore = Firestore.instance;

@@ -22,7 +22,7 @@ class UserResult extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () => toProfile(context),
-      child: cachedNetworkImage(user.profileImageUrl),
+      child: cachedUserResultImage(user.profileImageUrl),
     );
   }
 }
@@ -36,7 +36,7 @@ class BlockedUserResult extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
-      child: cachedNetworkImage(user.profileImageUrl),
+      child: cachedUserResultImage(user.profileImageUrl),
     );
   }
 }

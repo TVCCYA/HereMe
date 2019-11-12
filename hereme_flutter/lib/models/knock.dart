@@ -1,4 +1,7 @@
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:hereme_flutter/constants.dart';
+import 'package:hereme_flutter/utils/custom_image.dart';
 import 'package:time_ago_provider/time_ago_provider.dart';
 import 'package:flutter/material.dart';
 
@@ -20,18 +23,6 @@ class Knock extends StatelessWidget {
     return timeAgo;
   }
 
-  buildKnockImage() {
-    try {
-      return Image.network(
-        imageUrl,
-        scale: 3.5,
-        fit: BoxFit.cover,
-      );
-    } catch (e) {
-      print('ole error $e');
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -48,7 +39,7 @@ class Knock extends StatelessWidget {
           ),
           leading: ClipRRect(
             borderRadius: BorderRadius.circular(10.0),
-            child: buildKnockImage(),
+            child: cachedNetworkImage(imageUrl),
           ),
           onTap: onTap,
           trailing: Text(

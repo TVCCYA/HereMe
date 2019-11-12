@@ -1,17 +1,16 @@
 import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:geoflutterfire/geoflutterfire.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:hereme_flutter/GridFind/all_live_chats_close_by.dart';
-import 'package:hereme_flutter/GridFind/all_users_close_by.dart';
-import 'package:hereme_flutter/settings//add_account.dart';
+import 'package:hereme_flutter/home/all_live_chats_close_by.dart';
+import 'package:hereme_flutter/home/all_users_close_by.dart';
 import 'package:hereme_flutter/live_chat/live_chat_result.dart';
 import 'package:hereme_flutter/models/user.dart';
 import 'package:hereme_flutter/registration/photo_add.dart';
+import 'package:hereme_flutter/settings/add_link.dart';
 import 'package:hereme_flutter/user_profile/profile.dart';
 import 'package:hereme_flutter/utils/custom_image.dart';
 import 'package:hereme_flutter/utils/reusable_bottom_sheet.dart';
@@ -32,6 +31,7 @@ final liveChatsRef = Firestore.instance.collection('liveChats');
 final userLocationsRef = Firestore.instance.collection('userLocations');
 final liveChatLocationsRef = Firestore.instance.collection('liveChatLocations');
 final liveChatMessagesRef = Firestore.instance.collection('liveChatMessages');
+final activityRef = Firestore.instance.collection('activity');
 User currentUser;
 double currentLatitude;
 double currentLongitude;
@@ -251,7 +251,7 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                            builder: (BuildContext context) => AddAccount()),
+                            builder: (BuildContext context) => AddLink()),
                       );
                     },
                   ),
@@ -674,7 +674,7 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
             padding: const EdgeInsets.all(10.0),
             child: GestureDetector(
               child: _isAuth
-                  ? cachedNetworkImage(currentUser.profileImageUrl)
+                  ? cachedUserResultImage(currentUser.profileImageUrl)
                   : Icon(FontAwesomeIcons.user, color: Colors.grey[200]),
               onTap: () => Navigator.push(
                   context,
