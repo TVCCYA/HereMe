@@ -59,7 +59,7 @@ class _ChooseAccountState extends State<ChooseAccount> {
         color: kColorFacebookColor),
     SocialMedias(
         platform: 'Your Website',
-        icon: 'images/SocialMedias/facebook120.png',
+        icon: 'images/SocialMedias/website.png',
         color: kColorLightGray),
   ];
 
@@ -132,8 +132,10 @@ class SocialMediaTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () => Navigator.push(
+    return FlatButton(
+      padding: EdgeInsets.all(0),
+      splashColor: socialMedia.color.withOpacity(0.1),
+      onPressed: () => Navigator.push(
         context,
         MaterialPageRoute(
           builder: (context) => AddLink(

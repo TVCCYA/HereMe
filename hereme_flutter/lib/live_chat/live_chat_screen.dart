@@ -20,6 +20,7 @@ class LiveChatScreen extends StatefulWidget {
   final int hostRed;
   final int hostGreen;
   final int hostBlue;
+  final String duration;
 
   LiveChatScreen({
     this.title,
@@ -29,6 +30,7 @@ class LiveChatScreen extends StatefulWidget {
     this.hostRed,
     this.hostGreen,
     this.hostBlue,
+    this.duration,
   });
 
   @override
@@ -40,6 +42,7 @@ class LiveChatScreen extends StatefulWidget {
         hostRed: this.hostRed,
         hostGreen: this.hostGreen,
         hostBlue: this.hostBlue,
+        duration: this.duration,
       );
 }
 
@@ -51,6 +54,7 @@ class _LiveChatScreenState extends State<LiveChatScreen> {
   final int hostRed;
   final int hostGreen;
   final int hostBlue;
+  final String duration;
 
   _LiveChatScreenState({
     this.title,
@@ -60,6 +64,7 @@ class _LiveChatScreenState extends State<LiveChatScreen> {
     this.hostRed,
     this.hostGreen,
     this.hostBlue,
+    this.duration,
   });
 
   TextEditingController liveChatController = TextEditingController();
@@ -76,6 +81,12 @@ class _LiveChatScreenState extends State<LiveChatScreen> {
     setState(() {
       chatIdentifier = chatId;
     });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+//    streamChatDuration();
   }
 
   isHostAnonymous() {
@@ -141,7 +152,7 @@ class _LiveChatScreenState extends State<LiveChatScreen> {
       'uid': currentUser.uid,
       'displayName': currentUser.displayName,
       'message': message,
-      'creationDate': DateTime.now().millisecondsSinceEpoch * 1000,
+      'creationDate': DateTime.now().millisecondsSinceEpoch,
       'red': currentUser.red,
       'green': currentUser.green,
       'blue': currentUser.blue,
@@ -167,7 +178,7 @@ class _LiveChatScreenState extends State<LiveChatScreen> {
         'chatId': chatId,
         'message': message,
         'messageId': messageId,
-        'creationDate': DateTime.now().millisecondsSinceEpoch * 1000,
+        'creationDate': DateTime.now().millisecondsSinceEpoch,
         'uid': chatHostUid,
         'hostDisplayName': chatHostDisplayName,
         'hostRed': hostRed,
@@ -175,6 +186,19 @@ class _LiveChatScreenState extends State<LiveChatScreen> {
         'hostBlue': hostBlue
       });
     }
+  }
+
+  streamChatDuration() {
+    bool hasChatEnded;
+    Stream<DocumentSnapshot> streamSnaps = liveChatLocationsRef.document(chatId).snapshots();
+    streamSnaps.forEach((snapshot) {
+      final endDate = snapshot.data['endDate'];
+      int timeLeft = endDate - DateTime.now().millisecondsSinceEpoch;
+      hasChatEnded = timeLeft <= 0;
+      if (hasChatEnded) {
+        Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context) => Home()), (Route<dynamic> route) => false);
+      }
+    });
   }
 
   streamUserCountInChat() {
@@ -188,29 +212,15 @@ class _LiveChatScreenState extends State<LiveChatScreen> {
         String uid = doc.data['uid'];
         uids.add(uid);
       });
-      setState(() {
-        uids.forEach((i) {
-          if (!uidsInChat.contains(i)) {
-            this.uidsInChat.add(i);
-          }
+      if (this.mounted) {
+        setState(() {
+          uids.forEach((i) {
+            if (!uidsInChat.contains(i)) {
+              this.uidsInChat.add(i);
+            }
+          });
         });
-      });
-    });
-  }
-
-  userCountInChat() async {
-    QuerySnapshot snapshot = await liveChatMessagesRef
-        .document(chatId)
-        .collection('messages')
-        .getDocuments();
-
-    List<dynamic> uids = snapshot.documents.map((doc) => doc.data['uid']).toList();
-    setState(() {
-      uids.forEach((i) {
-        if (!uidsInChat.contains(i)) {
-          this.uidsInChat.add(i);
-        }
-      });
+      }
     });
   }
 
@@ -403,7 +413,7 @@ class _LiveChatScreenState extends State<LiveChatScreen> {
             child: Padding(
               padding: const EdgeInsets.only(right: 8.0),
               child: Text(
-                '11 hours left',
+                duration,
                 style: kAppBarTextStyle.copyWith(color: kColorRed, fontSize: 16.0),
               ),
             ),
@@ -661,7 +671,7 @@ class LiveChatMessage extends StatelessWidget {
                     text: '$displayName: ',
                     style: kDefaultTextStyle.copyWith(
                         color: Color.fromRGBO(red, green, blue, 1.0),
-                        fontWeight: FontWeight.w600),
+                        fontWeight: FontWeight.w700),
                   ),
                   TextSpan(
                     text: message,

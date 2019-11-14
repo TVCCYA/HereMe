@@ -56,13 +56,14 @@ class _AddRecentState extends State<AddRecent> {
       child: Scaffold(
         backgroundColor: kColorOffWhite,
         appBar: AppBar(
+          brightness: Brightness.light,
           leading: IconButton(
             icon: Icon(FontAwesomeIcons.chevronLeft),
             onPressed: () {
               Navigator.pop(context);
             },
             color: kColorBlack71,
-            splashColor: Colors.transparent,
+            splashColor: Colors.grey[200],
             highlightColor: Colors.transparent,
           ),
           title: Text(
@@ -171,10 +172,20 @@ class _AddRecentState extends State<AddRecent> {
                           _isButtonDisabled
                               ? kErrorFlushbar(context: context, errorText: 'https://example.com')
                               : _uploadRecentToFirebase(mediaFile);
+                          if (url.contains(' ')) {
+                            kErrorFlushbar(
+                                context: context,
+                                errorText: 'URL cannot contain spaces');
+                          }
+                          if (!url.contains('https://')) {
+                            kErrorFlushbar(
+                                context: context,
+                                errorText: 'URL format: https://example.com');
+                          }
                         },
                         splashColor: _isButtonDisabled
                             ? Colors.transparent
-                            : kColorOffWhite,
+                            : Colors.grey[200],
                         highlightColor: Colors.transparent,
                         icon: Icon(
                           _isButtonDisabled
@@ -263,7 +274,7 @@ class _AddRecentState extends State<AddRecent> {
             'storageFilename': filename,
             'title': title,
             'url': url,
-            'creationDate': DateTime.now().millisecondsSinceEpoch * 1000,
+            'creationDate': DateTime.now().millisecondsSinceEpoch,
           };
           recentUploadsRef.document(uid).collection('recents').document(filename)
               .setData(photoUrl).whenComplete(() {

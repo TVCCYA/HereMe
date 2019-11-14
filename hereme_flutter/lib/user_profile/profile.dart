@@ -91,7 +91,7 @@ class _ProfileState extends State<Profile> {
         'username': username,
         'city': locationLabel,
         'profileImageUrl': profileImageUrl,
-        'creationDate': DateTime.now().millisecondsSinceEpoch * 1000,
+        'creationDate': DateTime.now().millisecondsSinceEpoch,
       });
     }
   }
@@ -420,7 +420,6 @@ class _ProfileState extends State<Profile> {
                                   }
                                 },
                               ),
-//                        ReusableSectionLabel(title: 'Recents'),
                             ],
                           );
                         } else if (index == 3) {
@@ -444,13 +443,16 @@ class _ProfileState extends State<Profile> {
                                     final title = chat.data['title'];
                                     final creationDate = chat.data['creationDate'];
                                     final chatId = chat.data['chatId'];
-                                    final duration = chat.data['duration'];
                                     final hostDisplayName = chat.data['hostDisplayName'] ?? '';
                                     final lastMessage = chat.data['lastMessage'];
                                     final lastMessageDisplayName = chat.data['lastMessageDisplayName'];
                                     final lastRed = chat.data['lastRed'];
                                     final lastGreen = chat.data['lastGreen'];
                                     final lastBlue = chat.data['lastBlue'];
+                                    final endDate = chat.data['endDate'];
+
+                                    int timeLeft = endDate - DateTime.now().millisecondsSinceEpoch;
+                                    String duration = kTimeRemaining(timeLeft);
 
                                     final displayedChat = LiveChat(
                                       title: title,
@@ -470,7 +472,7 @@ class _ProfileState extends State<Profile> {
                                       onTap: () {
                                         _liveChatsActionSheet(context, title, chatId,
                                             hostDisplayName, red, green, blue,
-                                            currentUserUid);
+                                            currentUserUid, duration);
                                       },
                                     );
                                     displayedChats.add(displayedChat);
@@ -653,13 +655,16 @@ class _ProfileState extends State<Profile> {
                                     final title = chat.data['title'];
                                     final creationDate = chat.data['creationDate'];
                                     final chatId = chat.data['chatId'];
-                                    final duration = chat.data['duration'];
                                     final hostDisplayName = chat.data['hostDisplayName'] ?? '';
                                     final lastMessage = chat.data['lastMessage'];
                                     final lastMessageDisplayName = chat.data['lastMessageDisplayName'];
                                     final lastRed = chat.data['lastRed'];
                                     final lastGreen = chat.data['lastGreen'];
                                     final lastBlue = chat.data['lastBlue'];
+                                    final endDate = chat.data['endDate'];
+
+                                    int timeLeft = endDate - DateTime.now().millisecondsSinceEpoch;
+                                    String duration = kTimeRemaining(timeLeft);
 
                                     final displayedChat = LiveChat(
                                       title: title,
@@ -689,6 +694,7 @@ class _ProfileState extends State<Profile> {
                                                   hostRed: red,
                                                   hostGreen: green,
                                                   hostBlue: blue,
+                                                  duration: duration,
                                                 ) : CreateDisplayName()));
                                       },
                                     );
@@ -840,7 +846,7 @@ class _ProfileState extends State<Profile> {
   }
 
   _sendKnock(DocumentReference ref, String uid, String knockUsername, String knockImageUrl) {
-    int creationDate = DateTime.now().millisecondsSinceEpoch * 1000;
+    int creationDate = DateTime.now().millisecondsSinceEpoch;
     Map<String, dynamic> knockData = <String, dynamic>{
       'uid': currentUserUid,
       'profileImageUrl': currentUser.profileImageUrl,
@@ -994,7 +1000,7 @@ class _ProfileState extends State<Profile> {
                 buttonText: "Unlink",
                 onPressed: () {
                   Navigator.pop(context);
-                  _handleRemoveData(linkId, 'socialMedias', 'socials');
+                  kHandleRemoveData(linkId, currentUserUid, 'socialMedias', 'socials');
                   Navigator.pop(context);
                 },
               );
@@ -1037,7 +1043,7 @@ class _ProfileState extends State<Profile> {
   }
 
   _liveChatsActionSheet(BuildContext context, String title, String chatId, String hostDisplayName,
-      int hostRed, int hostGreen, int hostBlue, String chatHostUid) {
+      int hostRed, int hostGreen, int hostBlue, String chatHostUid, String duration) {
     List<ReusableBottomActionSheetListTile> sheets = [];
     _isCurrentUser
         ? sheets.add(ReusableBottomActionSheetListTile(
@@ -1052,7 +1058,7 @@ class _ProfileState extends State<Profile> {
           buttonText: "Delete",
           onPressed: () {
             Navigator.pop(context);
-            _handleRemoveData(chatId, 'liveChats', 'chats');
+            kHandleRemoveData(chatId, currentUserUid, 'liveChats', 'chats');
             kRemoveLiveChatMessages(chatId);
             liveChatLocationsRef.document(chatId).delete();
             Navigator.pop(context);
@@ -1078,6 +1084,7 @@ class _ProfileState extends State<Profile> {
                     hostRed: hostRed,
                     hostGreen: hostGreen,
                     hostBlue: hostBlue,
+                    duration: duration,
                   ) : CreateDisplayName()));
         },
       ),
@@ -1112,8 +1119,8 @@ class _ProfileState extends State<Profile> {
                 buttonText: "Delete",
                 onPressed: () {
                   Navigator.pop(context);
-                  _handleRemoveData(storageFilename, 'recentUploads', 'recents');
                   _handleRemoveRecentThumbnailFromStorage(storageFilename);
+                  kHandleRemoveData(storageFilename, currentUserUid, 'recentUploads', 'recents');
                   Navigator.pop(context);
                 },
               );
@@ -1152,23 +1159,6 @@ class _ProfileState extends State<Profile> {
     } catch (e) {
       print(e);
     }
-  }
-
-  _handleRemoveData(String key, String collection1, String collection2) async {
-    final ref = _firestore
-        .collection(collection1)
-        .document(currentUserUid)
-        .collection(collection2);
-
-    ref.getDocuments().then((snapshot) {
-      for (final doc in snapshot.documents) {
-        if (doc.exists) {
-          if (doc.data.containsValue(key)) {
-            ref.document(doc.documentID).delete();
-          }
-        }
-      }
-    });
   }
 
   _changeUserPhoto() {
@@ -1585,6 +1575,8 @@ class _ProfileState extends State<Profile> {
       retMap = {'Reddit': url};
     } else if (icon.contains('facebook')) {
       retMap = {'Facebook': url};
+    } else if (icon.contains('website')) {
+      retMap = {'Your Website': url};
     } else {
       retMap = {'Browser': url};
     }

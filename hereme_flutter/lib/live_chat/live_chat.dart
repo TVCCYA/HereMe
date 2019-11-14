@@ -11,7 +11,7 @@ class LiveChat extends StatelessWidget {
   final int hostRed;
   final int hostGreen;
   final int hostBlue;
-  final int duration;
+  final String duration;
   final String lastMessageDisplayName;
   final String lastMessage;
   final int lastRed;
@@ -65,7 +65,7 @@ class LiveChat extends StatelessWidget {
                   text: '$lastMessageDisplayName: ',
                   style: kDefaultTextStyle.copyWith(
                       color: Color.fromRGBO(lastRed ?? 91, lastGreen ?? 71, lastBlue ?? 188, 1.0),
-                      fontWeight: FontWeight.w600,
+                      fontWeight: FontWeight.w700,
                     fontSize: 14.0
                   ),
                 ),
@@ -81,7 +81,7 @@ class LiveChat extends StatelessWidget {
             style: kDefaultTextStyle.copyWith(fontSize: 14.0, color: kColorGreen),
           ),
           trailing: Text(
-            duration == 1 ? '$duration hour left' : '$duration hours left',
+            duration,
             overflow: TextOverflow.fade,
             softWrap: false,
             style: kDefaultTextStyle.copyWith(

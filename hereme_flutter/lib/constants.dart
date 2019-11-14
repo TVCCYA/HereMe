@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flushbar/flushbar.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -41,7 +42,7 @@ ThemeData kTheme(BuildContext context) {
 }
 
 const kAppBarTextStyle = TextStyle(
-  fontFamily: 'Arimo',
+  fontFamily: 'Avenir',
   fontSize: 18.0,
   color: kColorBlack71,
   fontWeight: FontWeight.bold,
@@ -49,7 +50,8 @@ const kAppBarTextStyle = TextStyle(
 
 const kDefaultTextStyle = TextStyle(
   color: kColorBlack71,
-  fontFamily: 'Arimo',
+  fontFamily: 'Avenir',
+  fontWeight: FontWeight.w500,
   fontSize: 16.0,
 );
 
@@ -274,6 +276,10 @@ String kIconPath(String socialMedia) {
         return 'images/SocialMedias/facebook120.png';
       }
       break;
+    case 'your websiteUsername':
+      {
+        return 'images/SocialMedias/website.png';
+      }
     default:
       {
         return "couldn't find social media username to link";
@@ -337,8 +343,10 @@ void kRemoveLiveChatMessages(String chatId) {
   final ref = liveChatMessagesRef.document(chatId).collection('messages');
   ref.getDocuments().then((snapshot) {
     snapshot.documents.forEach((doc) {
-      final messageId = doc.data['messageId'];
-      ref.document(messageId).delete();
+      if (doc.exists) {
+        final messageId = doc.data['messageId'];
+        ref.document(messageId).delete();
+      }
     });
   });
 }
@@ -362,4 +370,59 @@ void kDeleteSentKnocks(String currentUserUid) {
       }
     });
   });
+}
+
+
+void kHandleRemoveData(String key, String uid, String collection1, String collection2) async {
+  final ref = Firestore
+      .instance
+      .collection(collection1)
+      .document(uid)
+      .collection(collection2);
+
+  ref.getDocuments().then((snapshot) {
+    for (final doc in snapshot.documents) {
+      if (doc.exists) {
+        if (doc.data.containsValue(key)) {
+          ref.document(doc.documentID).delete();
+        }
+      }
+    }
+  });
+}
+
+
+
+String kTimeRemaining(int duration) {
+  String result;
+  if (duration <= 1800000) {
+    result = '< 30 mins left';
+  } else if (duration <= 3600000) {
+    result = '< 1 hour left';
+  } else if (duration <= 7200000) {
+    result = '< 2 hours left';
+  } else if (duration <= 10800000) {
+    result = '< 3 hours left';
+  } else if (duration <= 14400000) {
+    result = '< 4 hours left';
+  } else if (duration <= 18000000) {
+    result = '< 5 hours left';
+  } else if (duration <= 21600000) {
+    result = '< 6 hours left';
+  } else if (duration <= 25200000) {
+    result = '< 7 hours left';
+  } else if (duration <= 28800000) {
+    result = '< 8 hours left';
+  } else if (duration <= 32400000) {
+    result = '< 9 hours left';
+  } else if (duration <= 36000000) {
+    result = '< 10 hours left';
+  } else if (duration <= 39600000) {
+    result = '< 11 hours left';
+  } else if (duration <= 43200000) {
+    result = '< 12 hours left';
+  } else {
+    result = 'lots of time left';
+  }
+  return result;
 }

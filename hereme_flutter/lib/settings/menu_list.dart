@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:hereme_flutter/live_chat/add_live_chat.dart';
 import 'package:hereme_flutter/settings/choose_account.dart';
+import 'package:hereme_flutter/settings/recents/add_recents.dart';
 import 'package:hereme_flutter/utils/settings_tile.dart';
 import 'package:hereme_flutter/registration/initial_page.dart';
 import 'package:hereme_flutter/settings//help_support.dart';
-import 'add_account.dart';
 import 'package:hereme_flutter/constants.dart';
 import 'package:launch_review/launch_review.dart';
+import 'package:share/share.dart';
 
 class ListPage extends StatelessWidget {
   @override
@@ -42,37 +44,43 @@ class ListPage extends StatelessWidget {
                   builder: (BuildContext context) => ChooseAccount())),
         ),
         SettingsTile(
-          label: 'Saved Them',
+          label: 'Add Recent Upload',
           color: kColorPurple.withOpacity(0.9),
-          onTap: () => print('ok'),
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(
+                builder: (BuildContext context) => AddRecent())),
+        ),
+        SettingsTile(
+          label: 'Create Live Chat',
+          color: kColorPurple.withOpacity(0.8),
+          onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (BuildContext context) => AddLiveChat())),
         ),
         SettingsTile(
           label: 'Hide Me',
-          color: kColorPurple.withOpacity(0.8),
+          color: kColorPurple.withOpacity(0.7),
           onTap: () => print('hide me'),
         ),
         SettingsTile(
           label: 'Tell Your Friends',
-          color: kColorPurple.withOpacity(0.7),
-          onTap: () => print('share'),
+          color: kColorPurple.withOpacity(0.6),
+          onTap: () => _handleShare(),
         ),
         SettingsTile(
           label: 'Rate HereMe',
-          color: kColorPurple.withOpacity(0.6),
-          onTap: () => _handleRateMe(),
+          color: kColorPurple.withOpacity(0.5),
+          onTap: () => _handleRate(),
         ),
         SettingsTile(
           label: 'Help & Support',
-          color: kColorPurple.withOpacity(0.5),
+          color: kColorPurple.withOpacity(0.4),
           onTap: () => Navigator.push(
               context,
               MaterialPageRoute(
                   builder: (BuildContext context) => SupportPage())),
-        ),
-        SettingsTile(
-          label: 'Send Us Feedback',
-          color: kColorPurple.withOpacity(0.4),
-          onTap: () => print('feedback'),
         ),
         Theme(
           data: kTheme(context),
@@ -96,8 +104,12 @@ class ListPage extends StatelessWidget {
       ]),
     );
   }
+  
+  _handleShare() {
+    Share.share('Spread the word about HereMe!');
+  }
 
-  _handleRateMe() {
+  _handleRate() {
     LaunchReview.launch(
         androidAppId: "com.TVCCYA.HereMe.heremeflutter",
         iOSAppId: "1392161162");

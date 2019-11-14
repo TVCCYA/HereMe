@@ -426,15 +426,25 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
             final chatId = chat.data['chatId'];
             final hostDisplayName = chat.data['hostDisplayName'] ?? '';
             final hostUid = chat.data['uid'];
-            final hostRed = chat.data['hostRed'];
-            final hostGreen = chat.data['hostGreen'];
-            final hostBlue = chat.data['hostBlue'];
-            final duration = chat.data['duration'];
+            final hostRed = chat.data['hostRed'] ?? 91;
+            final hostGreen = chat.data['hostGreen'] ?? 71;
+            final hostBlue = chat.data['hostBlue'] ?? 188;
+            final endDate = chat.data['endDate'];
+
             GeoPoint point = chat.data['position']['geopoint'];
             double distance = geo
                 .point(latitude: point.latitude, longitude: point.longitude)
                 .distance(lat: latitude, lng: longitude);
             double distanceFromChat = distance / 1.609;
+
+            int timeLeft = endDate - DateTime.now().millisecondsSinceEpoch;
+            bool hasChatEnded = timeLeft <= 0;
+
+            if (hasChatEnded) {
+              kHandleRemoveData(chatId, hostUid,'liveChats', 'chats');
+              kRemoveLiveChatMessages(chatId);
+              liveChatLocationsRef.document(chatId).delete();
+            }
 
             final displayedChat = LiveChatResult(
               title: title,
@@ -445,17 +455,12 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
               hostRed: hostRed,
               hostGreen: hostGreen,
               hostBlue: hostBlue,
-              duration: duration,
+              duration: kTimeRemaining(timeLeft),
               distanceFromChat: distanceFromChat,
             );
-            if (currentUser.uid != hostUid &&
-                !currentUser.blockedUids.contains(hostUid) &&
+            if (!currentUser.blockedUids.contains(hostUid) &&
                 chatsAround.length < 3) {
               chatsAround.add(displayedChat);
-            }
-
-            if (chatsAround.isNotEmpty) {
-
             }
           }
           if (chatsAround.isNotEmpty) {
@@ -658,14 +663,12 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
         centerTitle: false,
         elevation: 2.0,
         backgroundColor: kColorOffWhite,
-        title: new Text(
+        title: Text(
           "HereMe",
           textAlign: TextAlign.left,
-          style: TextStyle(
+          style: kAppBarTextStyle.copyWith(
             color: kColorPurple,
-            fontFamily: 'Arimo',
-            fontSize: 24.0,
-            fontWeight: FontWeight.w600,
+            fontSize: 26.0,
           ),
         ),
         automaticallyImplyLeading: false,

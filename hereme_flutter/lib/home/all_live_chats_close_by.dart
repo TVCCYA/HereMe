@@ -53,14 +53,25 @@ class _AllLiveChatsCloseByState extends State<AllLiveChatsCloseBy> {
             final chatId = chat.data['chatId'];
             final hostDisplayName = chat.data['hostDisplayName'] ?? '';
             final hostUid = chat.data['uid'];
-            final hostRed = chat.data['hostRed'];
-            final hostGreen = chat.data['hostGreen'];
-            final hostBlue = chat.data['hostBlue'];
-            final duration = chat.data['duration'];
+            final hostRed = chat.data['hostRed'] ?? 91;
+            final hostGreen = chat.data['hostGreen'] ?? 71;
+            final hostBlue = chat.data['hostBlue'] ?? 188;
+            final endDate = chat.data['endDate'];
+
             GeoPoint point = chat.data['position']['geopoint'];
-            double distance = geo.point(latitude: point.latitude, longitude: point.longitude)
+            double distance = geo
+                .point(latitude: point.latitude, longitude: point.longitude)
                 .distance(lat: latitude, lng: longitude);
             double distanceFromChat = distance / 1.609;
+
+            int timeLeft = endDate - DateTime.now().millisecondsSinceEpoch;
+            bool hasChatEnded = timeLeft <= 0;
+
+            if (hasChatEnded) {
+              kHandleRemoveData(chatId, hostUid,'liveChats', 'chats');
+              kRemoveLiveChatMessages(chatId);
+              liveChatLocationsRef.document(chatId).delete();
+            }
 
             final displayedChat = LiveChatResult(
               title: title,
@@ -71,7 +82,7 @@ class _AllLiveChatsCloseByState extends State<AllLiveChatsCloseBy> {
               hostRed: hostRed,
               hostGreen: hostGreen,
               hostBlue: hostBlue,
-              duration: duration,
+              duration: kTimeRemaining(timeLeft),
               distanceFromChat: distanceFromChat,
             );
             if(!currentUser.blockedUids.contains(hostUid)) {

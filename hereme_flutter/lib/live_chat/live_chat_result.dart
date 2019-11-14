@@ -16,7 +16,7 @@ class LiveChatResult extends StatelessWidget {
   final int hostRed;
   final int hostGreen;
   final int hostBlue;
-  final int duration;
+  final String duration;
   final double distanceFromChat;
 
   LiveChatResult({
@@ -45,11 +45,41 @@ class LiveChatResult extends StatelessWidget {
           dense: true,
           contentPadding:
               EdgeInsets.only(left: 12.0, right: 16.0, top: 4.0, bottom: 4.0),
-          title: Text(
-            title,
-            overflow: TextOverflow.fade,
-            softWrap: false,
-            style: kDefaultTextStyle.copyWith(fontSize: 18.0),
+          title: RichText(
+            text: chatHostDisplayName.isNotEmpty ? TextSpan(
+              children: [
+                TextSpan(
+                  text: title,
+                  style: kAppBarTextStyle.copyWith(
+                    fontSize: 17.0,
+                  ),
+                ),
+                TextSpan(
+                  text: " hosted by: ",
+                  style: kDefaultTextStyle,
+                ),
+                TextSpan(
+                  text: chatHostDisplayName,
+                  style: kDefaultTextStyle.copyWith(
+                    color: Color.fromRGBO(hostRed, hostGreen, hostBlue, 1.0),
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            ) : TextSpan(
+              children: [
+                TextSpan(
+                  text: title,
+                  style: kAppBarTextStyle.copyWith(
+                    fontSize: 17.0,
+                  ),
+                ),
+                TextSpan(
+                  text: " hosted anonymously",
+                  style: kDefaultTextStyle,
+                ),
+              ],
+            ),
           ),
           subtitle: Row(
             children: <Widget>[
@@ -70,7 +100,7 @@ class LiveChatResult extends StatelessWidget {
             ],
           ),
           trailing: Text(
-            duration == 1 ? '$duration hour left' : '$duration hours left',
+            duration,
             overflow: TextOverflow.fade,
             softWrap: false,
             style: kDefaultTextStyle.copyWith(
@@ -91,6 +121,7 @@ class LiveChatResult extends StatelessWidget {
                       hostRed: hostRed ?? 95,
                       hostGreen: hostGreen ?? 71,
                       hostBlue: hostBlue ?? 188,
+                      duration: duration,
                     )
                         : CreateDisplayName()));
           },

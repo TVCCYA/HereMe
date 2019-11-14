@@ -28,6 +28,11 @@ class _AddLiveChatState extends State<AddLiveChat> {
   List<User> usersAround = [];
   List<String> usersAroundUid = [];
 
+  int creationDate = DateTime.now().millisecondsSinceEpoch;
+  final red = currentUser.red ?? 95;
+  final green = currentUser.green ?? 71;
+  final blue = currentUser.blue ?? 188;
+
   isValid() {
     if (title.isNotEmpty &&
         duration.isNotEmpty &&
@@ -95,6 +100,7 @@ class _AddLiveChatState extends State<AddLiveChat> {
       child: Scaffold(
         backgroundColor: kColorOffWhite,
         appBar: AppBar(
+          brightness: Brightness.light,
           backgroundColor: Colors.white,
           elevation: 2.0,
           title: Text(
@@ -107,7 +113,7 @@ class _AddLiveChatState extends State<AddLiveChat> {
               Navigator.pop(context);
             },
             color: kColorBlack71,
-            splashColor: Colors.transparent,
+            splashColor: Colors.grey[200],
             highlightColor: Colors.transparent,
           ),
         ),
@@ -149,6 +155,7 @@ class _AddLiveChatState extends State<AddLiveChat> {
                     ),
                     TextField(
                       cursorColor: kColorPurple,
+                      maxLength: 20,
                       onChanged: (value) {
                         title = value;
                         isValid();
@@ -251,7 +258,7 @@ class _AddLiveChatState extends State<AddLiveChat> {
                         },
                         splashColor: _isButtonDisabled
                             ? Colors.transparent
-                            : kColorOffWhite,
+                            : Colors.grey[200],
                         highlightColor: Colors.transparent,
                         icon: Icon(
                           _isButtonDisabled
@@ -287,15 +294,17 @@ class _AddLiveChatState extends State<AddLiveChat> {
         geo.point(latitude: currentLatitude, longitude: currentLongitude);
     await liveChatLocationsRef.document(chatId).setData({
       'position': myLocation.data,
+
       'uid': currentUser.uid,
       'chatId': chatId,
       'hostDisplayName': _isAnonymousChecked ? '' : currentUser.displayName,
-      'creationDate': DateTime.now().millisecondsSinceEpoch * 1000,
       'title': title,
-      'hostRed': currentUser.red,
-      'hostGreen': currentUser.green,
-      'hostBlue': currentUser.blue,
+      'hostRed': red,
+      'hostGreen': green,
+      'hostBlue': blue,
       'duration': int.parse(duration),
+      'endDate': creationDate + (int.parse(duration) * 3600000),
+      'creationDate': creationDate,
     });
   }
 
@@ -305,22 +314,29 @@ class _AddLiveChatState extends State<AddLiveChat> {
     final ref = liveChatsRef.document(uid).collection('chats').document(chatId);
 
     Map<String, dynamic> liveChatData = <String, dynamic> {
+      'invites': usersAroundUid,
+
       'uid': currentUser.uid,
       'chatId': chatId,
       'hostDisplayName': _isAnonymousChecked ? '' : currentUser.displayName,
-      'creationDate': DateTime.now().millisecondsSinceEpoch * 1000,
       'title': title,
-      'hostRed': currentUser.red,
-      'hostGreen': currentUser.green,
-      'hostBlue': currentUser.blue,
+      'hostRed': red,
+      'hostGreen': green,
+      'hostBlue': blue,
       'duration': int.parse(duration),
-      'invites': usersAroundUid,
-      'creationDate': DateTime.now().millisecondsSinceEpoch * 1000,
+      'endDate': creationDate + (int.parse(duration) * 3600000),
+      'creationDate': creationDate,
     };
 
     ref.setData(liveChatData).whenComplete(() {
       setChatLocation(chatId);
       Navigator.pop(context);
+      kShowFlushBar(
+        context: context,
+        text: 'Successfully created $title',
+        color: Color.fromRGBO(red, green, blue, 1.0),
+        icon: FontAwesomeIcons.comments,
+      );
     }).catchError((e) =>
         kErrorFlushbar(context: context, errorText: 'Unable to create Live Chat at this time'));
   }

@@ -88,11 +88,41 @@ class ActivityFeedItem extends StatelessWidget {
     return ListTile(
       dense: true,
       contentPadding: EdgeInsets.only(left: 16.0, right: 16.0, top: 4.0, bottom: 4.0),
-      title: Text(
-        title,
-        overflow: TextOverflow.fade,
-        softWrap: false,
-        style: kDefaultTextStyle,
+      title: RichText(
+        text: chatHostDisplayName.isNotEmpty ? TextSpan(
+          children: [
+            TextSpan(
+              text: title,
+              style: kAppBarTextStyle.copyWith(
+                fontSize: 16.0,
+              ),
+            ),
+            TextSpan(
+              text: " hosted by: ",
+              style: kDefaultTextStyle,
+            ),
+            TextSpan(
+              text: chatHostDisplayName,
+              style: kDefaultTextStyle.copyWith(
+                  color: Color.fromRGBO(hostRed, hostGreen, hostBlue, 1.0),
+                  fontWeight: FontWeight.w700,
+              ),
+            ),
+          ],
+        ) : TextSpan(
+          children: [
+            TextSpan(
+              text: title,
+              style: kAppBarTextStyle.copyWith(
+                fontSize: 16.0,
+              ),
+            ),
+            TextSpan(
+              text: " hosted anonymously",
+              style: kDefaultTextStyle,
+            ),
+          ],
+        ),
       ),
       subtitle: RichText(
         overflow: TextOverflow.ellipsis,
@@ -102,7 +132,7 @@ class ActivityFeedItem extends StatelessWidget {
               text: '${currentUser.displayName}: ',
               style: kDefaultTextStyle.copyWith(
                   color: kColorLightGray,
-                  fontWeight: FontWeight.w600,
+                  fontWeight: FontWeight.w700,
                   fontSize: 14.0
               ),
             ),
@@ -153,7 +183,7 @@ class ActivityFeedItem extends StatelessWidget {
         style: kDefaultTextStyle,
       ),
       subtitle: Text(
-        'Recent Profile Visit',
+        'Last Profile Visited',
         style: kDefaultTextStyle.copyWith(color: kColorLightGray, fontSize: 14.0),
       ),
       leading: ClipRRect(
