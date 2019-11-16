@@ -32,6 +32,7 @@ final userLocationsRef = Firestore.instance.collection('userLocations');
 final liveChatLocationsRef = Firestore.instance.collection('liveChatLocations');
 final liveChatMessagesRef = Firestore.instance.collection('liveChatMessages');
 final activityRef = Firestore.instance.collection('activity');
+final usersInChatRef = Firestore.instance.collection('usersInChat');
 User currentUser;
 double currentLatitude;
 double currentLongitude;
@@ -332,27 +333,29 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
                       shrinkWrap: true,
                       children: gridTiles,
                     ),
-                    FlatButton.icon(
-                      icon: Icon(
-                        FontAwesomeIcons.chevronCircleRight,
-                        color: kColorBlack71,
-                      ),
-                      // use
-                      onPressed: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) => AllUsersCloseBy(
-                                    latitude: latitude,
-                                    longitude: longitude,
-                                  ))),
-                      label: Text(
-                        'Within 1/4 mile',
-                        style: kDefaultTextStyle.copyWith(
-                            fontWeight: FontWeight.w300, fontSize: 16.0),
-                      ),
-                      splashColor: Colors.transparent,
-                      highlightColor: Colors.grey[200],
-                    )
+                    users.length > 4
+                        ? FlatButton.icon(
+                            icon: Icon(
+                              FontAwesomeIcons.chevronCircleRight,
+                              color: kColorBlack71,
+                            ),
+                            // use
+                            onPressed: () => Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) => AllUsersCloseBy(
+                                          latitude: latitude,
+                                          longitude: longitude,
+                                        ))),
+                            label: Text(
+                              'Within 1/4 mile',
+                              style: kDefaultTextStyle.copyWith(
+                                  fontWeight: FontWeight.w300, fontSize: 16.0),
+                            ),
+                            splashColor: Colors.transparent,
+                            highlightColor: Colors.grey[200],
+                          )
+                        : SizedBox(),
                   ],
                 ),
               ],
@@ -441,9 +444,7 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
             bool hasChatEnded = timeLeft <= 0;
 
             if (hasChatEnded) {
-              kHandleRemoveData(chatId, hostUid,'liveChats', 'chats');
-              kRemoveLiveChatMessages(chatId);
-              liveChatLocationsRef.document(chatId).delete();
+              kHandleRemoveAllLiveChatData(chatId, hostUid);
             }
 
             final displayedChat = LiveChatResult(
@@ -475,30 +476,32 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
                         style: kAppBarTextStyle.copyWith(fontSize: 18.0)),
                   ),
                   Column(children: chatsAround),
-                  Align(
-                    alignment: Alignment.bottomRight,
-                    child: FlatButton.icon(
-                      icon: Icon(
-                        FontAwesomeIcons.chevronCircleRight,
-                        color: kColorBlack71,
-                      ),
-                      // use
-                      onPressed: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) => AllLiveChatsCloseBy(
-                                    latitude: latitude,
-                                    longitude: longitude,
-                                  ))),
-                      label: Text(
-                        'Within 1 mile',
-                        style: kDefaultTextStyle.copyWith(
-                            fontWeight: FontWeight.w300, fontSize: 16.0),
-                      ),
-                      splashColor: Colors.transparent,
-                      highlightColor: Colors.grey[200],
-                    ),
-                  )
+                  chats.length > 3
+                      ? Align(
+                          alignment: Alignment.bottomRight,
+                          child: FlatButton.icon(
+                            icon: Icon(
+                              FontAwesomeIcons.chevronCircleRight,
+                              color: kColorBlack71,
+                            ),
+                            // use
+                            onPressed: () => Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) => AllLiveChatsCloseBy(
+                                          latitude: latitude,
+                                          longitude: longitude,
+                                        ))),
+                            label: Text(
+                              'Within 1 mile',
+                              style: kDefaultTextStyle.copyWith(
+                                  fontWeight: FontWeight.w300, fontSize: 16.0),
+                            ),
+                            splashColor: Colors.transparent,
+                            highlightColor: Colors.grey[200],
+                          ),
+                        )
+                      : SizedBox(),
                 ],
               ),
             );

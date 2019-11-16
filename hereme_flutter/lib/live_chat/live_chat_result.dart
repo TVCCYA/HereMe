@@ -83,7 +83,7 @@ class LiveChatResult extends StatelessWidget {
           ),
           subtitle: Row(
             children: <Widget>[
-              distanceFromChat == 0 ? Icon(
+              distanceFromChat < 0.16 ? Icon(
                 FontAwesomeIcons.mapMarkerAlt,
                 size: 12.0,
                 color: kColorPurple,
@@ -94,7 +94,7 @@ class LiveChatResult extends StatelessWidget {
               ),
               SizedBox(width: 2.0),
               Text(
-                distanceFromChat == 0 ? 'Here' : '${distanceFromChat.toStringAsFixed(5)} miles away',
+                distanceFromChat < 0.16 ? 'Here' : '${distanceFromChat.toStringAsFixed(4)} miles away',
                 style: kDefaultTextStyle.copyWith(fontSize: 14.0),
               ),
             ],

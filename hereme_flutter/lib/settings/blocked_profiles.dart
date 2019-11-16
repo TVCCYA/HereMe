@@ -113,6 +113,7 @@ class _BlockedProfilesState extends State<BlockedProfiles> {
   unblockUser(String uid) {
     usersRef.document(currentUser.uid).updateData(
         {'blockedUsers.$uid': FieldValue.delete()}).whenComplete(() {
+          usersRef.document(uid).updateData({'blockedUsers.${currentUser.uid}': FieldValue.delete()});
       kShowFlushBar(
           text: 'Successfully Unblocked',
           icon: FontAwesomeIcons.exclamation,

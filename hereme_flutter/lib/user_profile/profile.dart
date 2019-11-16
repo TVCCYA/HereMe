@@ -84,7 +84,7 @@ class _ProfileState extends State<Profile> {
   }
 
   recentProfileVisitUpdate() {
-    if (!_isCurrentUser) {
+    if (!_isCurrentUser && userUid != null) {
       activityRef.document(currentUserUid).collection('feedItems').document(currentUserUid).setData({
         'type': 'recentProfileVisit',
         'uid': userUid,
@@ -246,8 +246,10 @@ class _ProfileState extends State<Profile> {
                                     final hostRed = item.data['hostRed'] ?? 0;
                                     final hostGreen = item.data['hostGreen'] ?? 0;
                                     final hostBlue = item.data['hostBlue'] ?? 0;
-                                    final duration = item.data['duration'] ?? 0;
                                     final lastMessage = item.data['message'] ?? '';
+
+                                    final endDate = item.data['endDate'] ?? 0;
+                                    int timeLeft = endDate - DateTime.now().millisecondsSinceEpoch;
 
                                     final displayedItem = ActivityFeedItem(
                                       type: type,
@@ -267,7 +269,7 @@ class _ProfileState extends State<Profile> {
                                       hostRed: hostRed,
                                       hostGreen: hostGreen,
                                       hostBlue: hostBlue,
-                                      duration: duration,
+                                      duration: kTimeRemaining(timeLeft),
                                       lastMessage: lastMessage,
                                     );
                                     displayedItems.add(displayedItem);
@@ -795,7 +797,7 @@ class _ProfileState extends State<Profile> {
                                   buttonText2: 'Cancel',
                                   color2: kColorLightGray,
                                   onPressed1: () {
-                                    _handleKnock(uid: userUid, username: username, profileImageUrl: profileImageUrl);
+                                    _handleKnock(uid: user.uid, username: username, profileImageUrl: profileImageUrl);
                                     Navigator.pop(context);
                                   },
                                   onPressed2: () {
@@ -826,73 +828,6 @@ class _ProfileState extends State<Profile> {
     });
   }
 
-  _handleKnock({String uid, String username, String profileImageUrl}) {
-    final ref = knocksRef
-        .document(uid)
-        .collection('receivedKnockFrom')
-        .document(currentUserUid);
-    final newRef = ref.get();
-    newRef.then((doc) {
-      if (!doc.exists) {
-        _sendKnock(ref, uid, username, profileImageUrl);
-      } else {
-        kShowFlushBar(
-            text: 'Already Knocked $username',
-            context: context,
-            icon: FontAwesomeIcons.times,
-            color: kColorRed);
-      }
-    });
-  }
-
-  _sendKnock(DocumentReference ref, String uid, String knockUsername, String knockImageUrl) {
-    int creationDate = DateTime.now().millisecondsSinceEpoch;
-    Map<String, dynamic> knockData = <String, dynamic>{
-      'uid': currentUserUid,
-      'profileImageUrl': currentUser.profileImageUrl,
-      'username': currentUser.username,
-      'creationDate': creationDate,
-    };
-    ref.setData(knockData).whenComplete(() {
-      // current users activity feed updates
-      activityRef.document(currentUserUid).collection('feedItems').document(uid).setData({
-        'type': 'pendingKnock',
-        'uid': uid,
-        'username': knockUsername,
-        'profileImageUrl': knockImageUrl,
-        'creationDate': creationDate,
-      }).whenComplete(() {
-        _updateKnockedUsersActivityFeed(uid);
-      });
-
-      kShowFlushBar(
-          text: 'Successfully sent Knock',
-          context: context,
-          icon: FontAwesomeIcons.paperPlane,
-          color: kColorGreen);
-    }).catchError((e) => kShowAlert(
-      context: context,
-      title: 'Knock Failed',
-      desc: 'Unable to knock $knockUsername, please try again later',
-      buttonText: 'Try Again',
-      onPressed: () => Navigator.pop(context),
-    ));
-  }
-
-  _updateKnockedUsersActivityFeed(String uid) {
-    // knocked users activity feed updates by removing pending knock
-    activityRef.document(uid).collection('feedItems').getDocuments().then((snapshot) {
-      snapshot.documents.forEach((doc) {
-        if (doc.exists) {
-          final type = doc.data['type'];
-          if (type == 'pendingKnock') {
-            doc.reference.delete();
-          }
-        }
-      });
-    });
-  }
-
   _knocksActionSheet({BuildContext context, String uid, String username, String profileImageUrl}) {
     List<ReusableBottomActionSheetListTile> sheets = [];
     sheets.add(
@@ -912,7 +847,6 @@ class _ProfileState extends State<Profile> {
         iconData: FontAwesomeIcons.check,
         onTap: () async {
           _handleKnock(uid: uid, username: username, profileImageUrl: profileImageUrl);
-          _removeKnock(uid);
           Navigator.pop(context);
         },
       ),
@@ -927,27 +861,57 @@ class _ProfileState extends State<Profile> {
     kActionSheet(context, sheets);
   }
 
-  _pendingKnocksActionSheet({BuildContext context, String uid}) {
-    List<ReusableBottomActionSheetListTile> sheets = [];
-    sheets.add(
-      ReusableBottomActionSheetListTile(
-        title: 'Cancel Knock',
-        iconData: FontAwesomeIcons.ban,
-        color: kColorRed,
-        onTap: () {
-          _removePendingKnock(uid);
-          Navigator.pop(context);
-        },
-      ),
-    );
-    sheets.add(
-      ReusableBottomActionSheetListTile(
-        title: 'Cancel',
-        iconData: FontAwesomeIcons.times,
-        onTap: () => Navigator.pop(context),
-      ),
-    );
-    kActionSheet(context, sheets);
+  _handleKnock({String uid, String username, String profileImageUrl}) {
+    final ref = knocksRef
+        .document(uid)
+        .collection('receivedKnockFrom')
+        .document(currentUserUid);
+    final newRef = ref.get();
+    newRef.then((doc) {
+      if (!doc.exists && uid != null) {
+        _sendKnock(ref, uid, username);
+      } else {
+        kShowFlushBar(
+            text: 'Already Knocked $username',
+            context: context,
+            icon: FontAwesomeIcons.times,
+            color: kColorRed);
+      }
+    });
+  }
+
+  _sendKnock(DocumentReference ref, String uid, String username) {
+    int creationDate = DateTime.now().millisecondsSinceEpoch;
+    Map<String, dynamic> knockData = <String, dynamic>{
+      'uid': currentUserUid,
+      'profileImageUrl': currentUser.profileImageUrl,
+      'username': currentUser.username,
+      'creationDate': creationDate,
+    };
+    ref.setData(knockData).whenComplete(() {
+      _setPendingKnockActivityFeed(creationDate, username);
+      kShowFlushBar(
+          text: 'Successfully sent Knock',
+          context: context,
+          icon: FontAwesomeIcons.paperPlane,
+          color: kColorGreen);
+    }).catchError((e) => kShowAlert(
+      context: context,
+      title: 'Knock Failed',
+      desc: 'Unable to knock $username, please try again later',
+      buttonText: 'Try Again',
+      onPressed: () => Navigator.pop(context),
+    ));
+  }
+
+  _setPendingKnockActivityFeed(int creationDate, String username) {
+    activityRef.document(currentUserUid).collection('feedItems').document(user.uid).setData({
+      'type': 'pendingKnock',
+      'uid': user.uid,
+      'username': username,
+      'profileImageUrl': profileImageUrl,
+      'creationDate': creationDate,
+    });
   }
 
   _removeKnock(String uid) {
@@ -963,19 +927,54 @@ class _ProfileState extends State<Profile> {
     });
   }
 
-  _removePendingKnock(String uid) {
+  _removePendingKnockActivityFeed({String uid, String id}) {
+    DocumentReference ref = activityRef.document(uid).collection('feedItems').document(id);
+    ref.snapshots().forEach((snapshot) {
+      if (snapshot.exists) {
+        final type = snapshot.data['type'];
+        if (type == 'pendingKnock') {
+          snapshot.reference.delete();
+        }
+      }
+    });
+  }
+
+  _removePendingKnock(String uid1, String uid2) {
     knocksRef
-        .document(uid)
+        .document(uid1)
         .collection('receivedKnockFrom')
-        .document(currentUserUid)
+        .document(uid2)
         .get()
         .then((doc) {
       if (doc.exists) {
         doc.reference.delete().whenComplete(() {
-          _updateKnockedUsersActivityFeed(currentUserUid);
+          _removePendingKnockActivityFeed(uid: uid2, id: uid1);
         });
       }
     });
+  }
+
+  _pendingKnocksActionSheet({BuildContext context, String uid}) {
+    List<ReusableBottomActionSheetListTile> sheets = [];
+    sheets.add(
+      ReusableBottomActionSheetListTile(
+        title: 'Cancel Knock',
+        iconData: FontAwesomeIcons.ban,
+        color: kColorRed,
+        onTap: () {
+          _removePendingKnock(uid, currentUserUid);
+          Navigator.pop(context);
+        },
+      ),
+    );
+    sheets.add(
+      ReusableBottomActionSheetListTile(
+        title: 'Cancel',
+        iconData: FontAwesomeIcons.times,
+        onTap: () => Navigator.pop(context),
+      ),
+    );
+    kActionSheet(context, sheets);
   }
 
   _linksActionSheet(BuildContext context, String accountUsername,
@@ -1000,7 +999,7 @@ class _ProfileState extends State<Profile> {
                 buttonText: "Unlink",
                 onPressed: () {
                   Navigator.pop(context);
-                  kHandleRemoveData(linkId, currentUserUid, 'socialMedias', 'socials');
+                  kHandleRemoveDataAtId(linkId, currentUserUid, 'socialMedias', 'socials');
                   Navigator.pop(context);
                 },
               );
@@ -1058,9 +1057,7 @@ class _ProfileState extends State<Profile> {
           buttonText: "Delete",
           onPressed: () {
             Navigator.pop(context);
-            kHandleRemoveData(chatId, currentUserUid, 'liveChats', 'chats');
-            kRemoveLiveChatMessages(chatId);
-            liveChatLocationsRef.document(chatId).delete();
+            kHandleRemoveAllLiveChatData(chatId, currentUserUid);
             Navigator.pop(context);
           },
         );
@@ -1120,7 +1117,7 @@ class _ProfileState extends State<Profile> {
                 onPressed: () {
                   Navigator.pop(context);
                   _handleRemoveRecentThumbnailFromStorage(storageFilename);
-                  kHandleRemoveData(storageFilename, currentUserUid, 'recentUploads', 'recents');
+                  kHandleRemoveDataAtId(storageFilename, currentUserUid, 'recentUploads', 'recents');
                   Navigator.pop(context);
                 },
               );
@@ -1393,7 +1390,7 @@ class _ProfileState extends State<Profile> {
   }
 
   _getUserPageInfo() async {
-    await usersRef.document(widget.user.uid).get().then((doc) {
+    await usersRef.document(user.uid).get().then((doc) {
       User user = User.fromDocument(doc);
       if (this.mounted) {
         setState(() {

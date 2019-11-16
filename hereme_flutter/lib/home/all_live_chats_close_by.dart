@@ -68,7 +68,7 @@ class _AllLiveChatsCloseByState extends State<AllLiveChatsCloseBy> {
             bool hasChatEnded = timeLeft <= 0;
 
             if (hasChatEnded) {
-              kHandleRemoveData(chatId, hostUid,'liveChats', 'chats');
+              kHandleRemoveDataAtId(chatId, hostUid,'liveChats', 'chats');
               kRemoveLiveChatMessages(chatId);
               liveChatLocationsRef.document(chatId).delete();
             }

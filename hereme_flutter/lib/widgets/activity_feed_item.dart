@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:hereme_flutter/live_chat/live_chat_screen.dart';
 import 'package:hereme_flutter/models/user.dart';
 import 'package:hereme_flutter/registration/create_display_name.dart';
-import 'package:hereme_flutter/user_profile/profile.dart';
 import 'package:hereme_flutter/utils/custom_image.dart';
+import 'package:hereme_flutter/widgets/user_result.dart';
 import 'package:time_ago_provider/time_ago_provider.dart';
 import '../constants.dart';
 import 'package:hereme_flutter/home/home.dart';
@@ -25,7 +25,7 @@ class ActivityFeedItem extends StatelessWidget {
   final int hostRed;
   final int hostGreen;
   final int hostBlue;
-  final int duration;
+  final String duration;
   final String lastMessage;
 
   ActivityFeedItem({
@@ -104,8 +104,8 @@ class ActivityFeedItem extends StatelessWidget {
             TextSpan(
               text: chatHostDisplayName,
               style: kDefaultTextStyle.copyWith(
-                  color: Color.fromRGBO(hostRed, hostGreen, hostBlue, 1.0),
-                  fontWeight: FontWeight.w700,
+                color: Color.fromRGBO(hostRed, hostGreen, hostBlue, 1.0),
+                fontWeight: FontWeight.w700,
               ),
             ),
           ],
@@ -165,6 +165,7 @@ class ActivityFeedItem extends StatelessWidget {
                   hostRed: hostRed ?? 95,
                   hostGreen: hostGreen ?? 71,
                   hostBlue: hostBlue ?? 188,
+                  duration: duration,
                 )
                     : CreateDisplayName()));
       },
@@ -192,10 +193,8 @@ class ActivityFeedItem extends StatelessWidget {
       ),
       onTap: () {
         User user = User(uid: uid);
-        Navigator.push(context, MaterialPageRoute(builder: (context) => Profile(
-          user: user,
-          locationLabel: city,
-        )));
+        UserResult result = UserResult(user: user, locationLabel: city);
+        result.toProfile(context);
       },
       trailing: Text(
         date(),
@@ -213,32 +212,42 @@ class ActivityFeedItem extends StatelessWidget {
     return ListTile(
       dense: true,
       contentPadding: EdgeInsets.only(left: 16.0, right: 16.0, top: 4.0, bottom: 4.0),
-      title: Text(
-        'You are invited to $title',
-        overflow: TextOverflow.fade,
-        softWrap: false,
-        style: kDefaultTextStyle,
-      ),
-      subtitle: RichText(
-        overflow: TextOverflow.ellipsis,
+      title: RichText(
         text: TextSpan(
           children: [
             TextSpan(
-              text: 'Host: ',
+              text: "You are invited to: ",
+              style: kDefaultTextStyle,
+            ),
+            TextSpan(
+              text: title,
+              style: kAppBarTextStyle.copyWith(
+                fontSize: 16.0,
+              ),
+            ),
+          ],
+        ),
+      ),
+      subtitle: RichText(
+        overflow: TextOverflow.ellipsis,
+        text: chatHostDisplayName.isNotEmpty ? TextSpan(
+          children: [
+            TextSpan(
+              text: 'Hosted by: ',
               style: kDefaultTextStyle.copyWith(
                   color: kColorLightGray,
                   fontWeight: FontWeight.w600,
                   fontSize: 14.0
               ),
             ),
-            chatHostDisplayName.isNotEmpty ? TextSpan(
+            TextSpan(
               text: chatHostDisplayName,
               style: kDefaultTextStyle.copyWith(fontSize: 14.0, color: Color.fromRGBO(hostRed, hostGreen, hostBlue, 1.0)),
-            ) : TextSpan(
-              text: 'Anonymous',
-              style: kDefaultTextStyle.copyWith(fontSize: 14.0, color: kColorLightGray),
             ),
           ],
+        ) : Text(
+          'Hosted Anonymously',
+          style: kDefaultTextStyle.copyWith(fontSize: 14.0, color: kColorLightGray),
         ),
       ),
       trailing: Text(
@@ -263,6 +272,7 @@ class ActivityFeedItem extends StatelessWidget {
                   hostRed: hostRed ?? 95,
                   hostGreen: hostGreen ?? 71,
                   hostBlue: hostBlue ?? 188,
+                  duration: duration,
                 )
                     : CreateDisplayName()));
       },
@@ -277,7 +287,7 @@ class ActivityFeedItem extends StatelessWidget {
     } else if (type == 'recentProfileVisit') {
       return buildRecentProfileVisit(context);
     } else if (type == 'liveChatInvite') {
-      buildLiveChatInvite(context);
+      return buildLiveChatInvite(context);
     } else {
       return SizedBox();
     }

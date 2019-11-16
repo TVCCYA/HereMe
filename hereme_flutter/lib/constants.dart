@@ -328,7 +328,7 @@ void kBlockUser(BuildContext context, String uid) {
     'blockedUsers.$uid': 1,
   }).whenComplete(() {
     usersRef.document(uid).updateData({
-      'blockedUsers.$uid': 0,
+      'blockedUsers.${currentUser.uid}': 0,
     }).whenComplete(() {
       kShowFlushBar(
           context: context,
@@ -372,8 +372,7 @@ void kDeleteSentKnocks(String currentUserUid) {
   });
 }
 
-
-void kHandleRemoveData(String key, String uid, String collection1, String collection2) async {
+void kHandleRemoveDataAtId(String id, String uid, String collection1, String collection2) async {
   final ref = Firestore
       .instance
       .collection(collection1)
@@ -383,15 +382,13 @@ void kHandleRemoveData(String key, String uid, String collection1, String collec
   ref.getDocuments().then((snapshot) {
     for (final doc in snapshot.documents) {
       if (doc.exists) {
-        if (doc.data.containsValue(key)) {
+        if (doc.data.containsValue(id)) {
           ref.document(doc.documentID).delete();
         }
       }
     }
   });
 }
-
-
 
 String kTimeRemaining(int duration) {
   String result;
@@ -425,4 +422,47 @@ String kTimeRemaining(int duration) {
     result = 'lots of time left';
   }
   return result;
+}
+
+void kHandleRemoveChatFromActivityFeed(String chatId, String collection) {
+  usersInChatRef.document(chatId).collection(collection).snapshots().forEach((snapshot) {
+    snapshot.documents.forEach((doc) {
+      if (doc.exists) {
+        final uid = doc.data['uid'];
+        activityRef.document(uid).collection('feedItems').document(chatId).delete();
+      }
+    });
+  });
+}
+
+void kHandleRemoveEntireNode(String collection, String id) {
+  final ref = Firestore
+      .instance
+      .collection(collection)
+      .document(id);
+  ref.get().then((snapshot) {
+    if (snapshot.exists) {
+      ref.delete();
+    }
+  });
+}
+
+void kHandleRemoveUsersInChat(String chatId, String collection) {
+  usersInChatRef.document(chatId).collection(collection).snapshots().forEach((snapshot) {
+    snapshot.documents.forEach((doc) {
+      if (doc.exists) {
+        doc.reference.delete();
+      }
+    });
+  });
+}
+
+void kHandleRemoveAllLiveChatData(String chatId, String uid) {
+  kHandleRemoveChatFromActivityFeed(chatId, 'inChat');
+  kHandleRemoveChatFromActivityFeed(chatId, 'invited');
+  kHandleRemoveUsersInChat(chatId, 'invited');
+  kHandleRemoveUsersInChat(chatId, 'inChat');
+  kHandleRemoveEntireNode('liveChatLocations', chatId);
+  kRemoveLiveChatMessages(chatId);
+  kHandleRemoveDataAtId(chatId, uid,'liveChats', 'chats');
 }

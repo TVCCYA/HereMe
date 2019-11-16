@@ -72,6 +72,8 @@ class _LiveChatScreenState extends State<LiveChatScreen> {
   bool _hasStartedTyping = false;
   bool _hostAnonymous = false;
   List<dynamic> uidsInChat = [];
+  int now = DateTime.now().millisecondsSinceEpoch;
+  bool hasChatEnded = false;
 
   @override
   void initState() {
@@ -86,7 +88,7 @@ class _LiveChatScreenState extends State<LiveChatScreen> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-//    streamChatDuration();
+    streamChatDuration();
   }
 
   isHostAnonymous() {
@@ -118,12 +120,15 @@ class _LiveChatScreenState extends State<LiveChatScreen> {
     }
   }
 
-  buildMessages() {
+  List<LiveChatMessage> allMessages = [];
+  int creation = 1573746233463;
+  buildMessages(int date) {
     return StreamBuilder(
       stream: liveChatMessagesRef
           .document(chatId)
           .collection('messages')
           .orderBy('creationDate', descending: true)
+//          .where('creationDate', isGreaterThanOrEqualTo: date)
           .snapshots(),
       builder: (context, snapshot) {
         if (!snapshot.hasData) {
@@ -134,12 +139,13 @@ class _LiveChatScreenState extends State<LiveChatScreen> {
           if (!currentUser.blockedUids.contains(doc['uid'])) {
             messages.add(LiveChatMessage.fromDocument(doc));
           }
+          allMessages = messages;
         });
         return Expanded(
           child: ListView(
             reverse: true,
             padding: EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
-            children: messages,
+            children: allMessages,
           ),
         );
       },
@@ -189,14 +195,18 @@ class _LiveChatScreenState extends State<LiveChatScreen> {
   }
 
   streamChatDuration() {
-    bool hasChatEnded;
+    bool chatEnded;
     Stream<DocumentSnapshot> streamSnaps = liveChatLocationsRef.document(chatId).snapshots();
     streamSnaps.forEach((snapshot) {
       final endDate = snapshot.data['endDate'];
       int timeLeft = endDate - DateTime.now().millisecondsSinceEpoch;
-      hasChatEnded = timeLeft <= 0;
-      if (hasChatEnded) {
-        Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context) => Home()), (Route<dynamic> route) => false);
+      chatEnded = timeLeft <= 0;
+      if (chatEnded) {
+        if (this.mounted) {
+          setState(() {
+            hasChatEnded = true;
+          });
+        }
       }
     });
   }
@@ -221,6 +231,11 @@ class _LiveChatScreenState extends State<LiveChatScreen> {
           });
         });
       }
+      uidsInChat.forEach((uid) {
+        usersInChatRef.document(chatId).collection('inChat').document(uid).setData({
+          'uid': uid
+        });
+      });
     });
   }
 
@@ -298,12 +313,13 @@ class _LiveChatScreenState extends State<LiveChatScreen> {
   }
 
   _goToHostUserProfile() {
-    bool isCurrentUser = currentUser.uid == chatHostUid;
-    User user = User(uid: chatHostUid);
-    UserResult result = UserResult(user: user, locationLabel: isCurrentUser ? 'Here' : 'Nearby');
-    result.toProfile(context);
+    if (chatHostUid != null) {
+      bool isCurrentUser = currentUser.uid == chatHostUid;
+      User user = User(uid: chatHostUid);
+      UserResult result = UserResult(user: user, locationLabel: isCurrentUser ? 'Here' : 'Nearby');
+      result.toProfile(context);
+    }
   }
-
 
   _reasonToReport(BuildContext context) {
     Navigator.pop(context);
@@ -385,6 +401,48 @@ class _LiveChatScreenState extends State<LiveChatScreen> {
     kActionSheet(context, sheets);
   }
 
+//  getAllMessages() {
+//    Future<QuerySnapshot> snapshot = liveChatMessagesRef
+//        .document(chatId)
+//        .collection('messages')
+//        .orderBy('creationDate', descending: true)
+//        .where('creationDate', isLessThan: now)
+//        .getDocuments();
+//
+//    List<LiveChatMessage> messages = [];
+//    snapshot.then((doc) {
+//      doc.documents.forEach((val) {
+//        if (!currentUser.blockedUids.contains(val.data['uid'])) {
+//          messages.add(LiveChatMessage.fromDocument(val));
+//        }
+//        setState(() {
+//          allMessages = messages;
+//        });
+//      });
+//    });
+//  }
+
+//  streamMessages() {
+//    Stream<QuerySnapshot> streamMessages = liveChatMessagesRef
+//        .document(chatId)
+//        .collection('messages')
+//        .orderBy('creationDate', descending: true)
+//        .where('creationDate', isGreaterThanOrEqualTo: now)
+//        .snapshots();
+//    List<LiveChatMessage> messages = [];
+//    streamMessages.forEach((snapshot) {
+//      snapshot.documents.forEach((doc) {
+//        if (!currentUser.blockedUids.contains(doc.data['uid'])) {
+//          messages.add(LiveChatMessage.fromDocument(doc));
+//        }
+//        setState(() {
+//
+//          allMessages = messages;
+//        });
+//      });
+//    });
+//  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -435,8 +493,8 @@ class _LiveChatScreenState extends State<LiveChatScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: <Widget>[
-                    buildMessages(),
-                    Container(
+                   buildMessages(now),
+                    !hasChatEnded ? Container(
                       decoration: BoxDecoration(
                         border: Border(
                           top: BorderSide(color: Colors.grey[200], width: 2.0),
@@ -503,7 +561,7 @@ class _LiveChatScreenState extends State<LiveChatScreen> {
                           ),
                         ],
                       ),
-                    ),
+                    ) : SizedBox(),
                   ],
                 ),
               ),
@@ -601,10 +659,13 @@ class LiveChatMessage extends StatelessWidget {
   }
 
   _goToHostUserProfile(BuildContext context) {
-    bool isCurrentUser = currentUser.uid == uid;
-    User user = User(uid: uid);
-    UserResult result = UserResult(user: user, locationLabel: isCurrentUser ? 'Here' : 'Nearby');
-    result.toProfile(context);
+    if (uid != null) {
+      bool isCurrentUser = currentUser.uid == uid;
+      User user = User(uid: uid);
+      UserResult result = UserResult(
+          user: user, locationLabel: isCurrentUser ? 'Here' : 'Nearby');
+      result.toProfile(context);
+    }
   }
 
   _settingsActionSheet(BuildContext context) {

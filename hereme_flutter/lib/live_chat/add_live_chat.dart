@@ -82,7 +82,9 @@ class _AddLiveChatState extends State<AddLiveChat> {
             uid: uid,
             hasAccountLinked: hasAccountLinked,
           );
-          if (currentUser.uid != uid && hasAccountLinked != null && hasAccountLinked) {
+          if (currentUser.uid != uid &&
+              hasAccountLinked != null &&
+              hasAccountLinked) {
             setState(() {
               usersAround.add(displayedUser);
               usersAroundUid.add(displayedUser.uid);
@@ -252,9 +254,9 @@ class _AddLiveChatState extends State<AddLiveChat> {
                       alignment: Alignment.topRight,
                       child: FlatButton.icon(
                         onPressed: () {
-                            _isButtonDisabled
-                            ? print('disabled')
-                            : _uploadChatToFirebase();
+                          _isButtonDisabled
+                              ? print('disabled')
+                              : _uploadChatToFirebase();
                         },
                         splashColor: _isButtonDisabled
                             ? Colors.transparent
@@ -294,7 +296,6 @@ class _AddLiveChatState extends State<AddLiveChat> {
         geo.point(latitude: currentLatitude, longitude: currentLongitude);
     await liveChatLocationsRef.document(chatId).setData({
       'position': myLocation.data,
-
       'uid': currentUser.uid,
       'chatId': chatId,
       'hostDisplayName': _isAnonymousChecked ? '' : currentUser.displayName,
@@ -313,8 +314,8 @@ class _AddLiveChatState extends State<AddLiveChat> {
     final uid = currentUser.uid;
     final ref = liveChatsRef.document(uid).collection('chats').document(chatId);
 
-    Map<String, dynamic> liveChatData = <String, dynamic> {
-      'invites': usersAroundUid,
+    Map<String, dynamic> liveChatData = <String, dynamic>{
+//      'invites': usersAroundUid,
 
       'uid': currentUser.uid,
       'chatId': chatId,
@@ -330,6 +331,7 @@ class _AddLiveChatState extends State<AddLiveChat> {
 
     ref.setData(liveChatData).whenComplete(() {
       setChatLocation(chatId);
+      _updateInviteActivityFeed(chatId, liveChatData);
       Navigator.pop(context);
       kShowFlushBar(
         context: context,
@@ -337,7 +339,31 @@ class _AddLiveChatState extends State<AddLiveChat> {
         color: Color.fromRGBO(red, green, blue, 1.0),
         icon: FontAwesomeIcons.comments,
       );
-    }).catchError((e) =>
-        kErrorFlushbar(context: context, errorText: 'Unable to create Live Chat at this time'));
+    }).catchError((e) => kErrorFlushbar(
+        context: context,
+        errorText: 'Unable to create Live Chat at this time'));
+  }
+
+  _updateInviteActivityFeed(String chatId, Map<String, dynamic> data) {
+    if (usersAroundUid.isNotEmpty) {
+      usersAroundUid.forEach((uid) {
+        DocumentReference ref =
+            activityRef.document(uid).collection('feedItems').document(chatId);
+        ref.setData(data).whenComplete(() {
+          ref.updateData({
+            'type': 'liveChatInvite',
+          });
+          _addUsersAroundToFirestore(chatId, uid);
+        });
+      });
+    }
+  }
+
+  _addUsersAroundToFirestore(String chatId, String uid) {
+    usersInChatRef
+        .document(chatId)
+        .collection('invited')
+        .document(uid)
+        .setData({'uid': uid});
   }
 }
