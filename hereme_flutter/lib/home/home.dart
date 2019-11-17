@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'dart:io';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
@@ -43,6 +45,8 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
+  final _scaffoldKey = GlobalKey<ScaffoldState>();
+  FirebaseMessaging _firebaseMessaging = FirebaseMessaging();
   final auth = FirebaseAuth.instance;
   bool _isAuth = false;
   bool _hasAccountLinked = false;
@@ -82,6 +86,67 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
       positionStream.cancel();
     }
     super.dispose();
+  }
+
+  handleLoggedIn() async {
+    if (await auth.currentUser() != null) {
+      await getCurrentUser();
+      setState(() {
+        _isAuth = true;
+        pageLoading = false;
+      });
+      await configurePushNotifications();
+    } else {
+      Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (BuildContext context) => InitialPage()),
+          (Route<dynamic> route) => false);
+      setState(() {
+        _isAuth = false;
+        pageLoading = false;
+      });
+    }
+  }
+
+  configurePushNotifications() async {
+    final user = await auth.currentUser();
+    if (Platform.isIOS) getIOSPermission();
+    _firebaseMessaging.getToken().then((token) {
+      print('Firebase Messaging Token: $token\n');
+      usersRef.document(user.uid).updateData({
+        'androidNotificationToken': token,
+      });
+    });
+
+    _firebaseMessaging.configure(
+//      onLaunch: (Map<String, dynamic> message) async {},
+//      onResume: (Map<String, dynamic> message) async {},
+      onMessage: (Map<String, dynamic> message) async {
+        print('onMessage: $message\n');
+        final String recipientId = message['data']['recipient'];
+        final String body = message['data']['body'];
+        if (recipientId == user.uid) {
+          SnackBar snackbar = SnackBar(
+            content: Text(
+              body,
+              overflow: TextOverflow.ellipsis,
+              style: kDefaultTextStyle,
+            ),
+            backgroundColor: kColorLightGray,
+          );
+          _scaffoldKey.currentState.showSnackBar(snackbar);
+        }
+        print('NOTIFICATION NOT SHOWN');
+      },
+    );
+  }
+
+  getIOSPermission() {
+    _firebaseMessaging.requestNotificationPermissions(
+        IosNotificationSettings(sound: true, alert: true, badge: true));
+    _firebaseMessaging.onIosSettingsRegistered.listen((settings) {
+      print('Settings registered: $settings');
+    });
   }
 
   getCurrentUser() async {
@@ -129,25 +194,6 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
             }
           });
         });
-      });
-    }
-  }
-
-  handleLoggedIn() async {
-    if (await auth.currentUser() != null) {
-      await getCurrentUser();
-      setState(() {
-        _isAuth = true;
-        pageLoading = false;
-      });
-    } else {
-      Navigator.pushAndRemoveUntil(
-          context,
-          MaterialPageRoute(builder: (BuildContext context) => InitialPage()),
-          (Route<dynamic> route) => false);
-      setState(() {
-        _isAuth = false;
-        pageLoading = false;
       });
     }
   }
@@ -660,6 +706,7 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
     final double screenHeight = MediaQuery.of(context).size.height;
     SystemChrome.setEnabledSystemUIOverlays([SystemUiOverlay.top]);
     return Scaffold(
+      key: _scaffoldKey,
       backgroundColor: kColorOffWhite,
       appBar: AppBar(
         brightness: Brightness.light,
