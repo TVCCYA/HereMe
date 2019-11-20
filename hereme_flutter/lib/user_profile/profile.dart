@@ -1,3 +1,4 @@
+import 'package:admob_flutter/admob_flutter.dart';
 import 'package:flutter/material.dart';
 import 'dart:io';
 import 'dart:async';
@@ -51,6 +52,7 @@ class Profile extends StatefulWidget {
 }
 
 class _ProfileState extends State<Profile> {
+  final _scaffoldKey = GlobalKey<ScaffoldState>();
   String knockUsername = '';
   String knockUrl = '';
   String knockUid = '';
@@ -81,6 +83,11 @@ class _ProfileState extends State<Profile> {
     if (_isCurrentUser) {
       updateCurrentUserCounts();
     }
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
   }
 
   recentProfileVisitUpdate() {
@@ -137,6 +144,7 @@ class _ProfileState extends State<Profile> {
     double topProfileContainerHeight = screenHeight / 4 + 20;
 
     return Scaffold(
+      key: _scaffoldKey,
       backgroundColor: kColorOffWhite,
       body: ModalProgressHUD(
         inAsyncCall: showSpinner,
@@ -209,8 +217,9 @@ class _ProfileState extends State<Profile> {
               child: Theme(
                 data: kTheme(context),
                 child: Padding(
-                  padding: const EdgeInsets.only(left: 16.0, right: 16.0),
+                  padding: EdgeInsets.only(left: 16.0, right: 16.0),
                   child: ListView.builder(
+                    padding: EdgeInsets.only(bottom: 60),
                     itemCount: _isCurrentUser ? 5 : 4,
                     itemBuilder: (context, index) {
                       if (_isCurrentUser) {
@@ -836,6 +845,7 @@ class _ProfileState extends State<Profile> {
         iconData: FontAwesomeIcons.ban,
         color: kColorRed,
         onTap: () async {
+          _removePendingKnockActivityFeed(uid, currentUserUid);
           _removeKnock(uid);
           Navigator.pop(context);
         },
@@ -847,6 +857,7 @@ class _ProfileState extends State<Profile> {
         iconData: FontAwesomeIcons.check,
         onTap: () async {
           _handleKnock(uid: uid, username: username, profileImageUrl: profileImageUrl);
+          _removeKnock(uid);
           Navigator.pop(context);
         },
       ),
@@ -869,7 +880,7 @@ class _ProfileState extends State<Profile> {
     final newRef = ref.get();
     newRef.then((doc) {
       if (!doc.exists && uid != null) {
-        _sendKnock(ref, uid, username);
+        _sendKnock(ref, uid, username, profileImageUrl);
       } else {
         kShowFlushBar(
             text: 'Already Knocked $username',
@@ -880,7 +891,7 @@ class _ProfileState extends State<Profile> {
     });
   }
 
-  _sendKnock(DocumentReference ref, String uid, String username) {
+  _sendKnock(DocumentReference ref, String uid, String username, String profileImageUrl) {
     int creationDate = DateTime.now().millisecondsSinceEpoch;
     Map<String, dynamic> knockData = <String, dynamic>{
       'uid': currentUserUid,
@@ -889,7 +900,7 @@ class _ProfileState extends State<Profile> {
       'creationDate': creationDate,
     };
     ref.setData(knockData).whenComplete(() {
-      _setPendingKnockActivityFeed(creationDate, username);
+      _setPendingKnockActivityFeed(uid, username, profileImageUrl);
       kShowFlushBar(
           text: 'Successfully sent Knock',
           context: context,
@@ -904,10 +915,11 @@ class _ProfileState extends State<Profile> {
     ));
   }
 
-  _setPendingKnockActivityFeed(int creationDate, String username) {
-    activityRef.document(currentUserUid).collection('feedItems').document(user.uid).setData({
+  _setPendingKnockActivityFeed(String uid, String username, String profileImageUrl) {
+    int creationDate = DateTime.now().millisecondsSinceEpoch;
+    activityRef.document(currentUserUid).collection('feedItems').document(uid).setData({
       'type': 'pendingKnock',
-      'uid': user.uid,
+      'uid': uid,
       'username': username,
       'profileImageUrl': profileImageUrl,
       'creationDate': creationDate,
@@ -927,8 +939,8 @@ class _ProfileState extends State<Profile> {
     });
   }
 
-  _removePendingKnockActivityFeed({String uid, String id}) {
-    DocumentReference ref = activityRef.document(uid).collection('feedItems').document(id);
+  _removePendingKnockActivityFeed(String uid1, String uid2) {
+    DocumentReference ref = activityRef.document(uid1).collection('feedItems').document(uid2);
     ref.snapshots().forEach((snapshot) {
       if (snapshot.exists) {
         final type = snapshot.data['type'];
@@ -948,7 +960,7 @@ class _ProfileState extends State<Profile> {
         .then((doc) {
       if (doc.exists) {
         doc.reference.delete().whenComplete(() {
-          _removePendingKnockActivityFeed(uid: uid2, id: uid1);
+          _removePendingKnockActivityFeed(uid2, uid1);
         });
       }
     });
@@ -979,7 +991,6 @@ class _ProfileState extends State<Profile> {
 
   _linksActionSheet(BuildContext context, String accountUsername,
       String iconString, String url, String linkId) {
-    print(linkId ?? 'nope');
     String platform;
     for (var platformString
         in _determineUrl(accountUsername, iconString, url).keys) {
@@ -1698,7 +1709,7 @@ class FlexibleProfileAppBar extends StatelessWidget {
                           color: kColorDarkThistle,
                           size: 14.0,
                         ),
-                        SizedBox(width: 4.0),
+                        SizedBox(width: 2.0),
                         Text(
                           locationLabel,
                           style:

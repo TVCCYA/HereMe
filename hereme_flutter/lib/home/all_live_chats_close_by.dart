@@ -20,6 +20,7 @@ class AllLiveChatsCloseBy extends StatefulWidget {
 }
 
 class _AllLiveChatsCloseByState extends State<AllLiveChatsCloseBy> {
+  final _scaffoldKey = GlobalKey<ScaffoldState>();
   final double latitude;
   final double longitude;
   _AllLiveChatsCloseByState({this.latitude, this.longitude});
@@ -126,6 +127,7 @@ class _AllLiveChatsCloseByState extends State<AllLiveChatsCloseBy> {
     final double screenWidth = MediaQuery.of(context).size.width;
     final double screenHeight = MediaQuery.of(context).size.height;
     return Scaffold(
+      key: _scaffoldKey,
       backgroundColor: kColorOffWhite,
       appBar: AppBar(
         brightness: Brightness.light,
@@ -147,14 +149,11 @@ class _AllLiveChatsCloseByState extends State<AllLiveChatsCloseBy> {
           data: kTheme(context),
           child: RefreshIndicator(
             onRefresh: () async {
-              Flushbar(
-                messageText: Text(
-                  'Your feed will auto update when a new Live Chat has started within your vicinity',
-                  style: kDefaultTextStyle.copyWith(color: Colors.white, fontSize: 14.0),
-                ),
+              kShowSnackbar(
+                key: _scaffoldKey,
+                text: 'Your feed will auto update when a new Live Chat has started within your vicinity',
                 backgroundColor: kColorBlack71,
-                duration: Duration(seconds: 5),
-              )..show(context);
+              );
             },
             child: Container(
               height: screenHeight,

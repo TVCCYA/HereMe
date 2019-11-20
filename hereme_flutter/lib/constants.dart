@@ -466,3 +466,16 @@ void kHandleRemoveAllLiveChatData(String chatId, String uid) {
   kRemoveLiveChatMessages(chatId);
   kHandleRemoveDataAtId(chatId, uid,'liveChats', 'chats');
 }
+
+void kShowSnackbar({GlobalKey<ScaffoldState> key, String text, Color backgroundColor}) {
+  SnackBar snackbar = SnackBar(
+    elevation: 2.0,
+    duration: Duration(seconds: 5),
+    content: Text(
+      text,
+      style: kDefaultTextStyle.copyWith(color: Colors.white, fontSize: 15.0),
+    ),
+    backgroundColor: backgroundColor,
+  );
+  key.currentState.showSnackBar(snackbar);
+}

@@ -22,14 +22,10 @@ class AllUsersCloseBy extends StatefulWidget {
 }
 
 class _AllUsersCloseByState extends State<AllUsersCloseBy> {
+  final _scaffoldKey = GlobalKey<ScaffoldState>();
   final double latitude;
   final double longitude;
   _AllUsersCloseByState({this.latitude, this.longitude});
-
-  @override
-  void initState() {
-    super.initState();
-  }
 
   streamCloseByUsers() {
     Geoflutterfire geo = Geoflutterfire();
@@ -74,7 +70,8 @@ class _AllUsersCloseByState extends State<AllUsersCloseBy> {
         }
         List<GridTile> gridTiles = [];
         usersAround.forEach((user) {
-          gridTiles.add(GridTile(child: UserResult(user: user, locationLabel: 'Nearby')));
+          gridTiles.add(
+              GridTile(child: UserResult(user: user, locationLabel: 'Nearby')));
         });
         if (usersAround.isNotEmpty) {
           return Column(
@@ -84,8 +81,7 @@ class _AllUsersCloseByState extends State<AllUsersCloseBy> {
                 padding: EdgeInsets.only(
                     left: 8.0, top: 12.0, bottom: 8.0, right: 8.0),
                 child: Text('Everyone Within 1/4 Mile',
-                    style: kAppBarTextStyle.copyWith(
-                        fontSize: 18.0)),
+                    style: kAppBarTextStyle.copyWith(fontSize: 18.0)),
               ),
               GridView.count(
                 physics: NeverScrollableScrollPhysics(),
@@ -119,6 +115,7 @@ class _AllUsersCloseByState extends State<AllUsersCloseBy> {
     final double screenWidth = MediaQuery.of(context).size.width;
     final double screenHeight = MediaQuery.of(context).size.height;
     return Scaffold(
+      key: _scaffoldKey,
       backgroundColor: kColorOffWhite,
       appBar: AppBar(
         brightness: Brightness.light,
@@ -138,14 +135,11 @@ class _AllUsersCloseByState extends State<AllUsersCloseBy> {
       body: SafeArea(
         child: RefreshIndicator(
           onRefresh: () async {
-            Flushbar(
-              messageText: Text(
-                'Your feed will auto update as someone comes within or leaves your vicinity',
-                style: kDefaultTextStyle.copyWith(color: Colors.white, fontSize: 14.0),
-              ),
+            kShowSnackbar(
+              key: _scaffoldKey,
+              text: 'Your feed will auto update as someone comes within or leaves your vicinity',
               backgroundColor: kColorBlack71,
-              duration: Duration(seconds: 5),
-            )..show(context);
+            );
           },
           child: Container(
             height: screenHeight,

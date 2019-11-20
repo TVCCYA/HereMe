@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'package:admob_flutter/admob_flutter.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -66,12 +67,21 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
   bool pageLoading = true;
   List<String> blockedUids = [];
 
+  initializeAd() {
+    if (Platform.isIOS) {
+      Admob.initialize('ca-app-pub-5239326709670732~5739030234');
+    } else {
+      Admob.initialize('ca-app-pub-5239326709670732~3954004336');
+    }
+  }
+
   @override
   void initState() {
     super.initState();
     if (_isAuth) {
       getTopTotalViewedUsers();
     }
+    initializeAd();
   }
 
   @override
@@ -112,7 +122,7 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
     final user = await auth.currentUser();
     if (Platform.isIOS) getIOSPermission();
     _firebaseMessaging.getToken().then((token) {
-      print('Firebase Messaging Token: $token\n');
+//      print('Firebase Messaging Token: $token\n');
       usersRef.document(user.uid).updateData({
         'androidNotificationToken': token,
       });
@@ -122,7 +132,6 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
 //      onLaunch: (Map<String, dynamic> message) async {},
 //      onResume: (Map<String, dynamic> message) async {},
       onMessage: (Map<String, dynamic> message) async {
-        print('onMessage: $message\n');
         final String recipientId = message['data']['recipient'];
         final String body = message['data']['body'];
         if (recipientId == user.uid) {
@@ -145,7 +154,7 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
     _firebaseMessaging.requestNotificationPermissions(
         IosNotificationSettings(sound: true, alert: true, badge: true));
     _firebaseMessaging.onIosSettingsRegistered.listen((settings) {
-      print('Settings registered: $settings');
+
     });
   }
 
@@ -153,10 +162,10 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
     final user = await auth.currentUser();
     DocumentSnapshot doc = await usersRef.document(user.uid).get();
     currentUser = User.fromDocument(doc);
-    fetchBlockedUsers();
     if (blockedUids != null) {
       currentUser.blockedUids = blockedUids;
     }
+    fetchBlockedUsers();
 
     if (currentUser.profileImageUrl == null) {
       Navigator.pushAndRemoveUntil(
@@ -505,7 +514,7 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
               duration: kTimeRemaining(timeLeft),
               distanceFromChat: distanceFromChat,
             );
-            if (!currentUser.blockedUids.contains(hostUid) &&
+            if (!blockedUids.contains(hostUid) &&
                 chatsAround.length < 3) {
               chatsAround.add(displayedChat);
             }
@@ -591,7 +600,7 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
               hasAccountLinked: hasAccountLinked);
           if (hasAccountLinked != null &&
               hasAccountLinked &&
-              !currentUser.blockedUids.contains(uid)) {
+              !blockedUids.contains(uid)) {
             topUsers.add(displayedUser);
           }
         }
@@ -656,7 +665,7 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
         topTotalViewedUsers.forEach((user) {
           if (user.hasAccountLinked != null &&
               user.hasAccountLinked &&
-              !currentUser.blockedUids.contains(user.uid)) {
+              !blockedUids.contains(user.uid)) {
             gridTiles.add(GridTile(
                 child: UserResult(user: user, locationLabel: user.city)));
           }
@@ -762,6 +771,37 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
                               Divider(color: Colors.grey[300]),
                               enabledLocationFetchChats(),
                               Divider(color: Colors.grey[300]),
+//                              Container(
+//                                height: 50.0,
+//                                width: screenWidth,
+//                                child: AdmobBanner(
+//                                    adUnitId: 'ca-app-pub-5239326709670732/4791964351',
+//                                    adSize: AdmobBannerSize.BANNER,
+//                                    listener: (AdmobAdEvent event, Map<String, dynamic> args) {
+//                                      switch (event) {
+//                                        case AdmobAdEvent.loaded:
+//                                          print('Admob banner loaded!');
+//                                          break;
+//
+//                                        case AdmobAdEvent.opened:
+//                                          print('Admob banner opened!');
+//                                          break;
+//
+//                                        case AdmobAdEvent.closed:
+//                                          print('Admob banner closed!');
+//                                          break;
+//
+//                                        case AdmobAdEvent.failedToLoad:
+//                                          print('Admob banner failed to load. Error code: ${args['errorCode']}');
+//                                          break;
+//
+//                                        default:
+//                                          break;
+//                                      }
+//                                    }
+//                                ),
+//                              ),
+//                              Divider(color: Colors.grey[300]),
                             ],
                           ),
                         ),
@@ -778,8 +818,10 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
                           width: screenWidth,
                           color: Colors.yellow,
                           child: Center(
-                              child: Text(
-                                  'BOTTOM SCROLLY NOTIFICATION GOES HERE')),
+                            child: Text(
+                              'BOTTOM SCROLLY NOTIFICATION GOES HERE',
+                            ),
+                          ),
                         ),
                         alignment: Alignment.bottomCenter,
                       ),

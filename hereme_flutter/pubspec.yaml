@@ -40,6 +40,8 @@ dependencies:
   animator: ^1.0.0+1
   share: ^0.6.3+1
   firebase_messaging: ^5.1.8
+  firebase_admob: ^0.9.0+9
+  admob_flutter: ^0.3.1
 
 dev_dependencies:
   flutter_test:
