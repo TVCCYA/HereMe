@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:io';
-import 'package:admob_flutter/admob_flutter.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -67,13 +66,13 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
   bool pageLoading = true;
   List<String> blockedUids = [];
 
-  initializeAd() {
-    if (Platform.isIOS) {
-      Admob.initialize('ca-app-pub-5239326709670732~5739030234');
-    } else {
-      Admob.initialize('ca-app-pub-5239326709670732~3954004336');
-    }
-  }
+//  initializeAd() {
+//    if (Platform.isIOS) {
+//      Admob.initialize('ca-app-pub-5239326709670732~5739030234');
+//    } else {
+//      Admob.initialize('ca-app-pub-5239326709670732~3954004336');
+//    }
+//  }
 
   @override
   void initState() {
@@ -81,7 +80,6 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
     if (_isAuth) {
       getTopTotalViewedUsers();
     }
-    initializeAd();
   }
 
   @override
