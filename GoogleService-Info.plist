@@ -2,39 +2,35 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>AD_UNIT_ID_FOR_BANNER_TEST</key>
-	<string>ca-app-pub-3940256099942544/2934735716</string>
-	<key>AD_UNIT_ID_FOR_INTERSTITIAL_TEST</key>
-	<string>ca-app-pub-3940256099942544/4411468910</string>
 	<key>CLIENT_ID</key>
-	<string>127452083818-freh4a3pfppuo7sj76fdiboclfdvlhuh.apps.googleusercontent.com</string>
+	<string>1095599858-4csj0famd9u90380vgrsanjsa7fvomse.apps.googleusercontent.com</string>
 	<key>REVERSED_CLIENT_ID</key>
-	<string>com.googleusercontent.apps.127452083818-freh4a3pfppuo7sj76fdiboclfdvlhuh</string>
+	<string>com.googleusercontent.apps.1095599858-4csj0famd9u90380vgrsanjsa7fvomse</string>
 	<key>API_KEY</key>
-	<string>AIzaSyAn0cxLQVqmwz5NnaDUreGI_RDWo84athc</string>
+	<string>AIzaSyCgYzSAqxhPyNgzGp5yzfbGUaaVwYe_-x4</string>
 	<key>GCM_SENDER_ID</key>
-	<string>127452083818</string>
+	<string>1095599858</string>
 	<key>PLIST_VERSION</key>
 	<string>1</string>
 	<key>BUNDLE_ID</key>
-	<string>com.TVCCYA.HereMe.heremeFlutter</string>
+	<string>com.TVCCYA.HereMe</string>
 	<key>PROJECT_ID</key>
-	<string>hereme-flutter</string>
+	<string>hereme-33599</string>
 	<key>STORAGE_BUCKET</key>
-	<string>hereme-flutter.appspot.com</string>
+	<string>hereme-33599.appspot.com</string>
 	<key>IS_ADS_ENABLED</key>
-	<true></true>
+	<false></false>
 	<key>IS_ANALYTICS_ENABLED</key>
 	<false></false>
 	<key>IS_APPINVITE_ENABLED</key>
-	<false></false>
+	<true></true>
 	<key>IS_GCM_ENABLED</key>
 	<true></true>
 	<key>IS_SIGNIN_ENABLED</key>
 	<true></true>
 	<key>GOOGLE_APP_ID</key>
-	<string>1:127452083818:ios:dc029e90f3c144ef</string>
+	<string>1:1095599858:ios:a0d132d1eb541e2c</string>
 	<key>DATABASE_URL</key>
-	<string>https://hereme-flutter.firebaseio.com</string>
+	<string>https://hereme-33599.firebaseio.com</string>
 </dict>
 </plist>

@@ -157,5 +157,6 @@
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" exported="" name="Dart SDK" level="project" />
     <orderEntry type="library" name="Dart Packages" level="project" />
+    <orderEntry type="library" name="flutter" level="project" />
   </component>
 </module>

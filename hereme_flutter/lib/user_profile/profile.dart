@@ -157,6 +157,7 @@ class _ProfileState extends State<Profile> {
                       NestedScrollView.sliverOverlapAbsorberHandleFor(context),
                   child: SliverSafeArea(
                     sliver: SliverAppBar(
+                      centerTitle: true,
                       brightness: Brightness.light,
                       backgroundColor: kColorOffWhite,
                       floating: false,
@@ -464,6 +465,12 @@ class _ProfileState extends State<Profile> {
                                     int timeLeft = endDate - DateTime.now().millisecondsSinceEpoch;
                                     String duration = kTimeRemaining(timeLeft);
 
+                                    bool hasChatEnded = timeLeft <= 0;
+
+                                    if (hasChatEnded) {
+                                      kHandleRemoveAllLiveChatData(chatId, currentUserUid);
+                                    }
+
                                     final displayedChat = LiveChat(
                                       title: title,
                                       creationDate: creationDate,
@@ -676,6 +683,12 @@ class _ProfileState extends State<Profile> {
                                     int timeLeft = endDate - DateTime.now().millisecondsSinceEpoch;
                                     String duration = kTimeRemaining(timeLeft);
 
+                                    bool hasChatEnded = timeLeft <= 0;
+
+                                    if (hasChatEnded) {
+                                      kHandleRemoveAllLiveChatData(chatId, userUid);
+                                    }
+
                                     final displayedChat = LiveChat(
                                       title: title,
                                       creationDate: creationDate,
@@ -827,7 +840,7 @@ class _ProfileState extends State<Profile> {
   }
 
   _fullScreenProfileImage() {
-    Navigator.push(context, SizeRoute(page: ProfileImageFullScreen(profileImageUrl)));
+//    Navigator.push(context, SizeRoute(page: ProfileImageFullScreen(profileImageUrl)));
   }
 
   _updateFirestoreHasAccountLinked() {
@@ -856,6 +869,7 @@ class _ProfileState extends State<Profile> {
         iconData: FontAwesomeIcons.check,
         onTap: () async {
           _handleKnock(uid: uid, username: username, profileImageUrl: profileImageUrl);
+          _removePendingKnockActivityFeed(uid, currentUserUid);
           _removeKnock(uid);
           Navigator.pop(context);
         },

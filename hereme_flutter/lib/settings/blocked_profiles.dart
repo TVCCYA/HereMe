@@ -127,6 +127,7 @@ class _BlockedProfilesState extends State<BlockedProfiles> {
     return Scaffold(
       backgroundColor: kColorOffWhite,
       appBar: AppBar(
+        centerTitle: true,
         elevation: 2.0,
         brightness: Brightness.light,
         backgroundColor: Colors.white,

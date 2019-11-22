@@ -17,12 +17,12 @@ class _InitialPageState extends State<InitialPage> {
         decoration: BoxDecoration(
           image: DecorationImage(
             image: AssetImage("images/bubbly.png"),
-            fit: BoxFit.cover,
+            fit: BoxFit.none,
           ),
         ),
         child: SafeArea(
           child: Padding(
-            padding: EdgeInsets.all(24.0),
+            padding: EdgeInsets.all(32.0),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               crossAxisAlignment: CrossAxisAlignment.center,
@@ -34,9 +34,9 @@ class _InitialPageState extends State<InitialPage> {
                     borderRadius: BorderRadius.all(const Radius.circular(10.0)),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.grey[800],
-                        blurRadius: 5.0, // has the effect of softening the shadow
-                        spreadRadius: 2.0, // has the effect of extending the shadow
+                        color: kColorOffBlack,
+                        blurRadius: 5.0,
+                        spreadRadius: 2.0,
                         offset: Offset(
                           8.0, // horizontal, move right 10
                           8.0, // vertical, move down 10
@@ -53,18 +53,15 @@ class _InitialPageState extends State<InitialPage> {
                         Text(
                           'Welcome to HereMe',
                           textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontFamily: 'Berlin-Sans',
-                            fontSize: 32.0,
+                          style: kAppBarTextStyle.copyWith(
+                            fontSize: 26.0,
                             color: kColorPurple,
                           ),
                         ),
                         Text(
-                          'Discover the social media presence\n of people nearby',
+                          'Connect with people nearby',
                           textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontFamily: 'Arimo',
-                            fontSize: 16.0,
+                          style: kDefaultTextStyle.copyWith(
                             color: kColorPurple,
                           ),
                         ),
@@ -77,7 +74,7 @@ class _InitialPageState extends State<InitialPage> {
                           children: <Widget>[
                             ReusableButton(
                               title: 'Log In',
-                              textColor: Color.fromRGBO(154, 138, 212, 1.0),
+                              textColor: kColorDarkThistle,
                               onPressed: () {
                                 Navigator.push(
                                   context,
@@ -92,7 +89,7 @@ class _InitialPageState extends State<InitialPage> {
                             ),
                             ReusableButton(
                               title: 'Sign Up',
-                              textColor: Color.fromRGBO(154, 138, 212, 1.0),
+                              textColor: kColorDarkThistle,
                               onPressed: () {
                                 Navigator.push(
                                   context,

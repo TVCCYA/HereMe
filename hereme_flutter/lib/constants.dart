@@ -383,7 +383,7 @@ void kHandleRemoveDataAtId(String id, String uid, String collection1, String col
     for (final doc in snapshot.documents) {
       if (doc.exists) {
         if (doc.data.containsValue(id)) {
-          ref.document(doc.documentID).delete();
+          ref.document(id).delete();
         }
       }
     }

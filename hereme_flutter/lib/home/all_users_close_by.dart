@@ -118,6 +118,7 @@ class _AllUsersCloseByState extends State<AllUsersCloseBy> {
       key: _scaffoldKey,
       backgroundColor: kColorOffWhite,
       appBar: AppBar(
+        centerTitle: true,
         brightness: Brightness.light,
         backgroundColor: kColorOffWhite,
         elevation: 2.0,

@@ -12,7 +12,7 @@ import 'package:hereme_flutter/home/all_users_close_by.dart';
 import 'package:hereme_flutter/live_chat/live_chat_result.dart';
 import 'package:hereme_flutter/models/user.dart';
 import 'package:hereme_flutter/registration/photo_add.dart';
-import 'package:hereme_flutter/settings/add_link.dart';
+import 'package:hereme_flutter/settings/choose_account.dart';
 import 'package:hereme_flutter/user_profile/profile.dart';
 import 'package:hereme_flutter/utils/custom_image.dart';
 import 'package:hereme_flutter/utils/reusable_bottom_sheet.dart';
@@ -51,8 +51,6 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
   bool _isAuth = false;
   bool _hasAccountLinked = false;
 
-  List<User> topTotalViewedUsers = [];
-
   double latitude;
   double longitude;
   bool _locationEnabled = false;
@@ -77,9 +75,6 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
   @override
   void initState() {
     super.initState();
-    if (_isAuth) {
-      getTopTotalViewedUsers();
-    }
   }
 
   @override
@@ -133,15 +128,11 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
         final String recipientId = message['data']['recipient'];
         final String body = message['data']['body'];
         if (recipientId == user.uid) {
-          SnackBar snackbar = SnackBar(
-            content: Text(
-              body,
-              overflow: TextOverflow.ellipsis,
-              style: kDefaultTextStyle,
-            ),
-            backgroundColor: kColorLightGray,
+          kShowSnackbar(
+            key: _scaffoldKey,
+            text: body,
+            backgroundColor: kColorBlack71,
           );
-          _scaffoldKey.currentState.showSnackBar(snackbar);
         }
         print('NOTIFICATION NOT SHOWN');
       },
@@ -305,7 +296,7 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                            builder: (BuildContext context) => AddLink()),
+                            builder: (BuildContext context) => ChooseAccount()),
                       );
                     },
                   ),
@@ -641,26 +632,38 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
     );
   }
 
-  getTopTotalViewedUsers() async {
-    QuerySnapshot snapshot = await usersRef
-        .orderBy('totalVisitsCount', descending: true)
-        .getDocuments();
-    List<User> users =
-        snapshot.documents.map((doc) => User.fromDocument(doc)).toList();
-    setState(() {
-      this.topTotalViewedUsers = users;
-    });
-  }
-
   buildTotalTopViewed() {
     return FutureBuilder(
-      future: usersRef.limit(10).getDocuments(),
+      future: usersRef
+          .orderBy('totalVisitsCount', descending: true)
+          .where('totalVisitsCount', isGreaterThan: 0)
+          .limit(10)
+          .getDocuments(),
       builder: (context, snapshot) {
         if (!snapshot.hasData) {
           return circularProgress();
         }
+        List<User> topUsers = [];
+        final users = snapshot.data.documents;
+        for (var user in users) {
+          final imageUrl = user.data['profileImageUrl'];
+          final uid = user.data['uid'];
+          final hasAccountLinked = user.data['hasAccountLinked'];
+          final city = user.data['city'];
+
+          final displayedUser = User(
+              profileImageUrl: imageUrl,
+              uid: uid,
+              city: city,
+              hasAccountLinked: hasAccountLinked);
+          if (hasAccountLinked != null &&
+              hasAccountLinked &&
+              !blockedUids.contains(uid)) {
+            topUsers.add(displayedUser);
+          }
+        }
         List<GridTile> gridTiles = [];
-        topTotalViewedUsers.forEach((user) {
+        topUsers.forEach((user) {
           if (user.hasAccountLinked != null &&
               user.hasAccountLinked &&
               !blockedUids.contains(user.uid)) {
@@ -668,7 +671,7 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
                 child: UserResult(user: user, locationLabel: user.city)));
           }
         });
-        if (topTotalViewedUsers.isNotEmpty) {
+        if (topUsers.isNotEmpty) {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
@@ -698,7 +701,7 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
             child: Center(
               child: Text(
                 'Nobody To Be Displayed',
-                style: kAppBarTextStyle.copyWith(fontWeight: FontWeight.w400),
+                style: kAppBarTextStyle,
               ),
             ),
           );
@@ -810,19 +813,19 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
                          SingleChildScrollView Widget
                        */
                       ),
-                      Align(
-                        child: Container(
-                          height: 50.0,
-                          width: screenWidth,
-                          color: Colors.yellow,
-                          child: Center(
-                            child: Text(
-                              'BOTTOM SCROLLY NOTIFICATION GOES HERE',
-                            ),
-                          ),
-                        ),
-                        alignment: Alignment.bottomCenter,
-                      ),
+//                      Align(
+//                        child: Container(
+//                          height: 50.0,
+//                          width: screenWidth,
+//                          color: Colors.yellow,
+//                          child: Center(
+//                            child: Text(
+//                              'BOTTOM SCROLLY NOTIFICATION GOES HERE',
+//                            ),
+//                          ),
+//                        ),
+//                        alignment: Alignment.bottomCenter,
+//                      ),
                     ],
                   ),
                 ),

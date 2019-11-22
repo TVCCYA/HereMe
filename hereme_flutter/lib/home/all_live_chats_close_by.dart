@@ -130,6 +130,7 @@ class _AllLiveChatsCloseByState extends State<AllLiveChatsCloseBy> {
       key: _scaffoldKey,
       backgroundColor: kColorOffWhite,
       appBar: AppBar(
+        centerTitle: true,
         brightness: Brightness.light,
         backgroundColor: kColorOffWhite,
         elevation: 2.0,

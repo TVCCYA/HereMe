@@ -31,19 +31,7 @@ exports.onCreateActivityFeedItem = functions.firestore
         }
 
         function sendNotification(androidNotificationToken, activityFeedItem) {
-            let body;
-
-            // 3) switch body value based off of notification type
-            switch (activityFeedItem.type) {
-                case "pendingKnock":
-                    body = `${activityFeedItem.username} is knocking!`;
-                    break;
-                case "liveChatInvite":
-                    body = `${activityFeedItem.username} invited you to their Live Chat: ${activityFeedItem.title}`;
-                    break;
-                default:
-                    break;
-            }
+            let body = `${activityFeedItem.username} invited you to their Live Chat: ${activityFeedItem.title}`;
 
             // 4) Create message for push notification
             const message = {
@@ -56,6 +44,49 @@ exports.onCreateActivityFeedItem = functions.firestore
             admin.messaging().send(message).then(response => {
                 // Response is a message ID string
                 console.log("Successfully send message", response);
+            }).catch(error => {
+                console.log("Error sending message", error);
+            })
+        }
+    });
+
+
+exports.onCreateKnock = functions.firestore
+    .document('/knocks/{currentUserUid}/receivedKnockFrom/{userId}')
+    .onCreate(async  (snapshot, context) => {
+        console.log('Knock created', snapshot.data());
+
+        // 1) Get user connected to the feed
+        const currentUserUid = context.params.currentUserUid;
+        const userRef = admin.firestore().doc(`users/${currentUserUid}`);
+        const doc = await userRef.get();
+
+        // 2) Once we have user, check if they have a notification token;
+        // send notification if they have a token
+        const androidNotificationToken = doc.data().androidNotificationToken;
+        const knockData = snapshot.data();
+
+        if (androidNotificationToken) {
+            // send notification
+            sendNotification(androidNotificationToken, knockData);
+        } else {
+            console.log("No token for user, cannot send notification");
+        }
+
+        function sendNotification(androidNotificationToken, knockData) {
+            let body = `${knockData.username} is knocking!`;
+
+            // 4) Create message for push notification
+            const message = {
+                notification: {body},
+                token: androidNotificationToken,
+                data: {recipient: currentUserUid},
+            };
+
+            // 5) Send message with admin.messaging()
+            admin.messaging().send(message).then(response => {
+                // Response is a message ID string
+                console.log(`${knockData.username} Successfully sent message to ${currentUserUid}`, response);
             }).catch(error => {
                 console.log("Error sending message", error);
             })

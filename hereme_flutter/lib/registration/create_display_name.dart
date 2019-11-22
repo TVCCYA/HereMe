@@ -16,15 +16,15 @@ class CreateDisplayName extends StatefulWidget {
 class _CreateDisplayNameState extends State<CreateDisplayName> {
   String displayName;
   bool _isButtonDisabled = true;
+  bool _isAvailable = false;
   bool showSpinner = false;
-  int red;
-  int green;
-  int blue;
+  int red = currentUser.red;
+  int green = currentUser.green;
+  int blue = currentUser.blue;
 
   @override
   void initState() {
     super.initState();
-    createRandomColor();
   }
 
   createRandomColor() {
@@ -44,7 +44,7 @@ class _CreateDisplayNameState extends State<CreateDisplayName> {
     });
   }
 
-  isValid() {
+  _isValid() {
     if (displayName.isNotEmpty && displayName.length > 2) {
       setState(() {
         _isButtonDisabled = false;
@@ -59,7 +59,6 @@ class _CreateDisplayNameState extends State<CreateDisplayName> {
       setState(() {
         _isButtonDisabled = true;
       });
-      kErrorFlushbar(context: context, errorText: 'Username cannot contain spaces');
     }
   }
 
@@ -70,9 +69,13 @@ class _CreateDisplayNameState extends State<CreateDisplayName> {
         final username = doc.data['displayName'];
         if (displayName == username) {
           setState(() {
+            _isAvailable = false;
             _isButtonDisabled = true;
           });
-          kErrorFlushbar(context: context, errorText: '$displayName already taken');
+        } else {
+          setState(() {
+            _isAvailable = true;
+          });
         }
       });
     });
@@ -80,157 +83,157 @@ class _CreateDisplayNameState extends State<CreateDisplayName> {
 
   @override
   Widget build(BuildContext context) {
-    double screenHeight = MediaQuery.of(context).size.height;
-
     return Scaffold(
-      body: Container(
-        constraints: BoxConstraints.expand(),
-        decoration: BoxDecoration(
-          image: DecorationImage(
-            image: AssetImage("images/bubbly2.png"),
-            fit: BoxFit.none,
-            alignment: Alignment.topCenter,
+      backgroundColor: kColorOffWhite,
+      appBar: AppBar(
+        centerTitle: true,
+        brightness: Brightness.light,
+        elevation: 2.0,
+        backgroundColor: Colors.white,
+        title: Text(
+          "Change Username",
+          textAlign: TextAlign.left,
+          style: kAppBarTextStyle.copyWith(
+            color: kColorPurple,
           ),
         ),
-        child: SafeArea(
-          child: Stack(
-            children: <Widget>[
-              Align(
-                alignment: Alignment.topLeft,
-                child: Padding(
-                  padding: const EdgeInsets.only(left: 12.0, top: 12.0),
-                  child: GestureDetector(
-                    behavior: HitTestBehavior.translucent,
-                    onTap: () => Navigator.pop(context),
-                    child: Icon(
-                      FontAwesomeIcons.chevronLeft,
-                      size: 25.0,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-              ),
-              ModalProgressHUD(
-                inAsyncCall: showSpinner,
-                progressIndicator: CircularProgressIndicator(
-                  valueColor: AlwaysStoppedAnimation<Color>(kColorPurple),
-                ),
-                child: SafeArea(
-                  child: GestureDetector(
-                    behavior: HitTestBehavior.translucent,
-                    onPanDown: (_) {
-                      FocusScope.of(context).requestFocus(FocusNode());
-                    },
-                    child: Padding(
-                      padding: const EdgeInsets.all(24.0),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: <Widget>[
-                          Container(
-                            height: screenHeight / 2.2,
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius:
-                              BorderRadius.all(const Radius.circular(10.0)),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.grey[800],
-                                  blurRadius:
-                                  5.0, // has the effect of softening the shadow
-                                  spreadRadius:
-                                  2.0, // has the effect of extending the shadow
-                                  offset: Offset(
-                                    8.0, // horizontal, move right 10
-                                    8.0, // vertical, move down 10
-                                  ),
-                                ),
-                              ],
-                            ),
-                            child: Padding(
-                              padding: EdgeInsets.symmetric(horizontal: 24.0),
-                              child: Column(
-                                mainAxisAlignment:
-                                MainAxisAlignment.spaceEvenly,
-                                children: <Widget>[
-                                  Text(
-                                    currentUser.displayName == null ? 'Choose a Username' : 'Change Username',
-                                    textAlign: TextAlign.center,
-                                    style: kRegistrationPurpleTextStyle,
-                                  ),
-                                  Column(
-                                    children: <Widget>[
-                                      ReusableRegistrationTextField(
-                                        hintText: currentUser.displayName == null ? 'Your username' : currentUser.displayName,
-                                        maxLength: 16,
-                                        keyboardType:
-                                        TextInputType.text,
-                                        textInputAction: TextInputAction.done,
-                                        icon: FontAwesomeIcons.at,
-                                        color: Color.fromRGBO(red, green, blue, 1.0),
-                                        onSubmitted: (v) {
-                                          _isButtonDisabled ? print('not good') : handleAddDisplayName();
-                                        },
-                                        onChanged: (value) {
-                                          displayName = value;
-                                          _isNameAvailable();
-                                          isValid();
-                                        },
-                                      ),
-                                      SizedBox(height: 8.0),
-                                      RaisedButton(
-                                        color: kColorDarkThistle,
-                                        onPressed: () => createRandomColor(),
-                                        child: Text(
-                                          'Randomize Display Color',
-                                          style: kDefaultTextStyle.copyWith(color: Colors.white),
-                                        ),
-                                        splashColor: Colors.grey[200],
-                                        highlightColor: Colors.transparent,
-                                      ),
-                                      Align(
-                                        alignment: Alignment.topRight,
-                                        child: FlatButton.icon(
-                                          onPressed: () => _isButtonDisabled ? print('not good') : handleAddDisplayName(),
-                                          splashColor: _isButtonDisabled
-                                              ? Colors.transparent
-                                              : kColorOffWhite,
-                                          highlightColor: Colors.transparent,
-                                          icon: Icon(
-                                            _isButtonDisabled
-                                                ? FontAwesomeIcons
-                                                .arrowAltCircleUp
-                                                : FontAwesomeIcons
-                                                .arrowAltCircleRight,
-                                            size: 30.0,
-                                            color: _isButtonDisabled
-                                                ? kColorLightGray
-                                                : kColorPurple,
-                                          ),
-                                          label: Text(
-                                            _isButtonDisabled
-                                                ? 'Not Done'
-                                                : 'Done',
-                                            style: kDefaultTextStyle.copyWith(
-                                                color: _isButtonDisabled
-                                                    ? kColorLightGray
-                                                    : kColorPurple),
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ],
+        leading: IconButton(
+          icon: Icon(FontAwesomeIcons.chevronLeft),
+          onPressed: () {
+            Navigator.pop(context);
+          },
+          color: kColorBlack71,
+          splashColor: Colors.grey[200],
+          highlightColor: Colors.transparent,
+        ),
+      ),
+      body: SafeArea(
+        child: ModalProgressHUD(
+          inAsyncCall: showSpinner,
+          progressIndicator: CircularProgressIndicator(
+            valueColor: AlwaysStoppedAnimation<Color>(kColorPurple),
+          ),
+          child: SafeArea(
+            child: GestureDetector(
+              behavior: HitTestBehavior.translucent,
+              onPanDown: (_) {
+                FocusScope.of(context).requestFocus(FocusNode());
+              },
+              child: Padding(
+                padding: EdgeInsets.all(12.0),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: <Widget>[
+                    TextField(
+                      maxLength: 16,
+                      cursorColor: kColorPurple,
+                      onChanged: (value) {
+                        displayName = value;
+                        _isNameAvailable();
+                        _isValid();
+                      },
+                      focusNode: null,
+                      onSubmitted: (v) {
+                        if (displayName.contains(' ')) {
+                          kErrorFlushbar(
+                              context: context,
+                              errorText: 'Username cannot contain spaces');
+                        }
+                        if (!_isAvailable) {
+                          kErrorFlushbar(
+                              context: context, errorText: '$displayName already taken');
+                        }
+                        if (displayName.length < 3) {
+                          kErrorFlushbar(
+                              context: context, errorText: 'Username must be 3 characters or more');
+                        }
+                        _isButtonDisabled
+                            ? print('disabled')
+                            : handleAddDisplayName();
+                      },
+                      autocorrect: false,
+                      keyboardType: TextInputType.text,
+                      textInputAction: TextInputAction.done,
+                      autofocus: true,
+                      style: kDefaultTextStyle.copyWith(
+                          color: Color.fromRGBO(red, green, blue, 1.0)),
+                      decoration: kRegistrationInputDecoration.copyWith(
+                        labelText: 'Username',
+                        hintText: currentUser.displayName == null
+                            ? 'Your username'
+                            : currentUser.displayName,
+                        hintStyle: kDefaultTextStyle.copyWith(
+                          color: kColorLightGray,
+                        ),
+                        labelStyle: kAppBarTextStyle.copyWith(
+                          fontSize: 16.0,
+                        ),
+                        icon: Icon(
+                          FontAwesomeIcons.at,
+                          color: kColorBlack71,
+                          size: 20.0,
+                        ),
                       ),
                     ),
-                  ),
+                    SizedBox(height: 8.0),
+                    RaisedButton(
+                      color: Color.fromRGBO(red, green, blue, 1.0),
+                      onPressed: () => createRandomColor(),
+                      child: Text(
+                        'Randomize Display Color',
+                        style: kDefaultTextStyle.copyWith(color: Colors.white),
+                      ),
+                      splashColor: Colors.grey[200],
+                      highlightColor: Colors.transparent,
+                    ),
+                    Align(
+                      alignment: Alignment.topRight,
+                      child: FlatButton.icon(
+                        onPressed: () {
+                          if (displayName.contains(' ')) {
+                            kErrorFlushbar(
+                                context: context,
+                                errorText: 'Username cannot contain spaces');
+                          }
+                          if (!_isAvailable) {
+                            kErrorFlushbar(
+                                context: context, errorText: '$displayName already taken');
+                          }
+                          if (displayName.length < 3) {
+                            kErrorFlushbar(
+                                context: context, errorText: 'Username must be 3 characters or more');
+                          }
+                          _isButtonDisabled
+                              ? print('disabled')
+                              : handleAddDisplayName();
+                        },
+                        splashColor: _isButtonDisabled
+                            ? Colors.transparent
+                            : kColorOffWhite,
+                        highlightColor: Colors.transparent,
+                        icon: Icon(
+                          _isButtonDisabled
+                              ? FontAwesomeIcons.arrowAltCircleUp
+                              : FontAwesomeIcons.arrowAltCircleRight,
+                          size: 30.0,
+                          color: _isButtonDisabled
+                              ? kColorLightGray
+                              : kColorPurple,
+                        ),
+                        label: Text(
+                          _isButtonDisabled ? 'Not Done' : 'Done',
+                          style: kDefaultTextStyle.copyWith(
+                              color: _isButtonDisabled
+                                  ? kColorLightGray
+                                  : kColorPurple),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            ],
+            ),
           ),
         ),
       ),

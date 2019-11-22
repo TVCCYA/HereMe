@@ -71,6 +71,7 @@ class _AddLinkState extends State<AddLink> {
     final double screenHeight = MediaQuery.of(context).size.height;
     return Scaffold(
       appBar: AppBar(
+        centerTitle: true,
         elevation: 2.0,
         brightness: Brightness.light,
         backgroundColor: Colors.white,

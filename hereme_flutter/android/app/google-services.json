@@ -1,52 +1,44 @@
 {
   "project_info": {
-    "project_number": "127452083818",
-    "firebase_url": "https://hereme-flutter.firebaseio.com",
-    "project_id": "hereme-flutter",
-    "storage_bucket": "hereme-flutter.appspot.com"
+    "project_number": "1095599858",
+    "firebase_url": "https://hereme-33599.firebaseio.com",
+    "project_id": "hereme-33599",
+    "storage_bucket": "hereme-33599.appspot.com"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:127452083818:android:759be608ee1fbbfe",
+        "mobilesdk_app_id": "1:1095599858:android:4afce9a57e6c59c2d0726b",
         "android_client_info": {
-          "package_name": "com.TVCCYA.HereMe.heremeflutter"
+          "package_name": "com.TVCCYA.HereMe"
         }
       },
       "oauth_client": [
         {
-          "client_id": "127452083818-tj7uo9kullset4dke8cvl26id7cr0l4v.apps.googleusercontent.com",
-          "client_type": 1,
-          "android_info": {
-            "package_name": "com.TVCCYA.HereMe.heremeflutter",
-            "certificate_hash": "dfc82f14c9f69d7b393041af2325fe41b2621dc8"
-          }
-        },
-        {
-          "client_id": "127452083818-db0o1kparctpu1i6el7i1vu4ghibskar.apps.googleusercontent.com",
+          "client_id": "1095599858-3ocv8c9m1o4pcd3o101653f1i53qci4i.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
       "api_key": [
         {
-          "current_key": "AIzaSyCJB-9HW3IswRZn9Z0QRjuSyhj5mUHE7yk"
+          "current_key": "AIzaSyDYJo3uwo_oiOPZGPhIp9w2Gj6zRVhmr4s"
         }
       ],
       "services": {
-        "analytics_service": {
-          "status": 1
-        },
         "appinvite_service": {
-          "status": 2,
           "other_platform_oauth_client": [
             {
-              "client_id": "127452083818-db0o1kparctpu1i6el7i1vu4ghibskar.apps.googleusercontent.com",
+              "client_id": "1095599858-3ocv8c9m1o4pcd3o101653f1i53qci4i.apps.googleusercontent.com",
               "client_type": 3
+            },
+            {
+              "client_id": "1095599858-4csj0famd9u90380vgrsanjsa7fvomse.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.TVCCYA.HereMe"
+              }
             }
           ]
-        },
-        "ads_service": {
-          "status": 2
         }
       }
     }

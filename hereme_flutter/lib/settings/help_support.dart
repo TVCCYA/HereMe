@@ -17,6 +17,7 @@ class SupportPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        centerTitle: true,
         elevation: 2.0,
         brightness: Brightness.light,
         backgroundColor: Colors.white,

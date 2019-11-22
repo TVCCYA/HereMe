@@ -1,5 +1,5 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.TVCCYA.HereMe.heremeflutter">
+    package="com.TVCCYA.HereMe">
 
     <!-- The INTERNET permission is required for development. Specifically,
          flutter needs it to communicate with the running application
@@ -35,11 +35,14 @@
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
+
+                <action android:name="FLUTTER_NOTIFICATION_CLICK" />
+                <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
 
         <meta-data
-                android:name="com.google.android.gms.ads.1:127452083818:ios:dc029e90f3c144ef"
+                android:name="com.google.android.gms.ads.1:1095599858:android:4afce9a57e6c59c2d0726b"
                 android:value="ca-app-pub-5239326709670732~5739030234"/>
     </application>
 </manifest>

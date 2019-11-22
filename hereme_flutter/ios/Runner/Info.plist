@@ -2,6 +2,8 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>FirebaseAppDelegateProxyEnabled</key>
+	<false/>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
 	<key>CFBundleDisplayName</key>
@@ -22,12 +24,14 @@
 	<string>????</string>
 	<key>CFBundleVersion</key>
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
+	<key>GADApplicationIdentifier</key>
+	<string>ca-app-pub-5239326709670732~5739030234</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSCameraUsageDescription</key>
 	<string>We would like access to your camera.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>We would like access to your location so you can see what's happening nearby.</string>
+	<string>We would like access to your location so you can see what&apos;s happening nearby.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>We would like access to your photo library.</string>
 	<key>UILaunchStoryboardName</key>
@@ -47,12 +51,7 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<false/>
-
-	<key>GADApplicationIdentifier</key>
-    <string>ca-app-pub-5239326709670732~5739030234</string>
-
-    <key>io.flutter.embedded_views_preview</key>
-    <true/>
-
+	<key>io.flutter.embedded_views_preview</key>
+	<true/>
 </dict>
 </plist>

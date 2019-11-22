@@ -102,6 +102,7 @@ class _AddLiveChatState extends State<AddLiveChat> {
       child: Scaffold(
         backgroundColor: kColorOffWhite,
         appBar: AppBar(
+          centerTitle: true,
           brightness: Brightness.light,
           backgroundColor: Colors.white,
           elevation: 2.0,
@@ -147,7 +148,7 @@ class _AddLiveChatState extends State<AddLiveChat> {
                                   color: kColorPurple, fontSize: 16.0),
                             ),
                             TextSpan(
-                              text: ' People Around You',
+                              text: usersAround.length == 1 ? ' Person Nearby' : ' People Nearby',
                               style: kAppBarTextStyle.copyWith(
                                   fontSize: 16.0, fontWeight: FontWeight.w400),
                             ),
@@ -185,7 +186,7 @@ class _AddLiveChatState extends State<AddLiveChat> {
                         ),
                       ),
                     ),
-                    SizedBox(height: 12.0),
+                    SizedBox(height: 8.0),
                     TextField(
                       cursorColor: kColorPurple,
                       onChanged: (value) {

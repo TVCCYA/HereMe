@@ -1,5 +1,6 @@
 {
   "projects": {
-    "default": "hereme-flutter"
+    "default": "hereme-flutter",
+    "production": "hereme-33599"
   }
 }

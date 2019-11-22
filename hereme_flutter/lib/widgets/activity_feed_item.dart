@@ -228,9 +228,9 @@ class ActivityFeedItem extends StatelessWidget {
           ],
         ),
       ),
-      subtitle: RichText(
+      subtitle: chatHostDisplayName.isNotEmpty ? RichText(
         overflow: TextOverflow.ellipsis,
-        text: chatHostDisplayName.isNotEmpty ? TextSpan(
+        text: TextSpan(
           children: [
             TextSpan(
               text: 'Hosted by: ',
@@ -245,11 +245,11 @@ class ActivityFeedItem extends StatelessWidget {
               style: kDefaultTextStyle.copyWith(fontSize: 14.0, color: Color.fromRGBO(hostRed, hostGreen, hostBlue, 1.0)),
             ),
           ],
-        ) : Text(
-          'Hosted Anonymously',
-          style: kDefaultTextStyle.copyWith(fontSize: 14.0, color: kColorLightGray),
-        ),
-      ),
+        )
+      ) : Text(
+      'Hosted Anonymously',
+      style: kDefaultTextStyle.copyWith(fontSize: 14.0, color: kColorLightGray),
+    ),
       trailing: Text(
         date(),
         overflow: TextOverflow.fade,

@@ -21,6 +21,7 @@ class _SignUpState extends State<SignUp> {
   String email;
   String password;
   bool _isButtonDisabled = true;
+  bool _termsHidden = true;
   bool _agreed = false;
 
   final _firstNameFocus = FocusNode();
@@ -29,7 +30,17 @@ class _SignUpState extends State<SignUp> {
 
   bool showSpinner = false;
 
-  void isValid() {
+  _showTerms() {
+    if (email.isNotEmpty &&
+        password.isNotEmpty &&
+        firstName.isNotEmpty) {
+      setState(() {
+        _termsHidden = false;
+      });
+    }
+  }
+
+  _isValid() {
     if (email.isNotEmpty &&
         password.isNotEmpty &&
         firstName.isNotEmpty &&
@@ -46,225 +57,203 @@ class _SignUpState extends State<SignUp> {
 
   @override
   Widget build(BuildContext context) {
-    //removes status bar
-    SystemChrome.setEnabledSystemUIOverlays([]);
-    double screenHeight = MediaQuery.of(context).size.height;
-
     return Scaffold(
-//      resizeToAvoidBottomInset: false,
-      body: Container(
-        constraints: BoxConstraints.expand(),
-        decoration: BoxDecoration(
-          image: DecorationImage(
-            image: AssetImage("images/bubbly2.png"),
-            fit: BoxFit.none,
-            alignment: Alignment.topCenter,
+      appBar: AppBar(
+        centerTitle: true,
+        brightness: Brightness.light,
+        elevation: 2.0,
+        backgroundColor: Colors.white,
+        title: Text(
+          "Create Account",
+          textAlign: TextAlign.left,
+          style: kAppBarTextStyle.copyWith(
+            color: kColorPurple,
           ),
         ),
-        child: SafeArea(
-          child: Stack(
-            children: <Widget>[
-              Align(
-                alignment: Alignment.topLeft,
-                child: Padding(
-                  padding: const EdgeInsets.only(left: 12.0, top: 12.0),
-                  child: GestureDetector(
-                    behavior: HitTestBehavior.translucent,
-                    onTap: () => Navigator.pop(context),
-                    child: Icon(
-                      FontAwesomeIcons.chevronLeft,
-                      size: 25.0,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-              ),
-              Align(
-                alignment: Alignment.topCenter,
-                child: Padding(
-                  padding: const EdgeInsets.only(left: 12.0, top: 12.0),
-                  child: GestureDetector(
-                    behavior: HitTestBehavior.translucent,
-                    onTap: () => Navigator.pop(context),
-                    child: Text(
-                      'Create an Account',
-                      style: kAppBarTextStyle.copyWith(
-                        color: Colors.white,
-                        fontSize: 20,
-                        shadows: [
-                          Shadow(
-                            blurRadius: 4.0,
-                            color: kColorBlack71,
-//                        offset: Offset(5.0, 5.0),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              ModalProgressHUD(
-                inAsyncCall: showSpinner,
-                progressIndicator: CircularProgressIndicator(
-                  valueColor: AlwaysStoppedAnimation<Color>(kColorPurple),
-                ),
-                child: SafeArea(
-                  child: GestureDetector(
-                    behavior: HitTestBehavior.translucent,
-                    onPanDown: (_) {
-                      FocusScope.of(context).requestFocus(FocusNode());
+        leading: IconButton(
+          icon: Icon(FontAwesomeIcons.chevronLeft),
+          onPressed: () {
+            Navigator.pop(context);
+          },
+          color: kColorBlack71,
+          splashColor: Colors.grey[200],
+          highlightColor: Colors.transparent,
+        ),
+      ),
+      body: SafeArea(
+        child: ModalProgressHUD(
+          inAsyncCall: showSpinner,
+          progressIndicator: CircularProgressIndicator(
+            valueColor: AlwaysStoppedAnimation<Color>(kColorPurple),
+          ),
+          child: GestureDetector(
+            behavior: HitTestBehavior.translucent,
+            onPanDown: (_) {
+              FocusScope.of(context).requestFocus(FocusNode());
+            },
+            child: Padding(
+              padding: EdgeInsets.all(12.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: <Widget>[
+                  TextField(
+                    cursorColor: kColorPurple,
+                    onChanged: (value) {
+                      email = value;
+                      _isValid();
+                      _showTerms();
                     },
-                    child: Padding(
-                      padding: const EdgeInsets.all(24.0),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: <Widget>[
-                          Container(
-                            height: screenHeight / 2.2,
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius:
-                                  BorderRadius.all(const Radius.circular(10.0)),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.grey[800],
-                                  blurRadius:
-                                      5.0, // has the effect of softening the shadow
-                                  spreadRadius:
-                                      2.0, // has the effect of extending the shadow
-                                  offset: Offset(
-                                    8.0, // horizontal, move right 10
-                                    8.0, // vertical, move down 10
-                                  ),
-                                ),
-                              ],
-                            ),
-                            child: Padding(
-                              padding: EdgeInsets.symmetric(horizontal: 16.0),
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-//                                crossAxisAlignment: CrossAxisAlignment.center,
-                                children: <Widget>[
-                                  ReusableRegistrationTextField(
-                                    hintText: 'Enter your email',
-                                    focusNode: null,
-                                    keyboardType:
-                                        TextInputType.emailAddress,
-                                    textInputAction: TextInputAction.next,
-                                    icon: FontAwesomeIcons.envelope,
-                                    onSubmitted: (v) {
-                                      FocusScope.of(context)
-                                          .requestFocus(_emailFocus);
-                                    },
-                                    onChanged: (value) {
-                                      email = value;
-                                      isValid();
-                                    },
-                                  ),
-                                  SizedBox(height: 8.0),
-                                  ReusableRegistrationTextField(
-                                    hintText: 'Enter your first name',
-                                    focusNode: _emailFocus,
-                                    keyboardType: TextInputType.text,
-                                    textInputAction: TextInputAction.next,
-                                    icon: FontAwesomeIcons.signature,
-                                    onSubmitted: (v) {
-                                      FocusScope.of(context)
-                                          .requestFocus(_firstNameFocus);
-                                    },
-                                    onChanged: (value) {
-                                      firstName = value;
-                                      isValid();
-                                    },
-                                  ),
-                                  SizedBox(height: 8.0),
-                                  ReusableRegistrationTextField(
-                                    hintText: 'Enter your password',
-                                    obscureText: true,
-                                    focusNode: _firstNameFocus,
-                                    keyboardType: TextInputType.text,
-                                    textInputAction: TextInputAction.done,
-                                    icon: FontAwesomeIcons.lock,
-                                    onSubmitted: (v) {
-                                      FocusScope.of(context)
-                                          .requestFocus(_passwordFocus);
-                                      _signUp();
-                                    },
-                                    onChanged: (value) {
-                                      password = value;
-                                      isValid();
-                                    },
-                                  ),
-                                  SizedBox(height: 8.0),
-                                  Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.start,
-                                    children: <Widget>[
-                                      Checkbox(
-                                        activeColor: kColorPurple,
-                                        value: _agreed,
-                                        onChanged: (value) {
-                                          setState(() {
-                                            _agreed = value;
-                                          });
-                                          isValid();
-                                        },
-                                      ),
-                                      FlatButton(
-                                        padding: EdgeInsets.all(0.0),
-                                        onPressed: _launchURL,
-                                        splashColor: Colors.grey[200],
-                                        highlightColor: Colors.transparent,
-                                        child: Text(
-                                          'Agree to Terms & Conditions',
-                                          style: kAppBarTextStyle.copyWith(
-                                              fontSize: 14.0),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  Align(
-                                    alignment: Alignment.topRight,
-                                    child: FlatButton.icon(
-                                      onPressed: _signUp,
-                                      splashColor: _isButtonDisabled
-                                          ? Colors.transparent
-                                          : kColorOffWhite,
-                                      highlightColor: Colors.transparent,
-                                      icon: Icon(
-                                        _isButtonDisabled
-                                            ? FontAwesomeIcons
-                                                .arrowAltCircleUp
-                                            : FontAwesomeIcons
-                                                .arrowAltCircleRight,
-                                        size: 30.0,
-                                        color: _isButtonDisabled
-                                            ? kColorLightGray
-                                            : kColorPurple,
-                                      ),
-                                      label: Text(
-                                        _isButtonDisabled
-                                            ? 'Not Done'
-                                            : 'Add Photo',
-                                        style: kDefaultTextStyle.copyWith(
-                                            color: _isButtonDisabled
-                                                ? kColorLightGray
-                                                : kColorPurple),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ],
+                    focusNode: null,
+                    onSubmitted: (v) {
+                      FocusScope.of(context)
+                          .requestFocus(_emailFocus);
+                    },
+                    autocorrect: false,
+                    keyboardType: TextInputType.emailAddress,
+                    textInputAction: TextInputAction.next,
+                    autofocus: true,
+                    style: kDefaultTextStyle,
+                    decoration: kRegistrationInputDecoration.copyWith(
+                      labelText: 'Email',
+                      hintText: 'Enter your email',
+                      hintStyle: kDefaultTextStyle.copyWith(
+                        color: kColorLightGray,
+                      ),
+                      labelStyle: kAppBarTextStyle.copyWith(fontSize: 16.0),
+                      icon: Icon(
+                        FontAwesomeIcons.envelope,
+                        color: kColorBlack71,
+                        size: 20.0,
                       ),
                     ),
                   ),
-                ),
+                  SizedBox(height: 8.0),
+                  TextField(
+                    cursorColor: kColorPurple,
+                    onChanged: (value) {
+                      firstName = value;
+                      _isValid();
+                      _showTerms();
+                    },
+                    focusNode: _emailFocus,
+                    onSubmitted: (v) {
+                      FocusScope.of(context)
+                          .requestFocus(_firstNameFocus);
+                    },
+                    autocorrect: false,
+                    keyboardType: TextInputType.text,
+                    textInputAction: TextInputAction.next,
+                    autofocus: true,
+                    style: kDefaultTextStyle,
+                    decoration: kRegistrationInputDecoration.copyWith(
+                      labelText: 'First Name',
+                      hintText: 'Enter your first name',
+                      hintStyle: kDefaultTextStyle.copyWith(
+                        color: kColorLightGray,
+                      ),
+                      labelStyle: kAppBarTextStyle.copyWith(fontSize: 16.0),
+                      icon: Icon(
+                        FontAwesomeIcons.signature,
+                        color: kColorBlack71,
+                        size: 20.0,
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 8.0),
+                  TextField(
+                    obscureText: true,
+                    cursorColor: kColorPurple,
+                    onChanged: (value) {
+                      password = value;
+                      _isValid();
+                      _showTerms();
+                    },
+                    focusNode: _firstNameFocus,
+                    onSubmitted: (v) {
+                      FocusScope.of(context)
+                          .requestFocus(_passwordFocus);
+                      _signUp();
+                    },
+                    autocorrect: false,
+                    keyboardType: TextInputType.text,
+                    textInputAction: TextInputAction.done,
+                    autofocus: true,
+                    style: kDefaultTextStyle,
+                    decoration: kRegistrationInputDecoration.copyWith(
+                      labelText: 'Password',
+                      hintText: 'Enter your password',
+                      hintStyle: kDefaultTextStyle.copyWith(
+                        color: kColorLightGray,
+                      ),
+                      labelStyle: kAppBarTextStyle.copyWith(fontSize: 16.0),
+                      icon: Icon(
+                        FontAwesomeIcons.lock,
+                        color: kColorBlack71,
+                        size: 20.0,
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 8.0),
+                  _termsHidden ? SizedBox() : Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: <Widget>[
+                      Checkbox(
+                        activeColor: kColorPurple,
+                        value: _agreed,
+                        onChanged: (value) {
+                          setState(() {
+                            _agreed = value;
+                          });
+                          _isValid();
+                        },
+                      ),
+                      FlatButton(
+                        padding: EdgeInsets.all(0.0),
+                        onPressed: _launchURL,
+                        splashColor: Colors.grey[200],
+                        highlightColor: Colors.transparent,
+                        child: Text(
+                          'Agree to Terms & Conditions',
+                          style: kAppBarTextStyle.copyWith(
+                              fontSize: 14.0),
+                        ),
+                      ),
+                    ],
+                  ),
+                  Align(
+                    alignment: Alignment.topRight,
+                    child: FlatButton.icon(
+                      onPressed: _signUp,
+                      splashColor: _isButtonDisabled
+                          ? Colors.transparent
+                          : kColorOffWhite,
+                      highlightColor: Colors.transparent,
+                      icon: Icon(
+                        _isButtonDisabled
+                            ? FontAwesomeIcons
+                                .arrowAltCircleUp
+                            : FontAwesomeIcons
+                                .arrowAltCircleRight,
+                        size: 30.0,
+                        color: _isButtonDisabled
+                            ? kColorLightGray
+                            : kColorPurple,
+                      ),
+                      label: Text(
+                        _isButtonDisabled
+                            ? 'Not Done'
+                            : 'Add Photo',
+                        style: kDefaultTextStyle.copyWith(
+                            color: _isButtonDisabled
+                                ? kColorLightGray
+                                : kColorPurple),
+                      ),
+                    ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
         ),
       ),

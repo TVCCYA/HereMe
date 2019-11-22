@@ -1,4 +1,4 @@
-package com.TVCCYA.HereMe.heremeflutter
+package com.TVCCYA.HereMe
 
 import android.os.Bundle
 

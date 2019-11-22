@@ -56,6 +56,7 @@ class _AddRecentState extends State<AddRecent> {
       child: Scaffold(
         backgroundColor: kColorOffWhite,
         appBar: AppBar(
+          centerTitle: true,
           brightness: Brightness.light,
           leading: IconButton(
             icon: Icon(FontAwesomeIcons.chevronLeft),

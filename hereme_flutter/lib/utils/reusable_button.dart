@@ -15,16 +15,13 @@ class ReusableButton extends StatelessWidget {
       child: Material(
         color: Colors.white,
         child: MaterialButton(
-          splashColor: kColorOffWhite,
+          splashColor: Colors.grey[200],
           highlightColor: Colors.transparent,
           onPressed: onPressed,
           child: Text(
             title,
-            style: TextStyle(
+            style: kAppBarTextStyle.copyWith(
               color: textColor,
-              fontFamily: 'Arimo',
-              fontWeight: FontWeight.w600,
-              fontSize: 16.0,
             ),
           ),
         ),

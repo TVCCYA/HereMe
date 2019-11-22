@@ -1,5 +1,7 @@
+import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:hereme_flutter/home/home.dart';
 import 'package:hereme_flutter/constants.dart';
@@ -448,6 +450,7 @@ class _LiveChatScreenState extends State<LiveChatScreen> {
     return Scaffold(
       backgroundColor: kColorOffWhite,
       appBar: AppBar(
+        centerTitle: true,
         brightness: Brightness.light,
         title: FlatButton(
           onPressed: () => _settingsActionSheet(context),
@@ -469,7 +472,7 @@ class _LiveChatScreenState extends State<LiveChatScreen> {
         actions: <Widget>[
           Center(
             child: Padding(
-              padding: const EdgeInsets.only(right: 8.0),
+              padding: EdgeInsets.only(right: 8.0),
               child: Text(
                 duration,
                 style: kAppBarTextStyle.copyWith(color: kColorRed, fontSize: 16.0),
