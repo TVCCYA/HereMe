@@ -1,9 +1,11 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:hereme_flutter/home/home.dart';
 import 'package:hereme_flutter/constants.dart';
+import 'package:hereme_flutter/registration/initial_page.dart';
 import 'package:hereme_flutter/settings/blocked_profiles.dart';
 import 'package:hereme_flutter/utils/settings_tile.dart';
 import 'package:rflutter_alert/rflutter_alert.dart';
@@ -11,11 +13,13 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class SupportPage extends StatelessWidget {
+  final _scaffoldKey = GlobalKey<ScaffoldState>();
   final TextEditingController _nameChangeController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: _scaffoldKey,
       appBar: AppBar(
         centerTitle: true,
         elevation: 2.0,
@@ -89,58 +93,59 @@ class SupportPage extends StatelessWidget {
 
   _nameChangeAlert(BuildContext context) async {
     Alert(
-      context: context,
-      title: 'Change Name',
-      style: AlertStyle(
-        backgroundColor: kColorOffWhite,
-        overlayColor: Colors.black.withOpacity(0.75),
-        titleStyle: kDefaultTextStyle.copyWith(
-          color: kColorBlack71,
-          fontSize: 24.0,
+        context: context,
+        title: 'Change Name',
+        style: AlertStyle(
+          backgroundColor: kColorOffWhite,
+          overlayColor: Colors.black.withOpacity(0.75),
+          titleStyle: kDefaultTextStyle.copyWith(
+            color: kColorBlack71,
+            fontSize: 24.0,
+          ),
+          descStyle: kDefaultTextStyle.copyWith(
+            color: kColorBlack71,
+            fontSize: 16.0,
+          ),
         ),
-        descStyle: kDefaultTextStyle.copyWith(
-          color: kColorBlack71,
-          fontSize: 16.0,
-        ),
-      ),
-      content: Column(
-        children: <Widget>[
-          TextField(
-            controller: _nameChangeController,
-            style: kDefaultTextStyle,
-            onSubmitted: (v) => _submitUpdateNameChange(context),
-            cursorColor: kColorPurple,
-            decoration: kRegistrationInputDecoration
-                .copyWith(
-              labelText: 'First Name',
-              labelStyle:
-              kDefaultTextStyle.copyWith(
-                color: kColorLightGray,
-              ),
-              icon: Icon(
-                FontAwesomeIcons.signature,
-                color: kColorBlack71,
+        content: Column(
+          children: <Widget>[
+            TextField(
+              controller: _nameChangeController,
+              style: kDefaultTextStyle,
+              onSubmitted: (v) => _submitUpdateNameChange(context),
+              cursorColor: kColorPurple,
+              decoration: kRegistrationInputDecoration.copyWith(
+                labelText: 'First Name',
+                labelStyle: kDefaultTextStyle.copyWith(
+                  color: kColorLightGray,
+                ),
+                icon: Icon(
+                  FontAwesomeIcons.signature,
+                  color: kColorBlack71,
+                ),
               ),
             ),
-          ),
-        ],
-      ),
-      buttons: [
-        DialogButton(
-          onPressed: () => _submitUpdateNameChange(context),
-          child: Text(
-            'Update',
-            style: kDefaultTextStyle.copyWith(color: Colors.white),
-          ),
-          color: kColorBlue,
-        )
-      ]).show();
+          ],
+        ),
+        buttons: [
+          DialogButton(
+            onPressed: () => _submitUpdateNameChange(context),
+            child: Text(
+              'Update',
+              style: kDefaultTextStyle.copyWith(color: Colors.white),
+            ),
+            color: kColorBlue,
+          )
+        ]).show();
   }
 
   _submitUpdateNameChange(context) {
     _nameChangeController.text.length > 0
         ? _handleNameChange(context)
-        : kErrorFlushbar(context: context, errorText: 'Name cannot be empty');
+        : kShowSnackbar(
+            key: _scaffoldKey,
+            text: 'Name cannot be empty',
+            backgroundColor: kColorRed);
   }
 
   _handleNameChange(BuildContext context) async {
@@ -149,8 +154,12 @@ class SupportPage extends StatelessWidget {
       'username': _nameChangeController.text,
     };
     userReference.updateData(nameData).whenComplete(() {
-      print('Name Changed');
       _updatePreferences(context);
+      kShowSnackbar(
+        key: _scaffoldKey,
+        text: 'Successfully changed name',
+        backgroundColor: kColorGreen,
+      );
     }).catchError((e) => print(e));
   }
 
@@ -170,7 +179,8 @@ class SupportPage extends StatelessWidget {
     kShowAlertMultiButtons(
         context: context,
         title: 'Send Email?',
-        desc: 'We will email you a link to your HereMe email account ($email) for you to change your password',
+        desc:
+            'We will email you a link to your HereMe email account ($email) for you to change your password',
         buttonText1: 'Send It',
         color1: kColorGreen,
         buttonText2: 'Cancel',
@@ -179,24 +189,28 @@ class SupportPage extends StatelessWidget {
         onPressed2: () => Navigator.pop(context));
   }
 
-  
   _forgotPassword(BuildContext context, String email) async {
     final auth = FirebaseAuth.instance;
     try {
       await auth.sendPasswordResetEmail(email: email);
       Navigator.pop(context);
-      kShowFlushBar(
-          text: 'Check the link sent to $email',
-          icon: FontAwesomeIcons.check,
-          color: kColorGreen,
-          context: context);
+      kShowAlert(
+        context: context,
+        title: 'Email Sent',
+        desc: 'Check the link sent to $email',
+        buttonText: 'Ok',
+        onPressed: () => Navigator.pop(context),
+        color: kColorBlue,
+      );
     } catch (e) {
-      Navigator.pop(context);
-      kShowFlushBar(
-          text: 'Unable to send link to $email, please try again later',
-          icon: FontAwesomeIcons.times,
-          color: kColorRed,
-          context: context);
+      kShowAlert(
+        context: context,
+        title: 'Uh oh',
+        desc: 'Unable to send link to $email',
+        buttonText: 'Try Again',
+        onPressed: () => Navigator.pop(context),
+        color: kColorRed,
+      );
     }
   }
 
@@ -232,32 +246,71 @@ class SupportPage extends StatelessWidget {
         color2: kColorLightGray,
         buttonText1: 'Delete',
         buttonText2: 'Cancel',
-        onPressed1: () => _handleAccountDelete(),
+        onPressed1: () => _handleAccountDelete(context),
         onPressed2: () => Navigator.pop(context));
   }
 
-  _handleAccountDelete() async {
+  _handleRemoveCollection(DocumentReference ref, String collection) {
+    ref.collection(collection).snapshots().forEach((snapshot) {
+      snapshot.documents.forEach((doc) {
+        if (doc.exists) {
+          doc.reference.delete();
+        }
+      });
+    });
+  }
+
+  _retrieveAndDeleteLiveChat(String uid) {
+    liveChatsRef
+        .document(uid)
+        .collection('chats')
+        .snapshots()
+        .listen((snapshot) {
+      snapshot.documents.forEach((doc) {
+        if (doc.exists) {
+          final chatId = doc.data['chatId'];
+          _handleRemoveCollection(usersInChatRef.document(chatId), 'invited');
+          _handleRemoveCollection(usersInChatRef.document(chatId), 'inChat');
+          _handleRemoveCollection(
+              liveChatMessagesRef.document(chatId), 'messages');
+          liveChatLocationsRef.document(chatId).delete();
+        }
+      });
+    });
+  }
+
+  _handleAccountDelete(BuildContext context) async {
     String uid = currentUser.uid;
     final FirebaseStorage _storage = FirebaseStorage.instance;
     FirebaseUser user = await FirebaseAuth.instance.currentUser();
     final userReference = usersRef.document(uid);
     final userLocation = userLocationsRef.document(uid);
-    final userAccounts = socialMediasRef.document(uid);
-    final currentUsersKnocks = knocksRef.document(uid);
+
+    final socialMedias = socialMediasRef.document(uid);
+    final knocks = knocksRef.document(uid);
     final recentUploads = recentUploadsRef.document(uid);
+    final activityFeed = activityRef.document(uid);
+    final liveChats = liveChatsRef.document(uid);
 
     _storage.ref().child('profile_images/$uid').delete().whenComplete(() {
       _storage.ref().child('recent_upload_thumbnail/$uid').delete();
       userReference.delete();
       userLocation.delete();
-      userAccounts.delete();
+
+      _handleRemoveCollection(socialMedias, 'socials');
+      _handleRemoveCollection(activityFeed, 'feedItems');
+      _handleRemoveCollection(knocks, 'receivedKnockFrom');
+      _handleRemoveCollection(recentUploads, 'recents');
       kDeleteSentKnocks(uid);
-      recentUploads.delete();
-      currentUsersKnocks.delete();
-      // live chats/messages should eventually just delete automatically
+      _retrieveAndDeleteLiveChat(uid);
+      _handleRemoveCollection(liveChats, 'chats');
 
       user.delete().whenComplete(() {
         print('all deleted');
+        Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(builder: (BuildContext context) => InitialPage()),
+            (Route<dynamic> route) => false);
       });
     });
   }

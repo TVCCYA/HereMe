@@ -4,6 +4,8 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_google_ad_manager/banner.dart';
+import 'package:flutter_google_ad_manager/flutter_google_ad_manager.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:geoflutterfire/geoflutterfire.dart';
 import 'package:geolocator/geolocator.dart';
@@ -124,27 +126,26 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
     _firebaseMessaging.configure(
 //      onLaunch: (Map<String, dynamic> message) async {},
 //      onResume: (Map<String, dynamic> message) async {},
-      onMessage: (Map<String, dynamic> message) async {
-        final String recipientId = message['data']['recipient'];
-        final String body = message['data']['body'];
-        if (recipientId == user.uid) {
-          kShowSnackbar(
-            key: _scaffoldKey,
-            text: body,
-            backgroundColor: kColorBlack71,
-          );
-        }
-        print('NOTIFICATION NOT SHOWN');
-      },
-    );
+//      onMessage: (Map<String, dynamic> message) async {
+//        print('on message: $message\n');
+//        final String recipientId = message['data']['recipient'];
+//        final String body = message['notification']['body'];
+//        if (recipientId == user.uid) {
+//          kShowSnackbar(
+//            key: _scaffoldKey,
+//            text: body,
+//            backgroundColor: kColorBlack71,
+//          );
+//        }
+//        print('NOTIFICATION NOT SHOWN');
+//      },
+        );
   }
 
   getIOSPermission() {
     _firebaseMessaging.requestNotificationPermissions(
         IosNotificationSettings(sound: true, alert: true, badge: true));
-    _firebaseMessaging.onIosSettingsRegistered.listen((settings) {
-
-    });
+    _firebaseMessaging.onIosSettingsRegistered.listen((settings) {});
   }
 
   getCurrentUser() async {
@@ -503,8 +504,7 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
               duration: kTimeRemaining(timeLeft),
               distanceFromChat: distanceFromChat,
             );
-            if (!blockedUids.contains(hostUid) &&
-                chatsAround.length < 3) {
+            if (!blockedUids.contains(hostUid) && chatsAround.length < 3) {
               chatsAround.add(displayedChat);
             }
           }
@@ -754,24 +754,21 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
               ? circularProgress()
               : RefreshIndicator(
                   onRefresh: () async => await getCurrentLocation(),
-                  child: Stack(
-                    children: <Widget>[
-                      Container(
-                        height: screenHeight,
-                        width: screenWidth,
-                        child: SingleChildScrollView(
-                          padding: EdgeInsets.only(bottom: 50.0),
-                          physics: AlwaysScrollableScrollPhysics(),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: <Widget>[
-                              SizedBox(height: 4.0),
-                              buildTopViewed(),
-                              Divider(color: Colors.grey[300]),
-                              enabledLocationFetchUsers(),
-                              Divider(color: Colors.grey[300]),
-                              enabledLocationFetchChats(),
-                              Divider(color: Colors.grey[300]),
+                  child: Container(
+                    height: screenHeight,
+                    width: screenWidth,
+                    child: SingleChildScrollView(
+                      physics: AlwaysScrollableScrollPhysics(),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: <Widget>[
+                          SizedBox(height: 4.0),
+                          buildTopViewed(),
+                          Divider(color: Colors.grey[300]),
+                          enabledLocationFetchUsers(),
+                          Divider(color: Colors.grey[300]),
+                          enabledLocationFetchChats(),
+                          Divider(color: Colors.grey[300]),
 //                              Container(
 //                                height: 50.0,
 //                                width: screenWidth,
@@ -803,32 +800,25 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
 //                                ),
 //                              ),
 //                              Divider(color: Colors.grey[300]),
-                            ],
-                          ),
-                        ),
-
-                        /* If you don't do the bottom scroll notification...
-                         REMOVE padding from SingleChildScrollView and
-                         REPLACE the Stack wrapping with just the
-                         SingleChildScrollView Widget
-                       */
+                        ],
                       ),
-//                      Align(
-//                        child: Container(
-//                          height: 50.0,
-//                          width: screenWidth,
-//                          color: Colors.yellow,
-//                          child: Center(
-//                            child: Text(
-//                              'BOTTOM SCROLLY NOTIFICATION GOES HERE',
-//                            ),
-//                          ),
-//                        ),
-//                        alignment: Alignment.bottomCenter,
-//                      ),
-                    ],
+                    ),
                   ),
                 ),
+        ),
+      ),
+      bottomNavigationBar: BottomAppBar(
+        elevation: 0.0,
+        color: kColorOffWhite,
+        child: Container(
+          height: 50.0,
+          child: Center(
+            child: DFPBanner(
+              isDevelop: false,
+              adUnitId: 'ca-app-pub-5239326709670732/8292225666',
+              adSize: DFPAdSize.BANNER,
+            ),
+          ),
         ),
       ),
     );

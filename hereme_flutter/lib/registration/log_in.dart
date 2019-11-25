@@ -272,17 +272,23 @@ class _LogInState extends State<LogIn> {
     try {
       await _auth.sendPasswordResetEmail(email: forgotPasswordEmail);
       Navigator.pop(context);
-      kShowFlushBar(
-          text: 'Check the link sent to $forgotPasswordEmail',
-          icon: FontAwesomeIcons.check,
-          color: kColorGreen,
-          context: context);
+      kShowAlert(
+        context: context,
+        title: 'Email Sent',
+        desc: 'Check the link sent to $forgotPasswordEmail',
+        buttonText: 'Ok',
+        onPressed: () => Navigator.pop(context),
+        color: kColorBlue,
+      );
     } catch (e) {
-      kShowFlushBar(
-          text: 'Unable to send link to $forgotPasswordEmail',
-          icon: FontAwesomeIcons.times,
-          color: kColorRed,
-          context: context);
+      kShowAlert(
+        context: context,
+        title: 'Uh oh',
+        desc: 'Unable to send link to $forgotPasswordEmail',
+        buttonText: 'Try Again',
+        onPressed: () => Navigator.pop(context),
+        color: kColorRed,
+      );
     }
   }
 
@@ -317,6 +323,7 @@ class _LogInState extends State<LogIn> {
           'Email example: your_email@mail.com\nPassword must contain at least 6 characters',
           buttonText: 'Try Again',
           onPressed: () => Navigator.pop(context),
+          color: kColorRed
         );
       }
     }

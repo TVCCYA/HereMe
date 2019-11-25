@@ -26,6 +26,7 @@ class _AddLinkState extends State<AddLink> {
 
   _AddLinkState({this.platform, this.color, this.icon});
 
+  final _scaffoldKey = GlobalKey<ScaffoldState>();
   String username;
   TextEditingController _usernameController = TextEditingController();
   FocusNode _usernameName = FocusNode();
@@ -70,6 +71,7 @@ class _AddLinkState extends State<AddLink> {
     final double screenWidth = MediaQuery.of(context).size.width;
     final double screenHeight = MediaQuery.of(context).size.height;
     return Scaffold(
+      key: _scaffoldKey,
       appBar: AppBar(
         centerTitle: true,
         elevation: 2.0,
@@ -124,9 +126,11 @@ class _AddLinkState extends State<AddLink> {
                   focusNode: _usernameName,
                   onSubmitted: (v) {
                     if (username.contains(' ')) {
-                      kErrorFlushbar(
-                          context: context,
-                          errorText: 'Username cannot contain spaces');
+                      kShowSnackbar(
+                          key: _scaffoldKey,
+                          text: 'Username cannot contain spaces',
+                          backgroundColor: kColorRed
+                      );
                     } else {
                       if (platform == 'YouTube' ||
                           platform == 'Facebook' ||
@@ -172,14 +176,18 @@ class _AddLinkState extends State<AddLink> {
                         },
                         onSubmitted: (v) {
                           if (url.contains(' ')) {
-                            kErrorFlushbar(
-                                context: context,
-                                errorText: 'URL cannot contain spaces');
+                            kShowSnackbar(
+                                key: _scaffoldKey,
+                                text: 'URL cannot contain spaces',
+                                backgroundColor: kColorRed
+                            );
                           }
                           if (!url.contains('https://')) {
-                            kErrorFlushbar(
-                                context: context,
-                                errorText: 'URL format: https://example.com');
+                            kShowSnackbar(
+                                key: _scaffoldKey,
+                                text: 'URL format: https://example.com',
+                                backgroundColor: kColorRed
+                            );
                           }
                           _isButtonDisabled
                               ? print('disabled')
@@ -219,25 +227,33 @@ class _AddLinkState extends State<AddLink> {
                           platform == 'Your Website' ||
                           platform == 'SoundCloud') {
                         if (username.contains(' ')) {
-                          kErrorFlushbar(
-                              context: context,
-                              errorText: 'Username cannot contain spaces');
+                          kShowSnackbar(
+                              key: _scaffoldKey,
+                              text: 'Username cannot contain spaces',
+                              backgroundColor: kColorRed
+                          );
                         }
                         if (url.contains(' ')) {
-                          kErrorFlushbar(
-                              context: context,
-                              errorText: 'URL cannot contain spaces');
+                          kShowSnackbar(
+                              key: _scaffoldKey,
+                              text: 'URL cannot contain spaces',
+                              backgroundColor: kColorRed
+                          );
                         }
                         if (!url.contains('https://')) {
-                          kErrorFlushbar(
-                              context: context,
-                              errorText: 'URL format: https://example.com');
+                          kShowSnackbar(
+                              key: _scaffoldKey,
+                              text: 'URL format: https://example.com',
+                              backgroundColor: kColorRed
+                          );
                         }
                       } else {
                         if (username.contains(' ')) {
-                          kErrorFlushbar(
-                              context: context,
-                              errorText: 'Username cannot contain spaces');
+                          kShowSnackbar(
+                              key: _scaffoldKey,
+                              text: 'Username cannot contain spaces',
+                              backgroundColor: kColorRed
+                          );
                         }
                       }
                     },
@@ -318,27 +334,25 @@ class _AddLinkState extends State<AddLink> {
       link = key;
       url = value;
     });
-    print(link);
-    print(url);
 
     await ref.setData(
       {
         'linkId': linkId,
         '${link}Username': username,
         'url': url,
+        'creationDate': DateTime.now().millisecondsSinceEpoch,
       },
     ).whenComplete(() {
       usersRef.document(uid).updateData({
         'hasAccountLinked': true,
       });
     }).whenComplete(() {
-      Navigator.pop(context);
-      kShowFlushBar(
-          text: 'Successfully linked account',
-          icon: FontAwesomeIcons.exclamation,
-          color: color,
-          context: context
+      kShowSnackbar(
+        key: _scaffoldKey,
+        text: 'Successfully linked $username',
+        backgroundColor: kColorGreen,
       );
+      Future.delayed(Duration(seconds: 2), () => Navigator.pop(context));
     });
   }
 }

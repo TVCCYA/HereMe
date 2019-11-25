@@ -5,7 +5,6 @@ import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:hereme_flutter/home/home.dart';
 import 'package:hereme_flutter/constants.dart';
-import 'package:hereme_flutter/utils/reusable_registration_textfield.dart';
 import 'package:modal_progress_hud/modal_progress_hud.dart';
 
 class CreateDisplayName extends StatefulWidget {
@@ -14,17 +13,25 @@ class CreateDisplayName extends StatefulWidget {
 }
 
 class _CreateDisplayNameState extends State<CreateDisplayName> {
+  final _scaffoldKey = GlobalKey<ScaffoldState>();
   String displayName;
   bool _isButtonDisabled = true;
   bool _isAvailable = false;
   bool showSpinner = false;
-  int red = currentUser.red;
-  int green = currentUser.green;
-  int blue = currentUser.blue;
+  int red;
+  int green;
+  int blue;
 
   @override
   void initState() {
     super.initState();
+    if (currentUser.red != null) {
+      red = currentUser.red;
+      green = currentUser.green;
+      blue = currentUser.blue;
+    } else {
+      createRandomColor();
+    }
   }
 
   createRandomColor() {
@@ -81,9 +88,34 @@ class _CreateDisplayNameState extends State<CreateDisplayName> {
     });
   }
 
+  _onSubmitErrors() {
+    if (displayName.contains(' ')) {
+      kShowSnackbar(
+          key: _scaffoldKey,
+          text: 'Username cannot contain spaces',
+          backgroundColor: kColorRed
+      );
+    }
+    if (!_isAvailable) {
+      kShowSnackbar(
+          key: _scaffoldKey,
+          text: '$displayName already taken',
+          backgroundColor: kColorRed
+      );
+    }
+    if (displayName.length < 3) {
+      kShowSnackbar(
+          key: _scaffoldKey,
+          text: 'Username must be 3 characters or more',
+          backgroundColor: kColorRed
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: _scaffoldKey,
       backgroundColor: kColorOffWhite,
       appBar: AppBar(
         centerTitle: true,
@@ -135,19 +167,7 @@ class _CreateDisplayNameState extends State<CreateDisplayName> {
                       },
                       focusNode: null,
                       onSubmitted: (v) {
-                        if (displayName.contains(' ')) {
-                          kErrorFlushbar(
-                              context: context,
-                              errorText: 'Username cannot contain spaces');
-                        }
-                        if (!_isAvailable) {
-                          kErrorFlushbar(
-                              context: context, errorText: '$displayName already taken');
-                        }
-                        if (displayName.length < 3) {
-                          kErrorFlushbar(
-                              context: context, errorText: 'Username must be 3 characters or more');
-                        }
+                        _onSubmitErrors();
                         _isButtonDisabled
                             ? print('disabled')
                             : handleAddDisplayName();
@@ -191,19 +211,7 @@ class _CreateDisplayNameState extends State<CreateDisplayName> {
                       alignment: Alignment.topRight,
                       child: FlatButton.icon(
                         onPressed: () {
-                          if (displayName.contains(' ')) {
-                            kErrorFlushbar(
-                                context: context,
-                                errorText: 'Username cannot contain spaces');
-                          }
-                          if (!_isAvailable) {
-                            kErrorFlushbar(
-                                context: context, errorText: '$displayName already taken');
-                          }
-                          if (displayName.length < 3) {
-                            kErrorFlushbar(
-                                context: context, errorText: 'Username must be 3 characters or more');
-                          }
+                          _onSubmitErrors();
                           _isButtonDisabled
                               ? print('disabled')
                               : handleAddDisplayName();
@@ -253,7 +261,12 @@ class _CreateDisplayNameState extends State<CreateDisplayName> {
       setState(() {
         showSpinner = false;
       });
-      Navigator.pop(context);
+      kShowSnackbar(
+        key: _scaffoldKey,
+        text: 'Successfully changed username to $displayName',
+        backgroundColor: kColorGreen,
+      );
+      Future.delayed(Duration(seconds: 2), () => Navigator.pop(context));
     });
   }
 }

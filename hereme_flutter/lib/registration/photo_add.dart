@@ -125,7 +125,7 @@ class _PhotoAddState extends State<PhotoAdd> {
                             alignment: Alignment.topRight,
                             child: FlatButton.icon(
                               onPressed: () => _isButtonDisabled
-                                  ? kErrorFlushbar(context: context, errorText: 'Must Choose a Profile Image')
+                                  ? print('Disabled')
                                   : _uploadImageToFirebase(mediaFile),
                               splashColor: _isButtonDisabled
                                   ? Colors.transparent
@@ -239,6 +239,7 @@ class _PhotoAddState extends State<PhotoAdd> {
               'Unable to upload your thumbnail image, please try again later',
               buttonText: 'Try Again',
               onPressed: () => Navigator.pop(context),
+                  color: kColorRed
             ),
           );
         }

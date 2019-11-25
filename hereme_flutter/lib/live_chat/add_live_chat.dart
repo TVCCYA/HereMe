@@ -17,6 +17,7 @@ class AddLiveChat extends StatefulWidget {
 }
 
 class _AddLiveChatState extends State<AddLiveChat> {
+  final _scaffoldKey = GlobalKey<ScaffoldState>();
   bool showSpinner = false;
   final _titleFocus = FocusNode();
   final _durationFocus = FocusNode();
@@ -100,6 +101,7 @@ class _AddLiveChatState extends State<AddLiveChat> {
     return Theme(
       data: kTheme(context),
       child: Scaffold(
+        key: _scaffoldKey,
         backgroundColor: kColorOffWhite,
         appBar: AppBar(
           centerTitle: true,
@@ -148,7 +150,9 @@ class _AddLiveChatState extends State<AddLiveChat> {
                                   color: kColorPurple, fontSize: 16.0),
                             ),
                             TextSpan(
-                              text: usersAround.length == 1 ? ' Person Nearby' : ' People Nearby',
+                              text: usersAround.length == 1
+                                  ? ' Person Nearby'
+                                  : ' People Nearby',
                               style: kAppBarTextStyle.copyWith(
                                   fontSize: 16.0, fontWeight: FontWeight.w400),
                             ),
@@ -194,17 +198,20 @@ class _AddLiveChatState extends State<AddLiveChat> {
                         isValid();
 
                         if (int.parse(value) > 12) {
-                          kErrorFlushbar(
-                              context: context,
-                              errorText: 'Duration must be less than 12 hours');
+                          kShowSnackbar(
+                            key: _scaffoldKey,
+                            text: 'Duration must be less than 12 hours',
+                            backgroundColor: kColorRed,
+                          );
                           setState(() {
                             _isButtonDisabled = true;
                           });
                         } else if (int.parse(value) == 0) {
-                          kErrorFlushbar(
-                              context: context,
-                              errorText:
-                                  'Duration must be greater than 0 hours');
+                          kShowSnackbar(
+                            key: _scaffoldKey,
+                            text: 'Duration must be greater than 0 hours',
+                            backgroundColor: kColorRed,
+                          );
                           setState(() {
                             _isButtonDisabled = true;
                           });
@@ -333,16 +340,20 @@ class _AddLiveChatState extends State<AddLiveChat> {
     ref.setData(liveChatData).whenComplete(() {
       setChatLocation(chatId);
       _updateInviteActivityFeed(chatId, liveChatData);
-      Navigator.pop(context);
-      kShowFlushBar(
-        context: context,
+      kShowSnackbar(
+        key: _scaffoldKey,
+        backgroundColor: kColorGreen,
         text: 'Successfully created $title',
-        color: Color.fromRGBO(red, green, blue, 1.0),
-        icon: FontAwesomeIcons.comments,
       );
-    }).catchError((e) => kErrorFlushbar(
-        context: context,
-        errorText: 'Unable to create Live Chat at this time'));
+      Future.delayed(Duration(seconds: 2), () => Navigator.pop(context));
+    }).catchError((e) => kShowAlert(
+          context: context,
+          title: 'Whoops',
+          desc: 'Unable to create Live Chat at this time',
+          buttonText: 'Try Again',
+          onPressed: () => Navigator.pop(context),
+          color: kColorRed,
+        ));
   }
 
   _updateInviteActivityFeed(String chatId, Map<String, dynamic> data) {

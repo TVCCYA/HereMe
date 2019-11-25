@@ -69,6 +69,7 @@ class _LiveChatScreenState extends State<LiveChatScreen> {
     this.duration,
   });
 
+  final _scaffoldKey = GlobalKey<ScaffoldState>();
   TextEditingController liveChatController = TextEditingController();
   String message;
   bool _hasStartedTyping = false;
@@ -156,7 +157,11 @@ class _LiveChatScreenState extends State<LiveChatScreen> {
 
   addMessage() {
     final messageId = Uuid().v4();
-    liveChatMessagesRef.document(chatId).collection('messages').document(messageId).setData({
+    liveChatMessagesRef
+        .document(chatId)
+        .collection('messages')
+        .document(messageId)
+        .setData({
       'uid': currentUser.uid,
       'displayName': currentUser.displayName,
       'message': message,
@@ -171,7 +176,11 @@ class _LiveChatScreenState extends State<LiveChatScreen> {
         _hasStartedTyping = false;
       });
     });
-    liveChatsRef.document(chatHostUid).collection('chats').document(chatId).updateData({
+    liveChatsRef
+        .document(chatHostUid)
+        .collection('chats')
+        .document(chatId)
+        .updateData({
       'lastMessage': message,
       'lastMessageDisplayName': currentUser.displayName,
       'lastRed': currentUser.red,
@@ -180,7 +189,11 @@ class _LiveChatScreenState extends State<LiveChatScreen> {
     });
     bool isNotChatHost = chatHostUid != currentUser.uid;
     if (isNotChatHost) {
-      activityRef.document(currentUser.uid).collection('feedItems').document(chatId).setData({
+      activityRef
+          .document(currentUser.uid)
+          .collection('feedItems')
+          .document(chatId)
+          .setData({
         'type': 'liveChatMessage',
         'title': title,
         'chatId': chatId,
@@ -198,7 +211,8 @@ class _LiveChatScreenState extends State<LiveChatScreen> {
 
   streamChatDuration() {
     bool chatEnded;
-    Stream<DocumentSnapshot> streamSnaps = liveChatLocationsRef.document(chatId).snapshots();
+    Stream<DocumentSnapshot> streamSnaps =
+        liveChatLocationsRef.document(chatId).snapshots();
     streamSnaps.forEach((snapshot) {
       final endDate = snapshot.data['endDate'];
       int timeLeft = endDate - DateTime.now().millisecondsSinceEpoch;
@@ -214,10 +228,8 @@ class _LiveChatScreenState extends State<LiveChatScreen> {
   }
 
   streamUserCountInChat() {
-    Stream<QuerySnapshot> streamSnaps = liveChatMessagesRef
-        .document(chatId)
-        .collection('messages')
-        .snapshots();
+    Stream<QuerySnapshot> streamSnaps =
+        liveChatMessagesRef.document(chatId).collection('messages').snapshots();
     List<String> uids = [];
     streamSnaps.forEach((snapshot) {
       snapshot.documents.forEach((doc) {
@@ -234,9 +246,11 @@ class _LiveChatScreenState extends State<LiveChatScreen> {
         });
       }
       uidsInChat.forEach((uid) {
-        usersInChatRef.document(chatId).collection('inChat').document(uid).setData({
-          'uid': uid
-        });
+        usersInChatRef
+            .document(chatId)
+            .collection('inChat')
+            .document(uid)
+            .setData({'uid': uid});
       });
     });
   }
@@ -253,7 +267,9 @@ class _LiveChatScreenState extends State<LiveChatScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: <Widget>[
               GestureDetector(
-                onTap: () => _hostAnonymous ? print('do nothing') : _goToHostUserProfile(),
+                onTap: () => _hostAnonymous
+                    ? print('do nothing')
+                    : _goToHostUserProfile(),
                 child: Padding(
                   padding: EdgeInsets.only(left: 8.0, right: 8.0),
                   child: RichText(
@@ -265,17 +281,18 @@ class _LiveChatScreenState extends State<LiveChatScreen> {
                           style: kAppBarTextStyle.copyWith(
                               color: kColorBlack71, fontSize: 16.0),
                         ),
-                        _hostAnonymous ? TextSpan(
-                          text: 'Anonymous',
-                          style: kAppBarTextStyle.copyWith(
-                              color: kColorLightGray,
-                          )
-                        ) : TextSpan(
-                          text: chatHostDisplayName,
-                          style: kAppBarTextStyle.copyWith(color: Color.fromRGBO(
-                              hostRed ?? 95, hostGreen ?? 71, hostBlue ?? 188, 1.0),
-                          )
-                        ),
+                        _hostAnonymous
+                            ? TextSpan(
+                                text: 'Anonymous',
+                                style: kAppBarTextStyle.copyWith(
+                                  color: kColorLightGray,
+                                ))
+                            : TextSpan(
+                                text: chatHostDisplayName,
+                                style: kAppBarTextStyle.copyWith(
+                                  color: Color.fromRGBO(hostRed ?? 95,
+                                      hostGreen ?? 71, hostBlue ?? 188, 1.0),
+                                )),
                       ],
                     ),
                   ),
@@ -291,8 +308,7 @@ class _LiveChatScreenState extends State<LiveChatScreen> {
                         // TODO: return the count of uid's
                         text: '${uidsInChat.length}',
                         style: kAppBarTextStyle.copyWith(
-                            color: kColorBlack71,
-                            fontSize: 16.0),
+                            color: kColorBlack71, fontSize: 16.0),
                       ),
                       TextSpan(
                         text: ' in chat',
@@ -318,7 +334,8 @@ class _LiveChatScreenState extends State<LiveChatScreen> {
     if (chatHostUid != null) {
       bool isCurrentUser = currentUser.uid == chatHostUid;
       User user = User(uid: chatHostUid);
-      UserResult result = UserResult(user: user, locationLabel: isCurrentUser ? 'Here' : 'Nearby');
+      UserResult result = UserResult(
+          user: user, locationLabel: isCurrentUser ? 'Here' : 'Nearby');
       result.toProfile(context);
     }
   }
@@ -360,15 +377,31 @@ class _LiveChatScreenState extends State<LiveChatScreen> {
 
   _reportLiveChat(BuildContext context, String reason) {
     bool canReport = chatId != null;
-    canReport ? reportedLiveChatsRef.document(chatId).setData({
-      'reportedByUid': currentUser.uid,
-      'displayName': chatHostDisplayName,
-      'uid': chatHostUid,
-      'reason': reason,
-      'chatId': chatId,
-    }).whenComplete(() {
-      kShowFlushBar(context: context, text: 'Successfully Reported', color: kColorGreen, icon: FontAwesomeIcons.exclamation);
-    }) : kErrorFlushbar(context: context, errorText: 'Unable to Report, please try again');
+    canReport
+        ? reportedLiveChatsRef.document(chatId).setData({
+            'reportedByUid': currentUser.uid,
+            'displayName': chatHostDisplayName,
+            'uid': chatHostUid,
+            'reason': reason,
+            'chatId': chatId,
+          }).whenComplete(() {
+            kShowAlert(
+              context: context,
+              title: 'Successfully Reported',
+              desc: 'Thank you for making HereMe a better place',
+              buttonText: 'Dismiss',
+              onPressed: () => Navigator.pop(context),
+              color: kColorBlue,
+            );
+          })
+        : kShowAlert(
+            context: context,
+            title: 'Whoops',
+            desc: 'Unable to report at this time',
+            buttonText: 'Try Again',
+            onPressed: () => Navigator.pop(context),
+            color: kColorRed,
+          );
   }
 
   _settingsActionSheet(BuildContext context) {
@@ -383,16 +416,18 @@ class _LiveChatScreenState extends State<LiveChatScreen> {
         },
       ),
     );
-    _hostAnonymous ? SizedBox() : sheets.add(
-      ReusableBottomActionSheetListTile(
-        title: "$chatHostDisplayName's Profile",
-        iconData: FontAwesomeIcons.user,
-        onTap: () async {
-          Navigator.pop(context);
-          _goToHostUserProfile();
-        },
-      ),
-    );
+    _hostAnonymous
+        ? SizedBox()
+        : sheets.add(
+            ReusableBottomActionSheetListTile(
+              title: "$chatHostDisplayName's Profile",
+              iconData: FontAwesomeIcons.user,
+              onTap: () async {
+                Navigator.pop(context);
+                _goToHostUserProfile();
+              },
+            ),
+          );
     sheets.add(
       ReusableBottomActionSheetListTile(
         title: 'Cancel',
@@ -448,6 +483,7 @@ class _LiveChatScreenState extends State<LiveChatScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: _scaffoldKey,
       backgroundColor: kColorOffWhite,
       appBar: AppBar(
         centerTitle: true,
@@ -475,7 +511,8 @@ class _LiveChatScreenState extends State<LiveChatScreen> {
               padding: EdgeInsets.only(right: 8.0),
               child: Text(
                 duration,
-                style: kAppBarTextStyle.copyWith(color: kColorRed, fontSize: 16.0),
+                style:
+                    kAppBarTextStyle.copyWith(color: kColorRed, fontSize: 16.0),
               ),
             ),
           ),
@@ -496,75 +533,81 @@ class _LiveChatScreenState extends State<LiveChatScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: <Widget>[
-                   buildMessages(now),
-                    !hasChatEnded ? Container(
-                      decoration: BoxDecoration(
-                        border: Border(
-                          top: BorderSide(color: Colors.grey[200], width: 2.0),
-                        ),
-                      ),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: <Widget>[
-                          Expanded(
-                            child: TextField(
-                              style: kDefaultTextStyle,
-                              cursorColor: kColorPurple,
-                              controller: liveChatController,
-                              onChanged: (value) {
-                                message = value;
-                                startedTyping();
-                              },
-                              onSubmitted: (_) {
-                                _hasStartedTyping
-                                    ? addMessage()
-                                    : kErrorFlushbar(
-                                        context: context,
-                                        errorText:
-                                            'Message cannot be empty or larger than 200 characters');
-                              },
-                              decoration: InputDecoration(
-                                contentPadding: EdgeInsets.symmetric(
-                                    vertical: 10.0, horizontal: 10.0),
-                                hintText:
-                                    '${currentUser.displayName}: Join the convo...',
-                                hintStyle: kDefaultTextStyle.copyWith(
-                                    color: kColorLightGray),
-                                border: InputBorder.none,
+                    buildMessages(now),
+                    !hasChatEnded
+                        ? Container(
+                            decoration: BoxDecoration(
+                              border: Border(
+                                top: BorderSide(
+                                    color: Colors.grey[200], width: 2.0),
                               ),
                             ),
-                          ),
-                          FlatButton(
-                            onPressed: () {
-                              if (liveChatController.text.isNotEmpty &&
-                                  liveChatController.text.length > 200) {
-                                addMessage();
-                              }
-                            },
-                            child: _hasStartedTyping
-                                ? Animator(
-                                    duration: Duration(milliseconds: 200),
-                                    tween: Tween(begin: 0.8, end: 1.4),
-                                    curve: Curves.easeInOutQuad,
-                                    cycles: 1,
-                                    builder: (anim) => Transform.scale(
-                                      scale: anim.value,
-                                      child: IconButton(
-                                        onPressed: () => addMessage(),
-                                        icon: Icon(
-                                            FontAwesomeIcons.chevronCircleRight,
-                                            color: kColorBlack71),
-                                        splashColor: Colors.grey[200],
-                                        highlightColor: Colors.transparent,
-                                        iconSize: 20.0,
-                                      ),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: <Widget>[
+                                Expanded(
+                                  child: TextField(
+                                    style: kDefaultTextStyle,
+                                    cursorColor: kColorPurple,
+                                    controller: liveChatController,
+                                    onChanged: (value) {
+                                      message = value;
+                                      startedTyping();
+                                    },
+                                    onSubmitted: (_) {
+                                      _hasStartedTyping
+                                          ? addMessage()
+                                          : kShowSnackbar(
+                                              key: _scaffoldKey,
+                                              text:
+                                                  'Message cannot be empty or larger than 200 characters',
+                                              backgroundColor: kColorRed);
+                                    },
+                                    decoration: InputDecoration(
+                                      contentPadding: EdgeInsets.symmetric(
+                                          vertical: 10.0, horizontal: 10.0),
+                                      hintText:
+                                          '${currentUser.displayName}: Join the convo...',
+                                      hintStyle: kDefaultTextStyle.copyWith(
+                                          color: kColorLightGray),
+                                      border: InputBorder.none,
                                     ),
-                                  )
-                                : SizedBox(),
-                          ),
-                        ],
-                      ),
-                    ) : SizedBox(),
+                                  ),
+                                ),
+                                FlatButton(
+                                  onPressed: () {
+                                    if (liveChatController.text.isNotEmpty &&
+                                        liveChatController.text.length > 200) {
+                                      addMessage();
+                                    }
+                                  },
+                                  child: _hasStartedTyping
+                                      ? Animator(
+                                          duration: Duration(milliseconds: 200),
+                                          tween: Tween(begin: 0.8, end: 1.4),
+                                          curve: Curves.easeInOutQuad,
+                                          cycles: 1,
+                                          builder: (anim) => Transform.scale(
+                                            scale: anim.value,
+                                            child: IconButton(
+                                              onPressed: () => addMessage(),
+                                              icon: Icon(
+                                                  FontAwesomeIcons
+                                                      .chevronCircleRight,
+                                                  color: kColorBlack71),
+                                              splashColor: Colors.grey[200],
+                                              highlightColor:
+                                                  Colors.transparent,
+                                              iconSize: 20.0,
+                                            ),
+                                          ),
+                                        )
+                                      : SizedBox(),
+                                ),
+                              ],
+                            ),
+                          )
+                        : SizedBox(),
                   ],
                 ),
               ),
@@ -576,7 +619,8 @@ class _LiveChatScreenState extends State<LiveChatScreen> {
   }
 }
 
-final reportedMessagesRef = Firestore.instance.collection('reportedLiveChatMessages');
+final reportedMessagesRef =
+    Firestore.instance.collection('reportedLiveChatMessages');
 
 class LiveChatMessage extends StatelessWidget {
   final String displayName;
@@ -589,14 +633,14 @@ class LiveChatMessage extends StatelessWidget {
   final String messageId;
 
   LiveChatMessage({
-      this.displayName,
-      this.uid,
-      this.message,
-      this.creationDate,
-      this.red,
-      this.green,
-      this.blue,
-      this.messageId,
+    this.displayName,
+    this.uid,
+    this.message,
+    this.creationDate,
+    this.red,
+    this.green,
+    this.blue,
+    this.messageId,
   });
 
   factory LiveChatMessage.fromDocument(DocumentSnapshot doc) {
@@ -611,7 +655,7 @@ class LiveChatMessage extends StatelessWidget {
       messageId: doc['messageId'],
     );
   }
-  
+
   _reasonToReport(BuildContext context) {
     Navigator.pop(context);
     List<ReusableBottomActionSheetListTile> sheets = [];
@@ -649,16 +693,31 @@ class LiveChatMessage extends StatelessWidget {
 
   _reportMessage(BuildContext context, String reason) {
     bool canReport = chatIdentifier != null && messageId != null;
-    canReport ? reportedMessagesRef.document(messageId).setData({
-      'displayName': displayName,
-      'uid': uid,
-      'message': message,
-      'reason': reason,
-      'messageId': messageId,
-      'chatId': chatIdentifier,
-    }).whenComplete(() {
-      kShowFlushBar(context: context, text: 'Successfully Reported', color: kColorGreen, icon: FontAwesomeIcons.exclamation);
-    }) : kErrorFlushbar(context: context, errorText: 'Unable to Report, please try again');
+    canReport
+        ? reportedMessagesRef.document(messageId).setData({
+            'displayName': displayName,
+            'uid': uid,
+            'message': message,
+            'reason': reason,
+            'messageId': messageId,
+            'chatId': chatIdentifier,
+          }).whenComplete(() {
+            kShowAlert(
+                context: context,
+                title: 'Successfully Reported',
+                desc: 'Thank you for making HereMe a better place',
+                buttonText: 'Dismiss',
+                onPressed: () => Navigator.pop(context),
+                color: kColorBlue);
+          })
+        : kShowAlert(
+            context: context,
+            title: 'Whoops',
+            desc: 'Unable to report at this time',
+            buttonText: 'Try Again',
+            onPressed: () => Navigator.pop(context),
+            color: kColorRed,
+          );
   }
 
   _goToHostUserProfile(BuildContext context) {
@@ -674,26 +733,30 @@ class LiveChatMessage extends StatelessWidget {
   _settingsActionSheet(BuildContext context) {
     bool isCurrentUser = currentUser.uid == uid;
     List<ReusableBottomActionSheetListTile> sheets = [];
-    !isCurrentUser ? sheets.add(
-      ReusableBottomActionSheetListTile(
-        title: 'Report',
-        iconData: FontAwesomeIcons.flag,
-        color: kColorRed,
-        onTap: () async {
-          _reasonToReport(context);
-        },
-      ),
-    ) : SizedBox();
-    !isCurrentUser ? sheets.add(
-      ReusableBottomActionSheetListTile(
-        title: 'Block',
-        color: kColorRed,
-        iconData: FontAwesomeIcons.ban,
-        onTap: () async {
-          kConfirmBlock(context, displayName, uid);
-        },
-      ),
-    ) : SizedBox();
+    !isCurrentUser
+        ? sheets.add(
+            ReusableBottomActionSheetListTile(
+              title: 'Report',
+              iconData: FontAwesomeIcons.flag,
+              color: kColorRed,
+              onTap: () async {
+                _reasonToReport(context);
+              },
+            ),
+          )
+        : SizedBox();
+    !isCurrentUser
+        ? sheets.add(
+            ReusableBottomActionSheetListTile(
+              title: 'Block',
+              color: kColorRed,
+              iconData: FontAwesomeIcons.ban,
+              onTap: () async {
+                kConfirmBlock(context, displayName, uid);
+              },
+            ),
+          )
+        : SizedBox();
     sheets.add(
       ReusableBottomActionSheetListTile(
         title: !isCurrentUser ? "$displayName's Profile" : 'Your Profile',

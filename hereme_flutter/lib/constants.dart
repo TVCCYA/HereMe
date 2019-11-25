@@ -103,12 +103,14 @@ void kErrorFlushbar({BuildContext context, String errorText}) {
   )..show(context);
 }
 
-void kShowAlert(
-    {context: BuildContext,
-    title: String,
-    desc: String,
-    buttonText: String,
-    onPressed: Function}) {
+void kShowAlert({
+  context: BuildContext,
+  title: String,
+  desc: String,
+  buttonText: String,
+  onPressed: Function,
+  color: Color,
+}) {
   Alert(
     context: context,
     style: AlertStyle(
@@ -135,7 +137,7 @@ void kShowAlert(
           ),
         ),
         onPressed: onPressed,
-        color: kColorRed,
+        color: color,
         radius: BorderRadius.circular(5.0),
       ),
     ],
@@ -317,24 +319,30 @@ void kConfirmBlock(BuildContext context, String displayName, String uid) {
         'They will not be able to see your content on HereMe. They will not know you blocked them.',
     buttonText: 'Block',
     onPressed: () {
-      kBlockUser(context, uid);
+      kBlockUser(context, uid, displayName);
       Navigator.pop(context);
     },
+    color: kColorRed,
   );
 }
 
-void kBlockUser(BuildContext context, String uid) {
+void kBlockUser(BuildContext context, String uid, String displayName) {
   usersRef.document(currentUser.uid).updateData({
     'blockedUsers.$uid': 1,
   }).whenComplete(() {
     usersRef.document(uid).updateData({
       'blockedUsers.${currentUser.uid}': 0,
     }).whenComplete(() {
-      kShowFlushBar(
-          context: context,
-          text: 'Successfully Blocked',
-          color: kColorGreen,
-          icon: FontAwesomeIcons.exclamation);
+      kShowAlert(
+        context: context,
+        title: '$displayName Blocked',
+        desc: 'You can unblock them through your profile settings',
+        buttonText: 'Dismiss',
+        onPressed: () {
+          Navigator.pop(context);
+        },
+        color: kColorBlue,
+      );
     });
   });
 }
@@ -359,7 +367,12 @@ void kDeleteSentKnocks(String currentUserUid) {
         final type = doc.data['type'];
         if (type == 'pendingKnock') {
           final sentKnockUid = doc.data['uid'];
-          knocksRef.document(sentKnockUid).collection('receivedKnockFrom').document(currentUserUid).get().then((doc){
+          knocksRef
+              .document(sentKnockUid)
+              .collection('receivedKnockFrom')
+              .document(currentUserUid)
+              .get()
+              .then((doc) {
             if (doc.exists) {
               doc.reference.delete().whenComplete(() {
                 ref.document(sentKnockUid).delete();
@@ -372,9 +385,9 @@ void kDeleteSentKnocks(String currentUserUid) {
   });
 }
 
-void kHandleRemoveDataAtId(String id, String uid, String collection1, String collection2) async {
-  final ref = Firestore
-      .instance
+void kHandleRemoveDataAtId(
+    String id, String uid, String collection1, String collection2) async {
+  final ref = Firestore.instance
       .collection(collection1)
       .document(uid)
       .collection(collection2);
@@ -425,21 +438,26 @@ String kTimeRemaining(int duration) {
 }
 
 void kHandleRemoveChatFromActivityFeed(String chatId, String collection) {
-  usersInChatRef.document(chatId).collection(collection).snapshots().forEach((snapshot) {
+  usersInChatRef
+      .document(chatId)
+      .collection(collection)
+      .snapshots()
+      .forEach((snapshot) {
     snapshot.documents.forEach((doc) {
       if (doc.exists) {
         final uid = doc.data['uid'];
-        activityRef.document(uid).collection('feedItems').document(chatId).delete();
+        activityRef
+            .document(uid)
+            .collection('feedItems')
+            .document(chatId)
+            .delete();
       }
     });
   });
 }
 
 void kHandleRemoveEntireNode(String collection, String id) {
-  final ref = Firestore
-      .instance
-      .collection(collection)
-      .document(id);
+  final ref = Firestore.instance.collection(collection).document(id);
   ref.get().then((snapshot) {
     if (snapshot.exists) {
       ref.delete();
@@ -448,7 +466,11 @@ void kHandleRemoveEntireNode(String collection, String id) {
 }
 
 void kHandleRemoveUsersInChat(String chatId, String collection) {
-  usersInChatRef.document(chatId).collection(collection).snapshots().forEach((snapshot) {
+  usersInChatRef
+      .document(chatId)
+      .collection(collection)
+      .snapshots()
+      .forEach((snapshot) {
     snapshot.documents.forEach((doc) {
       if (doc.exists) {
         doc.reference.delete();
@@ -464,10 +486,11 @@ void kHandleRemoveAllLiveChatData(String chatId, String uid) {
   kHandleRemoveUsersInChat(chatId, 'inChat');
   kHandleRemoveEntireNode('liveChatLocations', chatId);
   kRemoveLiveChatMessages(chatId);
-  kHandleRemoveDataAtId(chatId, uid,'liveChats', 'chats');
+  kHandleRemoveDataAtId(chatId, uid, 'liveChats', 'chats');
 }
 
-void kShowSnackbar({GlobalKey<ScaffoldState> key, String text, Color backgroundColor}) {
+void kShowSnackbar(
+    {GlobalKey<ScaffoldState> key, String text, Color backgroundColor}) {
   SnackBar snackbar = SnackBar(
     elevation: 2.0,
     duration: Duration(seconds: 5),

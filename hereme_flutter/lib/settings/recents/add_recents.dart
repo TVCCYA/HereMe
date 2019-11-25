@@ -18,6 +18,7 @@ class AddRecent extends StatefulWidget {
 }
 
 class _AddRecentState extends State<AddRecent> {
+  final _scaffoldKey = GlobalKey<ScaffoldState>();
   bool showSpinner = false;
   final _urlFocus = FocusNode();
   final _titleFocus = FocusNode();
@@ -54,6 +55,7 @@ class _AddRecentState extends State<AddRecent> {
     return Theme(
       data: kTheme(context),
       child: Scaffold(
+        key: _scaffoldKey,
         backgroundColor: kColorOffWhite,
         appBar: AppBar(
           centerTitle: true,
@@ -108,7 +110,11 @@ class _AddRecentState extends State<AddRecent> {
                               if (url.contains('https://')) {
                                 FocusScope.of(context).requestFocus(_urlFocus);
                               } else {
-                                kErrorFlushbar(context: context, errorText: 'https://example.com');
+                                kShowSnackbar(
+                                  key: _scaffoldKey,
+                                  text: 'https://example.com',
+                                  backgroundColor: kColorRed
+                                );
                               }
                             },
                             onChanged: (value) {
@@ -171,17 +177,21 @@ class _AddRecentState extends State<AddRecent> {
                       child: FlatButton.icon(
                         onPressed: () {
                           _isButtonDisabled
-                              ? kErrorFlushbar(context: context, errorText: 'https://example.com')
+                              ? print('disabled')
                               : _uploadRecentToFirebase(mediaFile);
                           if (url.contains(' ')) {
-                            kErrorFlushbar(
-                                context: context,
-                                errorText: 'URL cannot contain spaces');
+                            kShowSnackbar(
+                                key: _scaffoldKey,
+                                text: 'URL cannot contain spaces',
+                                backgroundColor: kColorRed
+                            );
                           }
                           if (!url.contains('https://')) {
-                            kErrorFlushbar(
-                                context: context,
-                                errorText: 'URL format: https://example.com');
+                            kShowSnackbar(
+                                key: _scaffoldKey,
+                                text: 'URL format: https://example.com',
+                                backgroundColor: kColorRed
+                            );
                           }
                         },
                         splashColor: _isButtonDisabled
@@ -279,11 +289,15 @@ class _AddRecentState extends State<AddRecent> {
           };
           recentUploadsRef.document(uid).collection('recents').document(filename)
               .setData(photoUrl).whenComplete(() {
-            print('Recent Upload Added');
             setState(() {
               showSpinner = false;
             });
-            Navigator.pop(context);
+            kShowSnackbar(
+              key: _scaffoldKey,
+              text: 'Successfully added $title',
+              backgroundColor: kColorGreen,
+            );
+            Future.delayed(Duration(seconds: 2), () => Navigator.pop(context));
           }).catchError(
             (e) => kShowAlert(
                   context: context,

@@ -287,6 +287,7 @@ class _SignUpState extends State<SignUp> {
               'Email example: your_email@mail.com\nPassword must contain at least 6 characters',
           buttonText: 'Try Again',
           onPressed: () => Navigator.pop(context),
+          color: kColorRed,
         );
       }
     }
@@ -329,11 +330,13 @@ class _SignUpState extends State<SignUp> {
     if (await canLaunch(url)) {
       await launch(url);
     } else {
-      kShowFlushBar(
-        text: 'Whoops, this link cannot be opened',
-        icon: FontAwesomeIcons.times,
-        color: kColorRed,
+      kShowAlert(
         context: context,
+        title: 'Whoops',
+        desc: 'This link cannot be opened at this time',
+        buttonText: 'Try Again',
+        onPressed: Navigator.pop(context),
+        color: kColorRed,
       );
     }
   }

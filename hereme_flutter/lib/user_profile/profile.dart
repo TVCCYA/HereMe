@@ -52,9 +52,6 @@ class Profile extends StatefulWidget {
 
 class _ProfileState extends State<Profile> {
   final _scaffoldKey = GlobalKey<ScaffoldState>();
-  String knockUsername = '';
-  String knockUrl = '';
-  String knockUid = '';
 
   bool showSpinner = false;
   bool _isCurrentUser = false;
@@ -82,24 +79,12 @@ class _ProfileState extends State<Profile> {
     if (_isCurrentUser) {
       updateCurrentUserCounts();
     }
+    _getPendingKnocks();
   }
 
   @override
   void dispose() {
     super.dispose();
-  }
-
-  recentProfileVisitUpdate() {
-    if (!_isCurrentUser && userUid != null) {
-      activityRef.document(currentUserUid).collection('feedItems').document(currentUserUid).setData({
-        'type': 'recentProfileVisit',
-        'uid': userUid,
-        'username': username,
-        'city': locationLabel,
-        'profileImageUrl': profileImageUrl,
-        'creationDate': DateTime.now().millisecondsSinceEpoch,
-      });
-    }
   }
 
   @override
@@ -109,16 +94,6 @@ class _ProfileState extends State<Profile> {
     if (_isCurrentUser) {
       updateCurrentUserCounts();
     }
-  }
-
-  getKnockInfo(String uid) {
-    usersRef.document(uid).snapshots().listen((snaps) {
-      setState(() {
-        knockUsername = snaps.data['username'];
-        knockUrl = snaps.data['profileImageUrl'];
-//        print(knockUrl);
-      });
-    });
   }
 
   updateCurrentUserCounts() async {
@@ -131,7 +106,8 @@ class _ProfileState extends State<Profile> {
 
             displayedWeeklyCount =
                 NumberFormat.compact().format(weeklyVisitsCount);
-            displayedTotalCount = NumberFormat.compact().format(totalVisitsCount);
+            displayedTotalCount =
+                NumberFormat.compact().format(totalVisitsCount);
           });
         }
       });
@@ -243,22 +219,29 @@ class _ProfileState extends State<Profile> {
                                   List<ActivityFeedItem> displayedItems = [];
                                   for (var item in activityItems) {
                                     final type = item.data['type'];
-                                    final username = item.data['username'] ?? '';
+                                    final username =
+                                        item.data['username'] ?? '';
                                     final uid = item.data['uid'];
                                     final city = item.data['city'] ?? '';
-                                    final profileImageUrl = item.data['profileImageUrl'] ?? '';
-                                    final creationDate = item.data['creationDate'];
+                                    final profileImageUrl =
+                                        item.data['profileImageUrl'] ?? '';
+                                    final creationDate =
+                                        item.data['creationDate'];
 
                                     final title = item.data['title'] ?? '';
                                     final chatId = item.data['chatId'] ?? '';
-                                    final chatHostDisplayName = item.data['hostDisplayName'] ?? '';
+                                    final chatHostDisplayName =
+                                        item.data['hostDisplayName'] ?? '';
                                     final hostRed = item.data['hostRed'] ?? 0;
-                                    final hostGreen = item.data['hostGreen'] ?? 0;
+                                    final hostGreen =
+                                        item.data['hostGreen'] ?? 0;
                                     final hostBlue = item.data['hostBlue'] ?? 0;
-                                    final lastMessage = item.data['message'] ?? '';
+                                    final lastMessage =
+                                        item.data['message'] ?? '';
 
                                     final endDate = item.data['endDate'] ?? 0;
-                                    int timeLeft = endDate - DateTime.now().millisecondsSinceEpoch;
+                                    int timeLeft = endDate -
+                                        DateTime.now().millisecondsSinceEpoch;
 
                                     final displayedItem = ActivityFeedItem(
                                       type: type,
@@ -271,7 +254,6 @@ class _ProfileState extends State<Profile> {
                                         uid: uid,
                                       ),
                                       creationDate: creationDate,
-
                                       title: title,
                                       chatId: chatId,
                                       chatHostDisplayName: chatHostDisplayName,
@@ -281,7 +263,10 @@ class _ProfileState extends State<Profile> {
                                       duration: kTimeRemaining(timeLeft),
                                       lastMessage: lastMessage,
                                     );
-                                    displayedItems.add(displayedItem);
+                                    if (!currentUser.blockedUids
+                                        .contains(uid)) {
+                                      displayedItems.add(displayedItem);
+                                    }
                                   }
                                   if (displayedItems.isNotEmpty) {
                                     return ReusableContentContainer(
@@ -320,12 +305,13 @@ class _ProfileState extends State<Profile> {
                                   final knocks = snapshot.data.documents;
                                   List<Knock> displayedKnocks = [];
                                   for (var knock in knocks) {
-                                    final knockUsername = knock.data['username'];
-                                    final knockProfileImageUrl = knock.data['profileImageUrl'];
-                                    final creationDate = knock.data['creationDate'];
+                                    final knockUsername =
+                                        knock.data['username'];
+                                    final knockProfileImageUrl =
+                                        knock.data['profileImageUrl'];
+                                    final creationDate =
+                                        knock.data['creationDate'];
                                     final uid = knock.data['uid'];
-
-//                                    getKnockInfo(uid);
 
                                     final displayedKnock = Knock(
                                       username: knockUsername,
@@ -333,11 +319,11 @@ class _ProfileState extends State<Profile> {
                                       creationDate: creationDate,
                                       onTap: () {
                                         _knocksActionSheet(
-                                          context: context,
-                                          uid: uid,
-                                          username: knockUsername,
-                                          profileImageUrl: knockProfileImageUrl
-                                        );
+                                            context: context,
+                                            uid: uid,
+                                            username: knockUsername,
+                                            profileImageUrl:
+                                                knockProfileImageUrl);
                                       },
                                     );
                                     displayedKnocks.add(displayedKnock);
@@ -370,6 +356,7 @@ class _ProfileState extends State<Profile> {
                                 stream: socialMediasRef
                                     .document(currentUserUid)
                                     .collection('socials')
+                                    .orderBy('creationDate', descending: true)
                                     .snapshots(),
                                 builder: (context, snapshot) {
                                   if (!snapshot.hasData) {
@@ -379,7 +366,7 @@ class _ProfileState extends State<Profile> {
                                   List<LinkedAccount> displayedAccounts = [];
                                   for (var account in accounts) {
                                     account.data.forEach(
-                                          (key, value) {
+                                      (key, value) {
                                         if (key.contains('Username')) {
                                           final iconString = key;
                                           final accountUsername = value;
@@ -390,7 +377,7 @@ class _ProfileState extends State<Profile> {
                                               accountUsername, iconString, url);
 
                                           final displayedAccount =
-                                          LinkedAccount(
+                                              LinkedAccount(
                                             accountUsername: accountUsername,
                                             accountUrl: url,
                                             iconString: iconString,
@@ -400,8 +387,7 @@ class _ProfileState extends State<Profile> {
                                                   accountUsername,
                                                   iconString,
                                                   url,
-                                                  linkId
-                                              );
+                                                  linkId);
                                             },
                                           );
                                           displayedAccounts
@@ -452,23 +438,29 @@ class _ProfileState extends State<Profile> {
                                   List<LiveChat> displayedChats = [];
                                   for (var chat in chats) {
                                     final title = chat.data['title'];
-                                    final creationDate = chat.data['creationDate'];
+                                    final creationDate =
+                                        chat.data['creationDate'];
                                     final chatId = chat.data['chatId'];
-                                    final hostDisplayName = chat.data['hostDisplayName'] ?? '';
-                                    final lastMessage = chat.data['lastMessage'];
-                                    final lastMessageDisplayName = chat.data['lastMessageDisplayName'];
+                                    final hostDisplayName =
+                                        chat.data['hostDisplayName'] ?? '';
+                                    final lastMessage =
+                                        chat.data['lastMessage'];
+                                    final lastMessageDisplayName =
+                                        chat.data['lastMessageDisplayName'];
                                     final lastRed = chat.data['lastRed'];
                                     final lastGreen = chat.data['lastGreen'];
                                     final lastBlue = chat.data['lastBlue'];
                                     final endDate = chat.data['endDate'];
 
-                                    int timeLeft = endDate - DateTime.now().millisecondsSinceEpoch;
+                                    int timeLeft = endDate -
+                                        DateTime.now().millisecondsSinceEpoch;
                                     String duration = kTimeRemaining(timeLeft);
 
                                     bool hasChatEnded = timeLeft <= 0;
 
                                     if (hasChatEnded) {
-                                      kHandleRemoveAllLiveChatData(chatId, currentUserUid);
+                                      kHandleRemoveAllLiveChatData(
+                                          chatId, currentUserUid);
                                     }
 
                                     final displayedChat = LiveChat(
@@ -482,14 +474,22 @@ class _ProfileState extends State<Profile> {
                                       hostGreen: green,
                                       hostBlue: blue,
                                       lastMessage: lastMessage,
-                                      lastMessageDisplayName: lastMessageDisplayName,
+                                      lastMessageDisplayName:
+                                          lastMessageDisplayName,
                                       lastRed: lastRed,
                                       lastGreen: lastGreen,
                                       lastBlue: lastBlue,
                                       onTap: () {
-                                        _liveChatsActionSheet(context, title, chatId,
-                                            hostDisplayName, red, green, blue,
-                                            currentUserUid, duration);
+                                        _liveChatsActionSheet(
+                                            context,
+                                            title,
+                                            chatId,
+                                            hostDisplayName,
+                                            red,
+                                            green,
+                                            blue,
+                                            currentUserUid,
+                                            duration);
                                       },
                                     );
                                     displayedChats.add(displayedChat);
@@ -506,9 +506,11 @@ class _ProfileState extends State<Profile> {
                                         Navigator.push(
                                           context,
                                           MaterialPageRoute(
-                                              builder: (context) => currentUser.displayName != null
-                                                  ? AddLiveChat()
-                                                  : CreateDisplayName()),
+                                              builder: (context) =>
+                                                  currentUser.displayName !=
+                                                          null
+                                                      ? AddLiveChat()
+                                                      : CreateDisplayName()),
                                         );
                                       },
                                     );
@@ -564,18 +566,17 @@ class _ProfileState extends State<Profile> {
                                     );
                                   } else {
                                     return ReusableBottomActionSheetListTile(
-                                            iconData: FontAwesomeIcons.upload,
-                                            title: 'Add Recent',
-                                            onTap: () {
-                                              Navigator.push(
-                                                context,
-                                                MaterialPageRoute(
-                                                    builder: (BuildContext
-                                                            context) =>
-                                                        AddRecent()),
-                                              );
-                                            },
-                                          );
+                                      iconData: FontAwesomeIcons.upload,
+                                      title: 'Add Recent',
+                                      onTap: () {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                              builder: (BuildContext context) =>
+                                                  AddRecent()),
+                                        );
+                                      },
+                                    );
                                   }
                                 },
                               ),
@@ -619,10 +620,10 @@ class _ProfileState extends State<Profile> {
                                             iconString: iconString,
                                             onTap: () {
                                               _linksActionSheet(
-                                                  context,
-                                                  accountUsername,
-                                                  iconString,
-                                                  url,
+                                                context,
+                                                accountUsername,
+                                                iconString,
+                                                url,
                                                 linkId,
                                               );
                                             },
@@ -670,23 +671,29 @@ class _ProfileState extends State<Profile> {
                                   List<LiveChat> displayedChats = [];
                                   for (var chat in chats) {
                                     final title = chat.data['title'];
-                                    final creationDate = chat.data['creationDate'];
+                                    final creationDate =
+                                        chat.data['creationDate'];
                                     final chatId = chat.data['chatId'];
-                                    final hostDisplayName = chat.data['hostDisplayName'] ?? '';
-                                    final lastMessage = chat.data['lastMessage'];
-                                    final lastMessageDisplayName = chat.data['lastMessageDisplayName'];
+                                    final hostDisplayName =
+                                        chat.data['hostDisplayName'] ?? '';
+                                    final lastMessage =
+                                        chat.data['lastMessage'];
+                                    final lastMessageDisplayName =
+                                        chat.data['lastMessageDisplayName'];
                                     final lastRed = chat.data['lastRed'];
                                     final lastGreen = chat.data['lastGreen'];
                                     final lastBlue = chat.data['lastBlue'];
                                     final endDate = chat.data['endDate'];
 
-                                    int timeLeft = endDate - DateTime.now().millisecondsSinceEpoch;
+                                    int timeLeft = endDate -
+                                        DateTime.now().millisecondsSinceEpoch;
                                     String duration = kTimeRemaining(timeLeft);
 
                                     bool hasChatEnded = timeLeft <= 0;
 
                                     if (hasChatEnded) {
-                                      kHandleRemoveAllLiveChatData(chatId, userUid);
+                                      kHandleRemoveAllLiveChatData(
+                                          chatId, userUid);
                                     }
 
                                     final displayedChat = LiveChat(
@@ -700,7 +707,8 @@ class _ProfileState extends State<Profile> {
                                       hostGreen: green,
                                       hostBlue: blue,
                                       lastMessage: lastMessage,
-                                      lastMessageDisplayName: lastMessageDisplayName,
+                                      lastMessageDisplayName:
+                                          lastMessageDisplayName,
                                       lastRed: lastRed,
                                       lastGreen: lastGreen,
                                       lastBlue: lastBlue,
@@ -708,17 +716,22 @@ class _ProfileState extends State<Profile> {
                                         Navigator.push(
                                             context,
                                             MaterialPageRoute(
-                                                builder: (context) => currentUser.displayName != null
-                                                    ? LiveChatScreen(
-                                                  title: title ?? '',
-                                                  chatId: chatId,
-                                                  chatHostDisplayName: hostDisplayName,
-                                                  chatHostUid: userUid,
-                                                  hostRed: red,
-                                                  hostGreen: green,
-                                                  hostBlue: blue,
-                                                  duration: duration,
-                                                ) : CreateDisplayName()));
+                                                builder: (context) =>
+                                                    currentUser.displayName !=
+                                                            null
+                                                        ? LiveChatScreen(
+                                                            title: title ?? '',
+                                                            chatId: chatId,
+                                                            chatHostDisplayName:
+                                                                hostDisplayName,
+                                                            chatHostUid:
+                                                                userUid,
+                                                            hostRed: red,
+                                                            hostGreen: green,
+                                                            hostBlue: blue,
+                                                            duration: duration,
+                                                          )
+                                                        : CreateDisplayName()));
                                       },
                                     );
                                     displayedChats.add(displayedChat);
@@ -760,13 +773,13 @@ class _ProfileState extends State<Profile> {
                                   List<RecentUpload> displayedRecents = [];
                                   for (var recent in recents) {
                                     final imageUrl =
-                                    recent.data['thumbnailImageUrl'];
+                                        recent.data['thumbnailImageUrl'];
                                     final title = recent.data['title'];
                                     final url = recent.data['url'];
                                     final creationDate =
-                                    recent.data['creationDate'];
+                                        recent.data['creationDate'];
                                     final storageFilename =
-                                    recent.data['storageFilename'];
+                                        recent.data['storageFilename'];
 
                                     _determineUrl(title, '', url);
 
@@ -818,7 +831,10 @@ class _ProfileState extends State<Profile> {
                                   buttonText2: 'Cancel',
                                   color2: kColorLightGray,
                                   onPressed1: () {
-                                    _handleKnock(uid: user.uid, username: username, profileImageUrl: profileImageUrl);
+                                    _handleKnock(
+                                        uid: userUid,
+                                        username: username,
+                                        profileImageUrl: profileImageUrl);
                                     Navigator.pop(context);
                                   },
                                   onPressed2: () {
@@ -849,7 +865,11 @@ class _ProfileState extends State<Profile> {
     });
   }
 
-  _knocksActionSheet({BuildContext context, String uid, String username, String profileImageUrl}) {
+  _knocksActionSheet(
+      {BuildContext context,
+      String uid,
+      String username,
+      String profileImageUrl}) {
     List<ReusableBottomActionSheetListTile> sheets = [];
     sheets.add(
       ReusableBottomActionSheetListTile(
@@ -868,9 +888,8 @@ class _ProfileState extends State<Profile> {
         title: 'Knock back $username?',
         iconData: FontAwesomeIcons.check,
         onTap: () async {
-          _handleKnock(uid: uid, username: username, profileImageUrl: profileImageUrl);
-          _removePendingKnockActivityFeed(uid, currentUserUid);
-          _removeKnock(uid);
+          _handleKnock(
+              uid: uid, username: username, profileImageUrl: profileImageUrl);
           Navigator.pop(context);
         },
       ),
@@ -895,16 +914,17 @@ class _ProfileState extends State<Profile> {
       if (!doc.exists && uid != null) {
         _sendKnock(ref, uid, username, profileImageUrl);
       } else {
-        kShowFlushBar(
-            text: 'Already Knocked $username',
-            context: context,
-            icon: FontAwesomeIcons.times,
-            color: kColorRed);
+        kShowSnackbar(
+          key: _scaffoldKey,
+          text: 'Already Knocked $username',
+          backgroundColor: kColorRed,
+        );
       }
     });
   }
 
-  _sendKnock(DocumentReference ref, String uid, String username, String profileImageUrl) {
+  _sendKnock(DocumentReference ref, String uid, String username,
+      String profileImageUrl) {
     int creationDate = DateTime.now().millisecondsSinceEpoch;
     Map<String, dynamic> knockData = <String, dynamic>{
       'uid': currentUserUid,
@@ -913,29 +933,42 @@ class _ProfileState extends State<Profile> {
       'creationDate': creationDate,
     };
     ref.setData(knockData).whenComplete(() {
-      _setPendingKnockActivityFeed(uid, username, profileImageUrl);
-      kShowFlushBar(
-          text: 'Successfully sent Knock',
-          context: context,
-          icon: FontAwesomeIcons.paperPlane,
-          color: kColorGreen);
+      _updateSentKnockTo(uid, username, profileImageUrl);
+      kShowSnackbar(
+        key: _scaffoldKey,
+        text: 'Successfully Sent Knock',
+        backgroundColor: kColorGreen,
+      );
     }).catchError((e) => kShowAlert(
-      context: context,
-      title: 'Knock Failed',
-      desc: 'Unable to knock $username, please try again later',
-      buttonText: 'Try Again',
-      onPressed: () => Navigator.pop(context),
-    ));
+        context: context,
+        title: 'Knock Failed',
+        desc: 'Unable to knock $username, please try again later',
+        buttonText: 'Try Again',
+        onPressed: () => Navigator.pop(context),
+        color: kColorRed));
   }
 
-  _setPendingKnockActivityFeed(String uid, String username, String profileImageUrl) {
-    int creationDate = DateTime.now().millisecondsSinceEpoch;
-    activityRef.document(currentUserUid).collection('feedItems').document(uid).setData({
-      'type': 'pendingKnock',
+  _updateSentKnockTo(String uid, String username, String profileImageUrl) {
+    final creationDate = DateTime.now().millisecondsSinceEpoch;
+    knocksRef.document(currentUserUid).collection('sentKnockTo').document(uid).setData({
       'uid': uid,
+      'creationDate': creationDate ,
       'username': username,
       'profileImageUrl': profileImageUrl,
-      'creationDate': creationDate,
+    }).whenComplete(() {
+      _removeSentKnockTo(uid);
+    }).whenComplete(() {
+      _removePendingKnockActivityFeed(uid, currentUserUid);
+    }).whenComplete(() {
+      _removeKnock(uid);
+    });
+  }
+
+  _removeSentKnockTo(String uid) {
+    knocksRef.document(uid).collection('sentKnockTo').document(currentUserUid).get().then((doc) {
+      if (doc.exists) {
+        doc.reference.delete();
+      }
     });
   }
 
@@ -952,8 +985,48 @@ class _ProfileState extends State<Profile> {
     });
   }
 
+  _setPendingKnockActivityFeed(
+      String uid, String username, String profileImageUrl, int creationDate) {
+    activityRef
+        .document(currentUserUid)
+        .collection('feedItems')
+        .document(uid)
+        .setData({
+      'type': 'pendingKnock',
+      'uid': uid,
+      'username': username,
+      'profileImageUrl': profileImageUrl,
+      'creationDate': creationDate,
+    });
+  }
+
+  _getPendingKnocks() {
+    knocksRef.document(currentUserUid).collection('sentKnockTo').snapshots().listen((snapshot) {
+      snapshot.documents.forEach((doc) {
+        if (doc.exists) {
+          final uid = doc.data['uid'];
+          final username = doc.data['username'];
+          final profileImageUrl = doc.data['profileImageUrl'];
+          final creationDate = doc.data['creationDate'];
+          activityRef
+              .document(currentUserUid)
+              .collection('feedItems')
+              .document(uid)
+              .setData({
+            'type': 'pendingKnock',
+            'uid': uid,
+            'username': username,
+            'profileImageUrl': profileImageUrl,
+            'creationDate': creationDate,
+          });
+        }
+      });
+    });
+  }
+
   _removePendingKnockActivityFeed(String uid1, String uid2) {
-    DocumentReference ref = activityRef.document(uid1).collection('feedItems').document(uid2);
+    DocumentReference ref =
+        activityRef.document(uid1).collection('feedItems').document(uid2);
     ref.snapshots().forEach((snapshot) {
       if (snapshot.exists) {
         final type = snapshot.data['type'];
@@ -1023,9 +1096,11 @@ class _ProfileState extends State<Profile> {
                 buttonText: "Unlink",
                 onPressed: () {
                   Navigator.pop(context);
-                  kHandleRemoveDataAtId(linkId, currentUserUid, 'socialMedias', 'socials');
+                  kHandleRemoveDataAtId(
+                      linkId, currentUserUid, 'socialMedias', 'socials');
                   Navigator.pop(context);
                 },
+                color: kColorRed,
               );
             },
           ))
@@ -1047,11 +1122,11 @@ class _ProfileState extends State<Profile> {
         onTap: () {
           Clipboard.setData(ClipboardData(text: accountUsername));
           Navigator.pop(context);
-          kShowFlushBar(
-              text: "Copied $accountUsername",
-              icon: FontAwesomeIcons.clipboardCheck,
-              color: kColorGreen,
-              context: context);
+          kShowSnackbar(
+            key: _scaffoldKey,
+            text: 'Copied $accountUsername',
+            backgroundColor: kColorGreen,
+          );
         },
       ),
     );
@@ -1065,28 +1140,38 @@ class _ProfileState extends State<Profile> {
     kActionSheet(context, sheets);
   }
 
-  _liveChatsActionSheet(BuildContext context, String title, String chatId, String hostDisplayName,
-      int hostRed, int hostGreen, int hostBlue, String chatHostUid, String duration) {
+  _liveChatsActionSheet(
+      BuildContext context,
+      String title,
+      String chatId,
+      String hostDisplayName,
+      int hostRed,
+      int hostGreen,
+      int hostBlue,
+      String chatHostUid,
+      String duration) {
     List<ReusableBottomActionSheetListTile> sheets = [];
     _isCurrentUser
         ? sheets.add(ReusableBottomActionSheetListTile(
-      title: 'Delete $title',
-      iconData: FontAwesomeIcons.minusCircle,
-      color: kColorRed,
-      onTap: () {
-        kShowAlert(
-          context: context,
-          title: "Delete Live Chat?",
-          desc: "Are you sure you want to delete $title?",
-          buttonText: "Delete",
-          onPressed: () {
-            Navigator.pop(context);
-            kHandleRemoveAllLiveChatData(chatId, currentUserUid);
-            Navigator.pop(context);
-          },
-        );
-      },
-    )) : SizedBox();
+            title: 'Delete $title',
+            iconData: FontAwesomeIcons.minusCircle,
+            color: kColorRed,
+            onTap: () {
+              kShowAlert(
+                context: context,
+                title: "Delete Live Chat?",
+                desc: "Are you sure you want to delete $title?",
+                buttonText: "Delete",
+                onPressed: () {
+                  Navigator.pop(context);
+                  kHandleRemoveAllLiveChatData(chatId, currentUserUid);
+                  Navigator.pop(context);
+                },
+                color: kColorRed,
+              );
+            },
+          ))
+        : SizedBox();
     sheets.add(
       ReusableBottomActionSheetListTile(
         title: 'Enter Live Chat',
@@ -1098,15 +1183,16 @@ class _ProfileState extends State<Profile> {
               MaterialPageRoute(
                   builder: (context) => currentUser.displayName != null
                       ? LiveChatScreen(
-                    title: title ?? '',
-                    chatId: chatId,
-                    chatHostDisplayName: hostDisplayName,
-                    chatHostUid: chatHostUid,
-                    hostRed: hostRed,
-                    hostGreen: hostGreen,
-                    hostBlue: hostBlue,
-                    duration: duration,
-                  ) : CreateDisplayName()));
+                          title: title ?? '',
+                          chatId: chatId,
+                          chatHostDisplayName: hostDisplayName,
+                          chatHostUid: chatHostUid,
+                          hostRed: hostRed,
+                          hostGreen: hostGreen,
+                          hostBlue: hostBlue,
+                          duration: duration,
+                        )
+                      : CreateDisplayName()));
         },
       ),
     );
@@ -1134,17 +1220,18 @@ class _ProfileState extends State<Profile> {
             color: kColorRed,
             onTap: () {
               kShowAlert(
-                context: context,
-                title: "Remove Recent?",
-                desc: "Are you sure you want to remove $title?",
-                buttonText: "Delete",
-                onPressed: () {
-                  Navigator.pop(context);
-                  _handleRemoveRecentThumbnailFromStorage(storageFilename);
-                  kHandleRemoveDataAtId(storageFilename, currentUserUid, 'recentUploads', 'recents');
-                  Navigator.pop(context);
-                },
-              );
+                  context: context,
+                  title: "Remove Recent?",
+                  desc: "Are you sure you want to remove $title?",
+                  buttonText: "Delete",
+                  onPressed: () {
+                    Navigator.pop(context);
+                    _handleRemoveRecentThumbnailFromStorage(storageFilename);
+                    kHandleRemoveDataAtId(storageFilename, currentUserUid,
+                        'recentUploads', 'recents');
+                    Navigator.pop(context);
+                  },
+                  color: kColorRed);
             },
           ))
         : SizedBox();
@@ -1261,14 +1348,23 @@ class _ProfileState extends State<Profile> {
             'reason': reason,
             'reportedByUid': currentUser.uid,
           }).whenComplete(() {
-            kShowFlushBar(
-                context: context,
-                text: 'Successfully Reported',
-                color: kColorGreen,
-                icon: FontAwesomeIcons.exclamation);
+            kShowAlert(
+              context: context,
+              title: 'Successfully Reported',
+              desc: 'Thank you for making HereMe a better place',
+              buttonText: 'Dismiss',
+              onPressed: () => Navigator.pop(context),
+              color: kColorBlue,
+            );
           })
-        : kErrorFlushbar(
-            context: context, errorText: 'Unable to Report, please try again');
+        : kShowAlert(
+            context: context,
+            title: 'Whoops',
+            desc: 'Unable to report at this time',
+            buttonText: 'Try Again',
+            onPressed: () => Navigator.pop(context),
+            color: kColorRed,
+          );
   }
 
   _reportBlockSettings() {
@@ -1327,7 +1423,8 @@ class _ProfileState extends State<Profile> {
           Navigator.pop(context);
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (BuildContext context) => ChooseAccount()),
+            MaterialPageRoute(
+                builder: (BuildContext context) => ChooseAccount()),
           );
         },
       ),
@@ -1429,7 +1526,8 @@ class _ProfileState extends State<Profile> {
           weeklyVisitsCount = user.weeklyVisitsCount + 1;
           totalVisitsCount = user.totalVisitsCount + 1;
 
-          displayedWeeklyCount = NumberFormat.compact().format(weeklyVisitsCount);
+          displayedWeeklyCount =
+              NumberFormat.compact().format(weeklyVisitsCount);
           displayedTotalCount = NumberFormat.compact().format(totalVisitsCount);
         });
       }
@@ -1438,7 +1536,7 @@ class _ProfileState extends State<Profile> {
         'totalVisitsCount': user.totalVisitsCount + 1,
       });
     });
-    recentProfileVisitUpdate();
+    _recentProfileVisitUpdate();
   }
 
   _getOtherUserData() {
@@ -1463,7 +1561,24 @@ class _ProfileState extends State<Profile> {
       'weeklyVisitsCount': user.weeklyVisitsCount + 1,
       'totalVisitsCount': user.totalVisitsCount + 1,
     });
-    recentProfileVisitUpdate();
+    _recentProfileVisitUpdate();
+  }
+
+  _recentProfileVisitUpdate() {
+    if (!_isCurrentUser && userUid != null) {
+      activityRef
+          .document(currentUserUid)
+          .collection('feedItems')
+          .document(currentUserUid)
+          .setData({
+        'type': 'recentProfileVisit',
+        'uid': userUid,
+        'username': username,
+        'city': locationLabel,
+        'profileImageUrl': profileImageUrl,
+        'creationDate': DateTime.now().millisecondsSinceEpoch,
+      });
+    }
   }
 
   _getCurrentUserData() async {
@@ -1543,6 +1658,7 @@ class _ProfileState extends State<Profile> {
             desc: 'Unable to upload your profile image, please try again later',
             buttonText: 'Try Again',
             onPressed: () => Navigator.pop(context),
+            color: kColorRed,
           ),
         );
       }
@@ -1560,12 +1676,10 @@ class _ProfileState extends State<Profile> {
     if (await canLaunch(url)) {
       await launch(url, forceSafariVC: false);
     } else {
-      kShowFlushBar(
-        text: 'Whoops, unable to open in app',
-        icon: FontAwesomeIcons.exclamation,
-        color: kColorRed,
-        context: context,
-      );
+      kShowSnackbar(
+          key: _scaffoldKey,
+          text: 'Whoops, unable to open in app',
+          backgroundColor: kColorRed);
     }
   }
 
@@ -1699,13 +1813,19 @@ class FlexibleProfileAppBar extends StatelessWidget {
                       onTap: onTap,
                     ),
                     GestureDetector(
-                      onTap: () => isCurrentUser ? goToCreateDisplayName(context) : print('do nothing'),
+                      onTap: () => isCurrentUser
+                          ? goToCreateDisplayName(context)
+                          : print('do nothing'),
                       child: Text(
                         displayName ?? '',
                         style: kDefaultTextStyle.copyWith(
-                            color: Color.fromRGBO(red ?? 95, green ?? 71, blue ?? 188, 1.0,),
-                          fontSize: 18.0
-                        ),
+                            color: Color.fromRGBO(
+                              red ?? 95,
+                              green ?? 71,
+                              blue ?? 188,
+                              1.0,
+                            ),
+                            fontSize: 18.0),
                       ),
                     ),
                     Text('Visits this week: $weeklyVisitsCount',
@@ -1744,6 +1864,7 @@ class FlexibleProfileAppBar extends StatelessWidget {
   }
 
   goToCreateDisplayName(BuildContext context) {
-    Navigator.push(context, MaterialPageRoute(builder: (context) => CreateDisplayName()));
+    Navigator.push(
+        context, MaterialPageRoute(builder: (context) => CreateDisplayName()));
   }
 }

@@ -114,11 +114,14 @@ class _BlockedProfilesState extends State<BlockedProfiles> {
     usersRef.document(currentUser.uid).updateData(
         {'blockedUsers.$uid': FieldValue.delete()}).whenComplete(() {
           usersRef.document(uid).updateData({'blockedUsers.${currentUser.uid}': FieldValue.delete()});
-      kShowFlushBar(
-          text: 'Successfully Unblocked',
-          icon: FontAwesomeIcons.exclamation,
-          context: context,
-          color: kColorGreen);
+          kShowAlert(
+            context: context,
+            title: 'Successfully Unblocked',
+            desc: 'You will now be able to see each others content',
+            buttonText: 'Dismiss',
+            onPressed: Navigator.pop(context),
+            color: kColorBlue,
+          );
     });
   }
 

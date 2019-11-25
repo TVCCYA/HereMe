@@ -193,7 +193,7 @@ class ActivityFeedItem extends StatelessWidget {
       ),
       onTap: () {
         User user = User(uid: uid);
-        UserResult result = UserResult(user: user, locationLabel: city);
+        UserResult result = UserResult(user: user, locationLabel: city ?? 'Around');
         result.toProfile(context);
       },
       trailing: Text(
