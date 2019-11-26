@@ -7,7 +7,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:modal_progress_hud/modal_progress_hud.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:hereme_flutter/utils/reusable_registration_textfield.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class SignUp extends StatefulWidget {
@@ -322,6 +321,7 @@ class _SignUpState extends State<SignUp> {
     FirebaseUser user = await FirebaseAuth.instance.currentUser();
     await prefs.setString('username', firstName.trim());
     await prefs.setString('uid', user.uid);
+    await prefs.setBool('hideMe', false);
   }
 
   _launchURL() async {

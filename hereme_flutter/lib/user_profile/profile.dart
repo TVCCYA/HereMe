@@ -3,6 +3,8 @@ import 'dart:io';
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_google_ad_manager/ad_size.dart';
+import 'package:flutter_google_ad_manager/banner.dart';
 import 'package:hereme_flutter/live_chat/live_chat.dart';
 import 'package:hereme_flutter/live_chat/live_chat_screen.dart';
 import 'package:hereme_flutter/settings//recents/add_recents.dart';
@@ -83,11 +85,6 @@ class _ProfileState extends State<Profile> {
   }
 
   @override
-  void dispose() {
-    super.dispose();
-  }
-
-  @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     _determinePage();
@@ -116,7 +113,7 @@ class _ProfileState extends State<Profile> {
 
   Widget build(BuildContext context) {
     double screenHeight = MediaQuery.of(context).size.height;
-    double topProfileContainerHeight = screenHeight / 4 + 20;
+    double topProfileContainerHeight = screenHeight / 4 + 32;
 
     return Scaffold(
       key: _scaffoldKey,
@@ -635,8 +632,22 @@ class _ProfileState extends State<Profile> {
                                     );
                                   }
                                   if (displayedAccounts.isNotEmpty) {
-                                    return ReusableContentContainer(
-                                      content: displayedAccounts,
+                                    return Column(
+                                      children: <Widget>[
+                                        ReusableContentContainer(
+                                          content: displayedAccounts,
+                                        ),
+                                        Container(
+                                          height: 50.0,
+                                          child: Center(
+                                            child: DFPBanner(
+                                              isDevelop: false,
+                                              adUnitId: Platform.isAndroid ? 'ca-app-pub-5239326709670732/8292225666' : 'ca-app-pub-5239326709670732/4791964351',
+                                              adSize: DFPAdSize.SMART_BANNER,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
                                     );
                                   } else {
                                     return Padding(

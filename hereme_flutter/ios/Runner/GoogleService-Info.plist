@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CLIENT_ID</key>
+	<string>1095599858-4csj0famd9u90380vgrsanjsa7fvomse.apps.googleusercontent.com</string>
+	<key>REVERSED_CLIENT_ID</key>
+	<string>com.googleusercontent.apps.1095599858-4csj0famd9u90380vgrsanjsa7fvomse</string>
+	<key>API_KEY</key>
+	<string>AIzaSyCgYzSAqxhPyNgzGp5yzfbGUaaVwYe_-x4</string>
+	<key>GCM_SENDER_ID</key>
+	<string>1095599858</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>com.TVCCYA.HereMe</string>
+	<key>PROJECT_ID</key>
+	<string>hereme-33599</string>
+	<key>STORAGE_BUCKET</key>
+	<string>hereme-33599.appspot.com</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:1095599858:ios:a0d132d1eb541e2c</string>
+	<key>DATABASE_URL</key>
+	<string>https://hereme-33599.firebaseio.com</string>
+	<key>ADMOB_APP_ID</key>
+	<string>ca-app-pub-5239326709670732~5739030234</string>
+</dict>
+</plist>

@@ -12,9 +12,12 @@ import 'package:launch_review/launch_review.dart';
 import 'package:share/share.dart';
 
 class ListPage extends StatelessWidget {
+  final _scaffoldKey = GlobalKey<ScaffoldState>();
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: _scaffoldKey,
       backgroundColor: kColorOffWhite,
       appBar: AppBar(
         centerTitle: true,
@@ -63,7 +66,7 @@ class ListPage extends StatelessWidget {
         SettingsTile(
           label: 'Hide Me',
           color: kColorPurple.withOpacity(0.7),
-          onTap: () => print('hide me'),
+          onTap: () => kHandleHideMe(_scaffoldKey),
         ),
         SettingsTile(
           label: 'Tell Your Friends',

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flushbar/flushbar.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:rflutter_alert/rflutter_alert.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'home/home.dart';
 
 const kColorPurple = Color.fromRGBO(95, 71, 188, 1.0);
@@ -360,26 +361,18 @@ void kRemoveLiveChatMessages(String chatId) {
 }
 
 void kDeleteSentKnocks(String currentUserUid) {
-  final ref = activityRef.document(currentUserUid).collection('feedItems');
+  final ref = knocksRef.document(currentUserUid).collection('sentKnockTo');
   ref.getDocuments().then((snapshot) {
     snapshot.documents.forEach((doc) {
       if (doc.exists) {
-        final type = doc.data['type'];
-        if (type == 'pendingKnock') {
-          final sentKnockUid = doc.data['uid'];
-          knocksRef
-              .document(sentKnockUid)
-              .collection('receivedKnockFrom')
-              .document(currentUserUid)
-              .get()
-              .then((doc) {
-            if (doc.exists) {
-              doc.reference.delete().whenComplete(() {
-                ref.document(sentKnockUid).delete();
-              });
-            }
-          });
-        }
+        final uid = doc.data['uid'];
+        knocksRef.document(uid).collection('receivedKnockFrom').document(currentUserUid).get().then((document) {
+          if (document.exists) {
+            document.reference.delete().whenComplete(() {
+              doc.reference.delete();
+            });
+          }
+        });
       }
     });
   });
@@ -491,14 +484,36 @@ void kHandleRemoveAllLiveChatData(String chatId, String uid) {
 
 void kShowSnackbar(
     {GlobalKey<ScaffoldState> key, String text, Color backgroundColor}) {
+  key.currentState.hideCurrentSnackBar();
   SnackBar snackbar = SnackBar(
     elevation: 2.0,
     duration: Duration(seconds: 5),
     content: Text(
       text,
-      style: kDefaultTextStyle.copyWith(color: Colors.white, fontSize: 15.0),
+      style: kDefaultTextStyle.copyWith(color: Colors.white, fontSize: 15.0,),
+      textAlign: TextAlign.center,
     ),
     backgroundColor: backgroundColor,
   );
   key.currentState.showSnackBar(snackbar);
+}
+
+void kHandleHideMe(GlobalKey<ScaffoldState> key) async {
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  bool hideMe = prefs.getBool('hideMe') ?? false;
+  if (!hideMe) {
+    await prefs.setBool('hideMe', true);
+    kShowSnackbar(
+      key: key,
+      text: 'Hide Me Active: you will not be seen by people nearby, and you cannot see any content nearby',
+      backgroundColor: kColorGreen,
+    );
+  } else {
+    await prefs.setBool('hideMe', false);
+    kShowSnackbar(
+      key: key,
+      text: 'Hide Me Disabled',
+      backgroundColor: kColorBlue,
+    );
+  }
 }

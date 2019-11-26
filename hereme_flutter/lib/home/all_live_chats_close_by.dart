@@ -5,6 +5,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:geoflutterfire/geoflutterfire.dart';
 import 'package:hereme_flutter/constants.dart';
 import 'package:hereme_flutter/live_chat/live_chat_result.dart';
+import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'home.dart';
 
 class AllLiveChatsCloseBy extends StatefulWidget {
@@ -21,6 +22,7 @@ class AllLiveChatsCloseBy extends StatefulWidget {
 
 class _AllLiveChatsCloseByState extends State<AllLiveChatsCloseBy> {
   final _scaffoldKey = GlobalKey<ScaffoldState>();
+  RefreshController _refreshController = RefreshController(initialRefresh: false);
   final double latitude;
   final double longitude;
   _AllLiveChatsCloseByState({this.latitude, this.longitude});
@@ -124,8 +126,6 @@ class _AllLiveChatsCloseByState extends State<AllLiveChatsCloseBy> {
 
   @override
   Widget build(BuildContext context) {
-    final double screenWidth = MediaQuery.of(context).size.width;
-    final double screenHeight = MediaQuery.of(context).size.height;
     return Scaffold(
       key: _scaffoldKey,
       backgroundColor: kColorOffWhite,
@@ -148,22 +148,38 @@ class _AllLiveChatsCloseByState extends State<AllLiveChatsCloseBy> {
       body: SafeArea(
         child: Theme(
           data: kTheme(context),
-          child: RefreshIndicator(
-            onRefresh: () async {
+          child: SmartRefresher(
+          enablePullDown: true,
+          header: WaterDropHeader(
+            waterDropColor: Colors.grey[200],
+            idleIcon: Icon(
+              FontAwesomeIcons.commentDots,
+              color: kColorPurple,
+              size: 18.0,
+            ),
+            complete: Icon(
+              FontAwesomeIcons. arrowDown,
+              color: kColorLightGray,
+              size: 20.0,
+            ),
+            failed: Icon(
+              FontAwesomeIcons.times,
+              color: kColorRed,
+              size: 20.0,
+            ),
+          ),
+          controller: _refreshController,
+          onRefresh: () async {
               kShowSnackbar(
                 key: _scaffoldKey,
                 text: 'Your feed will auto update when a new Live Chat has started within your vicinity',
                 backgroundColor: kColorBlack71,
               );
+              _refreshController.refreshCompleted();
             },
-            child: Container(
-              height: screenHeight,
-              width: screenWidth,
-              child: SingleChildScrollView(
-                padding: EdgeInsets.only(bottom: 50.0),
-                physics: AlwaysScrollableScrollPhysics(),
-                child: streamCloseByChats(),
-              ),
+            child: SingleChildScrollView(
+              padding: EdgeInsets.only(bottom: 50.0),
+              child: streamCloseByChats(),
             ),
           ),
         ),

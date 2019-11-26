@@ -18,8 +18,10 @@ import 'package:hereme_flutter/settings/choose_account.dart';
 import 'package:hereme_flutter/user_profile/profile.dart';
 import 'package:hereme_flutter/utils/custom_image.dart';
 import 'package:hereme_flutter/utils/reusable_bottom_sheet.dart';
+import 'package:hereme_flutter/utils/settings_tile.dart';
 import 'package:hereme_flutter/widgets/user_result.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../registration/initial_page.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -48,6 +50,7 @@ class Home extends StatefulWidget {
 
 class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
   final _scaffoldKey = GlobalKey<ScaffoldState>();
+  RefreshController _refreshController = RefreshController(initialRefresh: false);
   FirebaseMessaging _firebaseMessaging = FirebaseMessaging();
   final auth = FirebaseAuth.instance;
   bool _isAuth = false;
@@ -57,6 +60,7 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
   double longitude;
   bool _locationEnabled = false;
   bool _locationLoading = true;
+  bool hideMe = false;
 
   bool get wantKeepAlive => true;
 
@@ -83,6 +87,11 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
   void didChangeDependencies() async {
     super.didChangeDependencies();
     handleLoggedIn();
+    if (hideMe) {
+      _locationEnabled = false;
+    } else {
+      getCurrentUser();
+    }
   }
 
   @override
@@ -117,7 +126,6 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
     final user = await auth.currentUser();
     if (Platform.isIOS) getIOSPermission();
     _firebaseMessaging.getToken().then((token) {
-//      print('Firebase Messaging Token: $token\n');
       usersRef.document(user.uid).updateData({
         'androidNotificationToken': token,
       });
@@ -170,6 +178,9 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
     await prefs.setString('username', currentUser.username);
     await prefs.setString('profileImageUrl', currentUser.profileImageUrl);
     await prefs.setString('uid', currentUser.uid);
+    setState(() {
+      hideMe = prefs.getBool('hideMe');
+    });
 
     await getStreamedLocation();
     if (currentUser.hasAccountLinked) {
@@ -201,7 +212,7 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
     GeolocationStatus geolocationStatus =
         await Geolocator().checkGeolocationPermissionStatus();
 
-    if (geolocationStatus != GeolocationStatus.granted) {
+    if (geolocationStatus != GeolocationStatus.granted || hideMe) {
       setState(() {
         _locationLoading = false;
         _locationEnabled = false;
@@ -288,7 +299,7 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
                         fontSize: 18.0, fontWeight: FontWeight.w400)),
               ),
               Container(
-                height: 100.0,
+                height: 75.0,
                 child: Center(
                   child: ReusableBottomActionSheetListTile(
                     iconData: FontAwesomeIcons.link,
@@ -323,7 +334,7 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
         builder: (context, snapshot) {
           if (!snapshot.hasData ||
               snapshot.connectionState == ConnectionState.waiting) {
-            return circularProgress();
+            return SizedBox();
           }
           List<User> usersAround = [];
           List<DocumentSnapshot> users = [];
@@ -407,7 +418,7 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
             );
           } else {
             return Container(
-              height: 150.0,
+              height: 75.0,
               child: Center(
                 child: Text(
                   'Nobody Nearby',
@@ -423,10 +434,15 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
     if (_locationLoading) {
       getCurrentLocation();
       return circularProgress();
-    } else if (_locationEnabled) {
+    }
+    if (_locationEnabled) {
       return showStreamedCloseByUsers();
-    } else {
+    } else if (hideMe) {
+      return _disableHideMe();
+    } else if (!_locationEnabled) {
       return _showNoLocationFlushBar();
+    } else {
+      return SizedBox();
     }
   }
 
@@ -434,7 +450,8 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
     if (_locationLoading) {
       getCurrentLocation();
       return circularProgress();
-    } else if (_locationEnabled) {
+    }
+    if (_locationEnabled) {
       return showStreamedCloseByChats();
     } else {
       return SizedBox();
@@ -551,7 +568,7 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
             );
           } else {
             return Container(
-              height: 150.0,
+              height: 75.0,
               child: Center(
                 child: Text(
                   'No Live Chats Nearby',
@@ -681,7 +698,7 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
                     style: kAppBarTextStyle.copyWith(fontSize: 18.0)),
               ),
               Container(
-                height: 150,
+                height: 150.0,
                 child: GridView.count(
                   padding: EdgeInsets.only(left: 8, right: 8),
                   crossAxisCount: 1,
@@ -697,7 +714,7 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
           );
         } else {
           return Container(
-            height: 150.0,
+            height: 75.0,
             child: Center(
               child: Text(
                 'Nobody To Be Displayed',
@@ -712,8 +729,6 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
 
   Widget build(BuildContext context) {
     super.build(context);
-    final double screenWidth = MediaQuery.of(context).size.width;
-    final double screenHeight = MediaQuery.of(context).size.height;
     SystemChrome.setEnabledSystemUIOverlays([SystemUiOverlay.top]);
     return Scaffold(
       key: _scaffoldKey,
@@ -752,72 +767,88 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
           data: kTheme(context),
           child: pageLoading
               ? circularProgress()
-              : RefreshIndicator(
-                  onRefresh: () async => await getCurrentLocation(),
-                  child: Container(
-                    height: screenHeight,
-                    width: screenWidth,
-                    child: SingleChildScrollView(
-                      physics: AlwaysScrollableScrollPhysics(),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: <Widget>[
-                          SizedBox(height: 4.0),
-                          buildTopViewed(),
-                          Divider(color: Colors.grey[300]),
-                          enabledLocationFetchUsers(),
-                          Divider(color: Colors.grey[300]),
-                          enabledLocationFetchChats(),
-                          Divider(color: Colors.grey[300]),
-//                              Container(
-//                                height: 50.0,
-//                                width: screenWidth,
-//                                child: AdmobBanner(
-//                                    adUnitId: 'ca-app-pub-5239326709670732/4791964351',
-//                                    adSize: AdmobBannerSize.BANNER,
-//                                    listener: (AdmobAdEvent event, Map<String, dynamic> args) {
-//                                      switch (event) {
-//                                        case AdmobAdEvent.loaded:
-//                                          print('Admob banner loaded!');
-//                                          break;
-//
-//                                        case AdmobAdEvent.opened:
-//                                          print('Admob banner opened!');
-//                                          break;
-//
-//                                        case AdmobAdEvent.closed:
-//                                          print('Admob banner closed!');
-//                                          break;
-//
-//                                        case AdmobAdEvent.failedToLoad:
-//                                          print('Admob banner failed to load. Error code: ${args['errorCode']}');
-//                                          break;
-//
-//                                        default:
-//                                          break;
-//                                      }
-//                                    }
-//                                ),
-//                              ),
-//                              Divider(color: Colors.grey[300]),
-                        ],
-                      ),
+              : SmartRefresher(
+                  enablePullDown: true,
+                  header: WaterDropHeader(
+                    waterDropColor: Colors.grey[200],
+                    idleIcon: Icon(
+                      FontAwesomeIcons.mapMarkerAlt,
+                      color: kColorPurple,
+                      size: 18.0,
+                    ),
+                    complete: Icon(
+                      FontAwesomeIcons.check,
+                      color: kColorGreen,
+                      size: 20.0,
+                    ),
+                    failed: Icon(
+                      FontAwesomeIcons.times,
+                      color: kColorRed,
+                      size: 20.0,
+                    ),
+                  ),
+                  controller: _refreshController,
+                  onRefresh: _onRefresh,
+                  child: SingleChildScrollView(
+//                      physics: AlwaysScrollableScrollPhysics(),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        SizedBox(height: 4.0),
+                        buildTopViewed(),
+                        Divider(color: Colors.grey[300]),
+                        Center(
+                          child: Container(
+                            height: 50.0,
+                            child: Center(
+                              child: DFPBanner(
+                                isDevelop: false,
+                                adUnitId: Platform.isAndroid
+                                    ? 'ca-app-pub-5239326709670732/8292225666'
+                                    : 'ca-app-pub-5239326709670732/4791964351',
+                                adSize: DFPAdSize.SMART_BANNER,
+                              ),
+                            ),
+                          ),
+                        ),
+                        Divider(color: Colors.grey[300]),
+                        enabledLocationFetchUsers(),
+                        Divider(color: Colors.grey[300]),
+                        enabledLocationFetchChats(),
+                        Divider(color: Colors.grey[300]),
+                      ],
                     ),
                   ),
                 ),
         ),
       ),
-      bottomNavigationBar: BottomAppBar(
-        elevation: 0.0,
-        color: kColorOffWhite,
-        child: Container(
-          height: 50.0,
-          child: Center(
-            child: DFPBanner(
-              isDevelop: false,
-              adUnitId: 'ca-app-pub-5239326709670732/8292225666',
-              adSize: DFPAdSize.BANNER,
-            ),
+    );
+  }
+
+  _onRefresh() async {
+    await getCurrentLocation();
+    _refreshController.refreshCompleted();
+  }
+
+  _disableHideMe() {
+    return Container(
+      height: 50.0,
+      color: kColorBlue.withOpacity(0.75),
+      child: FlatButton(
+        splashColor: Colors.grey[200],
+        highlightColor: Colors.transparent,
+        onPressed: () {
+          kHandleHideMe(_scaffoldKey);
+          setState(() {
+            hideMe = false;
+            _locationLoading = true;
+          });
+          getCurrentLocation();
+        },
+        child: Center(
+          child: Text(
+            'Disable Hide Me',
+            style: kAppBarTextStyle.copyWith(color: Colors.white),
           ),
         ),
       ),

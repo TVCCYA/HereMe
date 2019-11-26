@@ -8,7 +8,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:hereme_flutter/models/user.dart';
 import 'package:modal_progress_hud/modal_progress_hud.dart';
 import 'package:rflutter_alert/rflutter_alert.dart';
-import 'package:hereme_flutter/utils/reusable_registration_textfield.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
@@ -342,5 +341,6 @@ class _LogInState extends State<LogIn> {
     await prefs.setString('username', currentUser.username);
     await prefs.setString('profileImageUrl', currentUser.profileImageUrl);
     await prefs.setString('uid', currentUser.uid);
+    await prefs.setBool('hideMe', false);
   }
 }
