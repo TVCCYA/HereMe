@@ -81,34 +81,21 @@ class _ProfileState extends State<Profile> {
     if (_isCurrentUser) {
       updateCurrentUserCounts();
     }
-    _getPendingKnocks();
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    _determinePage();
-    if (_isCurrentUser) {
-      updateCurrentUserCounts();
-    }
   }
 
   updateCurrentUserCounts() async {
-    if (_isCurrentUser) {
-      usersRef.document(currentUserUid).snapshots().listen((doc) {
-        if (this.mounted) {
-          setState(() {
-            weeklyVisitsCount = doc.data['weeklyVisitsCount'];
-            totalVisitsCount = doc.data['totalVisitsCount'];
+    usersRef.document(currentUserUid).snapshots().listen((doc) {
+      if (this.mounted) {
+        setState(() {
+          weeklyVisitsCount = doc.data['weeklyVisitsCount'];
+          totalVisitsCount = doc.data['totalVisitsCount'];
 
-            displayedWeeklyCount =
-                NumberFormat.compact().format(weeklyVisitsCount);
-            displayedTotalCount =
-                NumberFormat.compact().format(totalVisitsCount);
-          });
-        }
-      });
-    }
+          displayedWeeklyCount =
+              NumberFormat.compact().format(weeklyVisitsCount);
+          displayedTotalCount = NumberFormat.compact().format(totalVisitsCount);
+        });
+      }
+    });
   }
 
   Widget build(BuildContext context) {
@@ -632,22 +619,8 @@ class _ProfileState extends State<Profile> {
                                     );
                                   }
                                   if (displayedAccounts.isNotEmpty) {
-                                    return Column(
-                                      children: <Widget>[
-                                        ReusableContentContainer(
-                                          content: displayedAccounts,
-                                        ),
-                                        Container(
-                                          height: 50.0,
-                                          child: Center(
-                                            child: DFPBanner(
-                                              isDevelop: false,
-                                              adUnitId: Platform.isAndroid ? 'ca-app-pub-5239326709670732/8292225666' : 'ca-app-pub-5239326709670732/4791964351',
-                                              adSize: DFPAdSize.SMART_BANNER,
-                                            ),
-                                          ),
-                                        ),
-                                      ],
+                                    return ReusableContentContainer(
+                                      content: displayedAccounts,
                                     );
                                   } else {
                                     return Padding(
@@ -961,13 +934,20 @@ class _ProfileState extends State<Profile> {
 
   _updateSentKnockTo(String uid, String username, String profileImageUrl) {
     final creationDate = DateTime.now().millisecondsSinceEpoch;
-    knocksRef.document(currentUserUid).collection('sentKnockTo').document(uid).setData({
+    knocksRef
+        .document(currentUserUid)
+        .collection('sentKnockTo')
+        .document(uid)
+        .setData({
       'uid': uid,
-      'creationDate': creationDate ,
+      'creationDate': creationDate,
       'username': username,
       'profileImageUrl': profileImageUrl,
     }).whenComplete(() {
-      _removeSentKnockTo(uid);
+      _setPendingKnockActivityFeed(
+          uid, username, profileImageUrl, creationDate);
+    }).whenComplete(() {
+      _removeSentKnockTo(uid, currentUserUid);
     }).whenComplete(() {
       _removePendingKnockActivityFeed(uid, currentUserUid);
     }).whenComplete(() {
@@ -975,8 +955,13 @@ class _ProfileState extends State<Profile> {
     });
   }
 
-  _removeSentKnockTo(String uid) {
-    knocksRef.document(uid).collection('sentKnockTo').document(currentUserUid).get().then((doc) {
+  _removeSentKnockTo(String uid1, String uid2) {
+    knocksRef
+        .document(uid1)
+        .collection('sentKnockTo')
+        .document(uid2)
+        .get()
+        .then((doc) {
       if (doc.exists) {
         doc.reference.delete();
       }
@@ -1011,34 +996,10 @@ class _ProfileState extends State<Profile> {
     });
   }
 
-  _getPendingKnocks() {
-    knocksRef.document(currentUserUid).collection('sentKnockTo').snapshots().listen((snapshot) {
-      snapshot.documents.forEach((doc) {
-        if (doc.exists) {
-          final uid = doc.data['uid'];
-          final username = doc.data['username'];
-          final profileImageUrl = doc.data['profileImageUrl'];
-          final creationDate = doc.data['creationDate'];
-          activityRef
-              .document(currentUserUid)
-              .collection('feedItems')
-              .document(uid)
-              .setData({
-            'type': 'pendingKnock',
-            'uid': uid,
-            'username': username,
-            'profileImageUrl': profileImageUrl,
-            'creationDate': creationDate,
-          });
-        }
-      });
-    });
-  }
-
   _removePendingKnockActivityFeed(String uid1, String uid2) {
     DocumentReference ref =
         activityRef.document(uid1).collection('feedItems').document(uid2);
-    ref.snapshots().forEach((snapshot) {
+    ref.get().then((snapshot) {
       if (snapshot.exists) {
         final type = snapshot.data['type'];
         if (type == 'pendingKnock') {
@@ -1058,6 +1019,7 @@ class _ProfileState extends State<Profile> {
       if (doc.exists) {
         doc.reference.delete().whenComplete(() {
           _removePendingKnockActivityFeed(uid2, uid1);
+          _removeSentKnockTo(uid2, uid1);
         });
       }
     });
@@ -1677,13 +1639,6 @@ class _ProfileState extends State<Profile> {
   }
 
   _launchUrl(String accountUsername, String iconString, String url) async {
-    for (var urlString
-        in _determineUrl(accountUsername, iconString, url).values) {
-      url = urlString;
-    }
-
-    print(url);
-
     if (await canLaunch(url)) {
       await launch(url, forceSafariVC: false);
     } else {
@@ -1727,6 +1682,12 @@ class _ProfileState extends State<Profile> {
       retMap = {'Browser': url};
     }
     return retMap;
+  }
+
+  @override
+  void deactivate() {
+    super.deactivate();
+    _scaffoldKey.currentState.hideCurrentSnackBar();
   }
 }
 

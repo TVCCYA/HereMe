@@ -26,6 +26,12 @@ class _AddLiveChatState extends State<AddLiveChat> {
   bool _isButtonDisabled = true;
   bool _isAnonymousChecked = false;
 
+  @override
+  void deactivate() {
+    super.deactivate();
+    _scaffoldKey.currentState.hideCurrentSnackBar();
+  }
+
   List<User> usersAround = [];
   List<String> usersAroundUid = [];
 

@@ -1,5 +1,4 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flushbar/flushbar.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:geoflutterfire/geoflutterfire.dart';
@@ -26,6 +25,12 @@ class _AllLiveChatsCloseByState extends State<AllLiveChatsCloseBy> {
   final double latitude;
   final double longitude;
   _AllLiveChatsCloseByState({this.latitude, this.longitude});
+
+  @override
+  void deactivate() {
+    super.deactivate();
+    _scaffoldKey.currentState.hideCurrentSnackBar();
+  }
 
   streamCloseByChats() {
     Geoflutterfire geo = Geoflutterfire();
@@ -122,7 +127,6 @@ class _AllLiveChatsCloseByState extends State<AllLiveChatsCloseBy> {
         },
     );
   }
-
 
   @override
   Widget build(BuildContext context) {

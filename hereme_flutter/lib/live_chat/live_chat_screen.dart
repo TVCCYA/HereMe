@@ -94,6 +94,12 @@ class _LiveChatScreenState extends State<LiveChatScreen> {
     streamChatDuration();
   }
 
+  @override
+  void deactivate() {
+    super.deactivate();
+    _scaffoldKey.currentState.hideCurrentSnackBar();
+  }
+
   isHostAnonymous() {
     if (chatHostDisplayName.isEmpty) {
       setState(() {
@@ -124,8 +130,7 @@ class _LiveChatScreenState extends State<LiveChatScreen> {
   }
 
   List<LiveChatMessage> allMessages = [];
-  int creation = 1573746233463;
-  buildMessages(int date) {
+  buildMessages() {
     return StreamBuilder(
       stream: liveChatMessagesRef
           .document(chatId)
@@ -305,7 +310,6 @@ class _LiveChatScreenState extends State<LiveChatScreen> {
                   text: TextSpan(
                     children: [
                       TextSpan(
-                        // TODO: return the count of uid's
                         text: '${uidsInChat.length}',
                         style: kAppBarTextStyle.copyWith(
                             color: kColorBlack71, fontSize: 16.0),
@@ -438,48 +442,6 @@ class _LiveChatScreenState extends State<LiveChatScreen> {
     kActionSheet(context, sheets);
   }
 
-//  getAllMessages() {
-//    Future<QuerySnapshot> snapshot = liveChatMessagesRef
-//        .document(chatId)
-//        .collection('messages')
-//        .orderBy('creationDate', descending: true)
-//        .where('creationDate', isLessThan: now)
-//        .getDocuments();
-//
-//    List<LiveChatMessage> messages = [];
-//    snapshot.then((doc) {
-//      doc.documents.forEach((val) {
-//        if (!currentUser.blockedUids.contains(val.data['uid'])) {
-//          messages.add(LiveChatMessage.fromDocument(val));
-//        }
-//        setState(() {
-//          allMessages = messages;
-//        });
-//      });
-//    });
-//  }
-
-//  streamMessages() {
-//    Stream<QuerySnapshot> streamMessages = liveChatMessagesRef
-//        .document(chatId)
-//        .collection('messages')
-//        .orderBy('creationDate', descending: true)
-//        .where('creationDate', isGreaterThanOrEqualTo: now)
-//        .snapshots();
-//    List<LiveChatMessage> messages = [];
-//    streamMessages.forEach((snapshot) {
-//      snapshot.documents.forEach((doc) {
-//        if (!currentUser.blockedUids.contains(doc.data['uid'])) {
-//          messages.add(LiveChatMessage.fromDocument(doc));
-//        }
-//        setState(() {
-//
-//          allMessages = messages;
-//        });
-//      });
-//    });
-//  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -533,7 +495,7 @@ class _LiveChatScreenState extends State<LiveChatScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: <Widget>[
-                    buildMessages(now),
+                    buildMessages(),
                     !hasChatEnded
                         ? Container(
                             decoration: BoxDecoration(
@@ -576,10 +538,13 @@ class _LiveChatScreenState extends State<LiveChatScreen> {
                                 ),
                                 FlatButton(
                                   onPressed: () {
-                                    if (liveChatController.text.isNotEmpty &&
-                                        liveChatController.text.length > 200) {
-                                      addMessage();
-                                    }
+                                    _hasStartedTyping
+                                        ? addMessage()
+                                        : kShowSnackbar(
+                                        key: _scaffoldKey,
+                                        text:
+                                        'Message cannot be empty or larger than 200 characters',
+                                        backgroundColor: kColorRed);
                                   },
                                   child: _hasStartedTyping
                                       ? Animator(

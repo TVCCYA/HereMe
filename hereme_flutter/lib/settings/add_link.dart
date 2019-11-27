@@ -35,6 +35,12 @@ class _AddLinkState extends State<AddLink> {
   FocusNode _urlNode = FocusNode();
   bool _isButtonDisabled = true;
 
+  @override
+  void deactivate() {
+    super.deactivate();
+    _scaffoldKey.currentState.hideCurrentSnackBar();
+  }
+
   isValid() {
     if (platform == 'YouTube' ||
         platform == 'Facebook' ||

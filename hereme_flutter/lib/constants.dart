@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flushbar/flushbar.dart';
+import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:rflutter_alert/rflutter_alert.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -112,6 +113,7 @@ void kShowAlert({
   onPressed: Function,
   color: Color,
 }) {
+  kSelectionClick();
   Alert(
     context: context,
     style: AlertStyle(
@@ -155,6 +157,7 @@ void kShowAlertMultiButtons(
     buttonText2: String,
     onPressed1: Function,
     onPressed2: Function}) {
+  kSelectionClick();
   Alert(
     context: context,
     style: AlertStyle(
@@ -200,6 +203,7 @@ void kShowAlertMultiButtons(
 }
 
 void kActionSheet(context, sheets) {
+  kSelectionClick();
   showModalBottomSheet<void>(
     context: context,
     builder: (BuildContext context) {
@@ -485,6 +489,7 @@ void kHandleRemoveAllLiveChatData(String chatId, String uid) {
 void kShowSnackbar(
     {GlobalKey<ScaffoldState> key, String text, Color backgroundColor}) {
   key.currentState.hideCurrentSnackBar();
+  kHeavyImpact();
   SnackBar snackbar = SnackBar(
     elevation: 2.0,
     duration: Duration(seconds: 5),
@@ -516,4 +521,16 @@ void kHandleHideMe(GlobalKey<ScaffoldState> key) async {
       backgroundColor: kColorBlue,
     );
   }
+}
+
+void kSelectionClick() {
+  SystemChannels.platform.invokeMethod<void>(
+    'HapticFeedback.vibrate',
+    'HapticFeedbackType.selectionClick');
+}
+
+void kHeavyImpact() {
+  SystemChannels.platform.invokeMethod<void>(
+    'HapticFeedback.vibrate',
+    'HapticFeedbackType.heavyImpact');
 }

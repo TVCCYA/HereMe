@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flushbar/flushbar.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:geoflutterfire/geoflutterfire.dart';
@@ -26,6 +25,12 @@ class _AllUsersCloseByState extends State<AllUsersCloseBy> {
   final double latitude;
   final double longitude;
   _AllUsersCloseByState({this.latitude, this.longitude});
+
+  @override
+  void deactivate() {
+    super.deactivate();
+    _scaffoldKey.currentState.hideCurrentSnackBar();
+  }
 
   streamCloseByUsers() {
     Geoflutterfire geo = Geoflutterfire();

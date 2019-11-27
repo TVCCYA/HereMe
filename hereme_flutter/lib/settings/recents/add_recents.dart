@@ -27,6 +27,12 @@ class _AddRecentState extends State<AddRecent> {
   bool _isButtonDisabled = true;
   File mediaFile;
 
+  @override
+  void deactivate() {
+    super.deactivate();
+    _scaffoldKey.currentState.hideCurrentSnackBar();
+  }
+
   void isValid() {
     if ((url.isNotEmpty && !url.contains(' ') && url.contains('https://')) && title.isNotEmpty && mediaFile != null) {
       setState(() {

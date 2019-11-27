@@ -18,7 +18,6 @@ import 'package:hereme_flutter/settings/choose_account.dart';
 import 'package:hereme_flutter/user_profile/profile.dart';
 import 'package:hereme_flutter/utils/custom_image.dart';
 import 'package:hereme_flutter/utils/reusable_bottom_sheet.dart';
-import 'package:hereme_flutter/utils/settings_tile.dart';
 import 'package:hereme_flutter/widgets/user_result.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
@@ -70,19 +69,6 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
   bool pageLoading = true;
   List<String> blockedUids = [];
 
-//  initializeAd() {
-//    if (Platform.isIOS) {
-//      Admob.initialize('ca-app-pub-5239326709670732~5739030234');
-//    } else {
-//      Admob.initialize('ca-app-pub-5239326709670732~3954004336');
-//    }
-//  }
-
-  @override
-  void initState() {
-    super.initState();
-  }
-
   @override
   void didChangeDependencies() async {
     super.didChangeDependencies();
@@ -100,6 +86,12 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
       positionStream.cancel();
     }
     super.dispose();
+  }
+
+  @override
+  void deactivate() {
+    super.deactivate();
+    _scaffoldKey.currentState.hideCurrentSnackBar();
   }
 
   handleLoggedIn() async {
@@ -179,7 +171,7 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
     await prefs.setString('profileImageUrl', currentUser.profileImageUrl);
     await prefs.setString('uid', currentUser.uid);
     setState(() {
-      hideMe = prefs.getBool('hideMe');
+      hideMe = prefs.getBool('hideMe') ?? false;
     });
 
     await getStreamedLocation();
@@ -431,14 +423,14 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
   }
 
   enabledLocationFetchUsers() {
-    if (_locationLoading) {
+    if (hideMe) {
+      return _disableHideMe();
+    } else if (_locationLoading) {
       getCurrentLocation();
       return circularProgress();
     }
     if (_locationEnabled) {
       return showStreamedCloseByUsers();
-    } else if (hideMe) {
-      return _disableHideMe();
     } else if (!_locationEnabled) {
       return _showNoLocationFlushBar();
     } else {
@@ -447,7 +439,9 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
   }
 
   enabledLocationFetchChats() {
-    if (_locationLoading) {
+    if (hideMe) {
+      return SizedBox();
+    } else if (_locationLoading) {
       getCurrentLocation();
       return circularProgress();
     }
@@ -739,7 +733,7 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
         elevation: 2.0,
         backgroundColor: kColorOffWhite,
         title: Text(
-          "HereMe",
+          hideMe ? 'HideMe' : 'HereMe',
           textAlign: TextAlign.left,
           style: kAppBarTextStyle.copyWith(
             color: kColorPurple,
@@ -825,8 +819,9 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
     );
   }
 
-  _onRefresh() async {
-    await getCurrentLocation();
+  _onRefresh() {
+    kSelectionClick();
+    getCurrentLocation();
     _refreshController.refreshCompleted();
   }
 

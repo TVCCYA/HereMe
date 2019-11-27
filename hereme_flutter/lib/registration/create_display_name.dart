@@ -34,6 +34,12 @@ class _CreateDisplayNameState extends State<CreateDisplayName> {
     }
   }
 
+  @override
+  void deactivate() {
+    super.deactivate();
+    _scaffoldKey.currentState.hideCurrentSnackBar();
+  }
+
   createRandomColor() {
     Random rnd;
     int min = 1;

@@ -39,8 +39,6 @@ dependencies:
   firebase_messaging: ^5.1.8
   flutter_google_ad_manager: ^0.10.1
   pull_to_refresh: ^1.5.7
-#  firebase_admob: ^0.9.0+9
-#  admob_flutter: ^0.3.1ad
 
 dev_dependencies:
   flutter_test:
