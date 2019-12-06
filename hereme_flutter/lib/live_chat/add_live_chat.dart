@@ -1,5 +1,4 @@
 import 'dart:async';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -45,13 +44,15 @@ class _AddLiveChatState extends State<AddLiveChat> {
         duration.isNotEmpty &&
         int.parse(duration) <= 12 &&
         int.parse(duration) > 0) {
-      setState(() {
-        _isButtonDisabled = false;
-      });
+      if (this.mounted)
+        setState(() {
+          _isButtonDisabled = false;
+        });
     } else {
-      setState(() {
-        _isButtonDisabled = true;
-      });
+      if (this.mounted)
+        setState(() {
+          _isButtonDisabled = true;
+        });
     }
   }
 
@@ -91,15 +92,34 @@ class _AddLiveChatState extends State<AddLiveChat> {
           );
           if (currentUser.uid != uid &&
               hasAccountLinked != null &&
-              hasAccountLinked) {
-            setState(() {
-              usersAround.add(displayedUser);
-              usersAroundUid.add(displayedUser.uid);
-            });
+              hasAccountLinked &&
+              uid != adminUid) {
+            if (this.mounted)
+              setState(() {
+                usersAround.add(displayedUser);
+                usersAroundUid.add(displayedUser.uid);
+              });
           }
         }
       }
     });
+  }
+
+  what() {
+//    String userId;
+//    if (usersAroundUid.isNotEmpty) {
+//      usersAroundUid.forEach((uid) {
+//        userId = uid;
+//      });
+//      print(userId ?? 'nah');
+//      print(usersAroundUid);
+//    }
+    for (var i in usersAroundUid.getRange(0, usersAroundUid.length)) {
+      print(i);
+    }
+//    usersAroundUid.forEach((uid) {
+//      print(uid);
+//    });
   }
 
   @override
@@ -209,18 +229,20 @@ class _AddLiveChatState extends State<AddLiveChat> {
                             text: 'Duration must be less than 12 hours',
                             backgroundColor: kColorRed,
                           );
-                          setState(() {
-                            _isButtonDisabled = true;
-                          });
+                          if (this.mounted)
+                            setState(() {
+                              _isButtonDisabled = true;
+                            });
                         } else if (int.parse(value) == 0) {
                           kShowSnackbar(
                             key: _scaffoldKey,
                             text: 'Duration must be greater than 0 hours',
                             backgroundColor: kColorRed,
                           );
-                          setState(() {
-                            _isButtonDisabled = true;
-                          });
+                          if (this.mounted)
+                            setState(() {
+                              _isButtonDisabled = true;
+                            });
                         }
                       },
                       inputFormatters: [
@@ -257,9 +279,10 @@ class _AddLiveChatState extends State<AddLiveChat> {
                           activeColor: kColorPurple,
                           value: _isAnonymousChecked,
                           onChanged: (value) {
-                            setState(() {
-                              _isAnonymousChecked = value;
-                            });
+                            if (this.mounted)
+                              setState(() {
+                                _isAnonymousChecked = value;
+                              });
                           },
                         ),
                       ],
@@ -268,9 +291,7 @@ class _AddLiveChatState extends State<AddLiveChat> {
                       alignment: Alignment.topRight,
                       child: FlatButton.icon(
                         onPressed: () {
-                          _isButtonDisabled
-                              ? print('disabled')
-                              : _uploadChatToFirebase();
+                          _isButtonDisabled ? what() : _uploadChatToFirebase();
                         },
                         splashColor: _isButtonDisabled
                             ? Colors.transparent
@@ -328,9 +349,13 @@ class _AddLiveChatState extends State<AddLiveChat> {
     final uid = currentUser.uid;
     final ref = liveChatsRef.document(uid).collection('chats').document(chatId);
 
-    Map<String, dynamic> liveChatData = <String, dynamic>{
-//      'invites': usersAroundUid,
+    if (this.mounted)
+      setState(() {
+        showSpinner = true;
+        _isButtonDisabled = true;
+      });
 
+    Map<String, dynamic> liveChatData = <String, dynamic>{
       'uid': currentUser.uid,
       'chatId': chatId,
       'hostDisplayName': _isAnonymousChecked ? '' : currentUser.displayName,
@@ -344,40 +369,54 @@ class _AddLiveChatState extends State<AddLiveChat> {
     };
 
     ref.setData(liveChatData).whenComplete(() {
+      if (this.mounted)
+        setState(() {
+          showSpinner = false;
+        });
       setChatLocation(chatId);
-      _updateInviteActivityFeed(chatId, liveChatData);
-      kShowSnackbar(
-        key: _scaffoldKey,
-        backgroundColor: kColorGreen,
-        text: 'Successfully created $title',
+      _updateInviteActivityFeed(chatId);
+      Navigator.pop(context);
+    }).catchError((e) {
+      kShowAlert(
+        context: context,
+        title: 'Whoops',
+        desc: 'Unable to create Live Chat at this time',
+        buttonText: 'Try Again',
+        onPressed: () => Navigator.pop(context),
+        color: kColorRed,
       );
-      Future.delayed(Duration(seconds: 2), () => Navigator.pop(context));
-    }).catchError((e) => kShowAlert(
-          context: context,
-          title: 'Whoops',
-          desc: 'Unable to create Live Chat at this time',
-          buttonText: 'Try Again',
-          onPressed: () => Navigator.pop(context),
-          color: kColorRed,
-        ));
+      if (this.mounted)
+        setState(() {
+          _isButtonDisabled = false;
+        });
+    });
   }
 
-  _updateInviteActivityFeed(String chatId, Map<String, dynamic> data) {
+  _updateInviteActivityFeed(String chatId) {
     if (usersAroundUid.isNotEmpty) {
       usersAroundUid.forEach((uid) {
         DocumentReference ref =
             activityRef.document(uid).collection('feedItems').document(chatId);
-        ref.setData(data).whenComplete(() {
-          ref.updateData({
-            'type': 'liveChatInvite',
-          });
-          _addUsersAroundToFirestore(chatId, uid);
+        ref.setData({
+          'type': 'liveChatInvite',
+          'uid': currentUser.uid,
+          'chatId': chatId,
+          'hostDisplayName': _isAnonymousChecked ? '' : currentUser.displayName,
+          'title': title,
+          'hostRed': red,
+          'hostGreen': green,
+          'hostBlue': blue,
+          'duration': int.parse(duration),
+          'endDate': creationDate + (int.parse(duration) * 3600000),
+          'creationDate': creationDate,
+        }).whenComplete(() {
+          _addInvitedToUsersInChat(chatId, uid);
         });
       });
     }
   }
 
-  _addUsersAroundToFirestore(String chatId, String uid) {
+  _addInvitedToUsersInChat(String chatId, String uid) {
     usersInChatRef
         .document(chatId)
         .collection('invited')

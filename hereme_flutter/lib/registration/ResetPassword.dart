@@ -169,11 +169,11 @@ class _ResetPasswordState extends State<ResetPassword> {
 
   _checkForCompletion() {
     if (emailInput.text.contains("@") && emailInput.text.contains(".")) {
-      setState(() {
+      if (this.mounted) setState(() {
         hideSendButton = false;
       });
     } else {
-      setState(() {
+      if (this.mounted) setState(() {
         hideSendButton = true;
       });
     }
@@ -183,7 +183,7 @@ class _ResetPasswordState extends State<ResetPassword> {
     final FirebaseAuth _auth = FirebaseAuth.instance;
     var succeed = true;
 
-    setState(() {
+    if (this.mounted) setState(() {
       inputErrorText = "";
       showSentText = false;
     });
@@ -192,14 +192,14 @@ class _ResetPasswordState extends State<ResetPassword> {
       int errorLength = error.toString().length;
       String errorToString = error.toString().substring(50, errorLength - 1);
 
-      setState(() {
+      if (this.mounted) setState(() {
         inputErrorText = errorToString;
       });
 
       succeed = false;
     }).whenComplete(() {
-      if(succeed == true) {
-        setState(() {
+      if (succeed == true) {
+        if (this.mounted) setState(() {
           showSentText = true;
           hideSendButton = true;
         });

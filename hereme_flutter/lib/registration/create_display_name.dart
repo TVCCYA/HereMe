@@ -50,7 +50,7 @@ class _CreateDisplayNameState extends State<CreateDisplayName> {
     final g = min + rnd.nextInt(max - min);
     final b = min + rnd.nextInt(bMax - min);
 
-    setState(() {
+    if (this.mounted) setState(() {
       red = r;
       green = g;
       blue = b;
@@ -59,17 +59,17 @@ class _CreateDisplayNameState extends State<CreateDisplayName> {
 
   _isValid() {
     if (displayName.isNotEmpty && displayName.length > 2) {
-      setState(() {
+      if (this.mounted) setState(() {
         _isButtonDisabled = false;
       });
     } else {
-      setState(() {
+      if (this.mounted) setState(() {
         _isButtonDisabled = true;
       });
     }
 
     if (displayName.contains(' ')) {
-      setState(() {
+      if (this.mounted) setState(() {
         _isButtonDisabled = true;
       });
     }
@@ -81,12 +81,12 @@ class _CreateDisplayNameState extends State<CreateDisplayName> {
       snapshot.documents.forEach((doc) {
         final username = doc.data['displayName'];
         if (displayName == username) {
-          setState(() {
+          if (this.mounted) setState(() {
             _isAvailable = false;
             _isButtonDisabled = true;
           });
         } else {
-          setState(() {
+          if (this.mounted) setState(() {
             _isAvailable = true;
           });
         }
@@ -255,7 +255,7 @@ class _CreateDisplayNameState extends State<CreateDisplayName> {
   }
 
   handleAddDisplayName() {
-    setState(() {
+    if (this.mounted) setState(() {
       showSpinner = true;
     });
     usersRef.document(currentUser.uid).updateData({
@@ -264,7 +264,7 @@ class _CreateDisplayNameState extends State<CreateDisplayName> {
       'green': green,
       'blue': blue,
     }).whenComplete(() {
-      setState(() {
+      if (this.mounted) setState(() {
         showSpinner = false;
       });
       kShowSnackbar(

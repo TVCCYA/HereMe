@@ -6,6 +6,7 @@ import 'package:geoflutterfire/geoflutterfire.dart';
 import 'package:hereme_flutter/constants.dart';
 import 'package:hereme_flutter/models/user.dart';
 import 'package:hereme_flutter/widgets/user_result.dart';
+import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'home.dart';
 
 class AllUsersCloseBy extends StatefulWidget {
@@ -22,6 +23,7 @@ class AllUsersCloseBy extends StatefulWidget {
 
 class _AllUsersCloseByState extends State<AllUsersCloseBy> {
   final _scaffoldKey = GlobalKey<ScaffoldState>();
+  RefreshController _refreshController = RefreshController(initialRefresh: false);
   final double latitude;
   final double longitude;
   _AllUsersCloseByState({this.latitude, this.longitude});
@@ -69,7 +71,8 @@ class _AllUsersCloseByState extends State<AllUsersCloseBy> {
           if (currentUser.uid != uid &&
               hasAccountLinked != null &&
               hasAccountLinked &&
-              !currentUser.blockedUids.contains(uid)) {
+              !currentUser.blockedUids.contains(uid) &&
+              uid != adminUid) {
             usersAround.add(displayedUser);
           }
         }
@@ -139,20 +142,40 @@ class _AllUsersCloseByState extends State<AllUsersCloseBy> {
         ),
       ),
       body: SafeArea(
-        child: RefreshIndicator(
+        child: SmartRefresher(
+          enablePullDown: true,
+          header: WaterDropHeader(
+            waterDropColor: Colors.grey[200],
+            idleIcon: Icon(
+              FontAwesomeIcons.user,
+              color: kColorPurple,
+              size: 18.0,
+            ),
+            complete: Icon(
+              FontAwesomeIcons. arrowDown,
+              color: kColorLightGray,
+              size: 20.0,
+            ),
+            failed: Icon(
+              FontAwesomeIcons.times,
+              color: kColorRed,
+              size: 20.0,
+            ),
+          ),
+          controller: _refreshController,
           onRefresh: () async {
             kShowSnackbar(
               key: _scaffoldKey,
               text: 'Your feed will auto update as someone comes within or leaves your vicinity',
               backgroundColor: kColorBlack71,
             );
+            _refreshController.refreshCompleted();
           },
           child: Container(
             height: screenHeight,
             width: screenWidth,
             child: SingleChildScrollView(
               padding: EdgeInsets.only(bottom: 50.0),
-              physics: AlwaysScrollableScrollPhysics(),
               child: streamCloseByUsers(),
             ),
           ),

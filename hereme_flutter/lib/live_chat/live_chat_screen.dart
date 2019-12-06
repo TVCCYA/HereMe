@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -83,7 +82,7 @@ class _LiveChatScreenState extends State<LiveChatScreen> {
     super.initState();
     isHostAnonymous();
     streamUserCountInChat();
-    setState(() {
+    if (this.mounted) setState(() {
       chatIdentifier = chatId;
     });
   }
@@ -102,11 +101,11 @@ class _LiveChatScreenState extends State<LiveChatScreen> {
 
   isHostAnonymous() {
     if (chatHostDisplayName.isEmpty) {
-      setState(() {
+      if (this.mounted) setState(() {
         _hostAnonymous = true;
       });
     } else {
-      setState(() {
+      if (this.mounted) setState(() {
         _hostAnonymous = false;
       });
     }
@@ -114,16 +113,16 @@ class _LiveChatScreenState extends State<LiveChatScreen> {
 
   startedTyping() {
     if (message.isNotEmpty) {
-      setState(() {
+      if (this.mounted) setState(() {
         _hasStartedTyping = true;
       });
       if (message.length > 200) {
-        setState(() {
+        if (this.mounted) setState(() {
           _hasStartedTyping = false;
         });
       }
     } else {
-      setState(() {
+      if (this.mounted) setState(() {
         _hasStartedTyping = false;
       });
     }
@@ -177,7 +176,7 @@ class _LiveChatScreenState extends State<LiveChatScreen> {
       'messageId': messageId,
     }).whenComplete(() {
       liveChatController.clear();
-      setState(() {
+      if (this.mounted) setState(() {
         _hasStartedTyping = false;
       });
     });
@@ -223,11 +222,9 @@ class _LiveChatScreenState extends State<LiveChatScreen> {
       int timeLeft = endDate - DateTime.now().millisecondsSinceEpoch;
       chatEnded = timeLeft <= 0;
       if (chatEnded) {
-        if (this.mounted) {
-          setState(() {
+        if (this.mounted) setState(() {
             hasChatEnded = true;
           });
-        }
       }
     });
   }
@@ -241,15 +238,13 @@ class _LiveChatScreenState extends State<LiveChatScreen> {
         String uid = doc.data['uid'];
         uids.add(uid);
       });
-      if (this.mounted) {
-        setState(() {
+      if (this.mounted) setState(() {
           uids.forEach((i) {
             if (!uidsInChat.contains(i)) {
               this.uidsInChat.add(i);
             }
           });
         });
-      }
       uidsInChat.forEach((uid) {
         usersInChatRef
             .document(chatId)

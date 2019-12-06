@@ -41,6 +41,8 @@ final usersInChatRef = Firestore.instance.collection('usersInChat');
 User currentUser;
 double currentLatitude;
 double currentLongitude;
+final bool isAdmin = currentUser.uid == 'z3Gq1WeepHfoT5HGVIWJo7oDxiX2';
+final String adminUid = 'z3Gq1WeepHfoT5HGVIWJo7oDxiX2';
 
 class Home extends StatefulWidget {
   @override
@@ -97,7 +99,7 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
   handleLoggedIn() async {
     if (await auth.currentUser() != null) {
       await getCurrentUser();
-      setState(() {
+      if (this.mounted) setState(() {
         _isAuth = true;
         pageLoading = false;
       });
@@ -107,7 +109,7 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
           context,
           MaterialPageRoute(builder: (BuildContext context) => InitialPage()),
           (Route<dynamic> route) => false);
-      setState(() {
+      if (this.mounted) setState(() {
         _isAuth = false;
         pageLoading = false;
       });
@@ -170,13 +172,13 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
     await prefs.setString('username', currentUser.username);
     await prefs.setString('profileImageUrl', currentUser.profileImageUrl);
     await prefs.setString('uid', currentUser.uid);
-    setState(() {
+    if (this.mounted) setState(() {
       hideMe = prefs.getBool('hideMe') ?? false;
     });
 
     await getStreamedLocation();
     if (currentUser.hasAccountLinked) {
-      setState(() {
+      if (this.mounted) setState(() {
         _hasAccountLinked = true;
       });
     } else {
@@ -189,7 +191,7 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
     if (currentUser.blockedUserUids != null) {
       currentUser.blockedUserUids.forEach((uid, val) {
         uids.add(uid);
-        setState(() {
+        if (this.mounted) setState(() {
           uids.forEach((i) {
             if (!blockedUids.contains(i)) {
               this.blockedUids.add(i);
@@ -205,14 +207,14 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
         await Geolocator().checkGeolocationPermissionStatus();
 
     if (geolocationStatus != GeolocationStatus.granted || hideMe) {
-      setState(() {
+      if (this.mounted) setState(() {
         _locationLoading = false;
         _locationEnabled = false;
       });
     } else {
       Position position = await Geolocator()
           .getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
-      setState(() {
+      if (this.mounted) setState(() {
         _locationLoading = false;
         _locationEnabled = true;
         latitude = position.latitude;
@@ -229,7 +231,7 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
     geolocationStatus = GeolocationStatus.granted;
 
     if (geolocationStatus != GeolocationStatus.granted) {
-      setState(() {
+      if (this.mounted) setState(() {
         _locationLoading = false;
         _locationEnabled = false;
       });
@@ -241,7 +243,7 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
       positionStream = geolocator
           .getPositionStream(locationOptions)
           .listen((Position newPosition) async {
-        setState(() {
+        if (this.mounted) setState(() {
           _locationLoading = false;
           _locationEnabled = true;
           latitude = newPosition.latitude;
@@ -348,7 +350,8 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
                 hasAccountLinked != null &&
                 hasAccountLinked &&
                 usersAround.length < 4 &&
-                !blockedUids.contains(uid)) {
+                !blockedUids.contains(uid) &&
+                uid != adminUid) {
               usersAround.add(displayedUser);
             }
           }
@@ -381,7 +384,7 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
                       shrinkWrap: true,
                       children: gridTiles,
                     ),
-                    users.length > 4
+                    usersAround.length > 4
                         ? FlatButton.icon(
                             icon: Icon(
                               FontAwesomeIcons.chevronCircleRight,
@@ -515,7 +518,8 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
               duration: kTimeRemaining(timeLeft),
               distanceFromChat: distanceFromChat,
             );
-            if (!blockedUids.contains(hostUid) && chatsAround.length < 3) {
+            if (!blockedUids.contains(hostUid) &&
+                chatsAround.length < 3) {
               chatsAround.add(displayedChat);
             }
           }
@@ -531,7 +535,7 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
                         style: kAppBarTextStyle.copyWith(fontSize: 18.0)),
                   ),
                   Column(children: chatsAround),
-                  chats.length > 3
+                  chatsAround.length > 3
                       ? Align(
                           alignment: Alignment.bottomRight,
                           child: FlatButton.icon(
@@ -784,7 +788,6 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
                   controller: _refreshController,
                   onRefresh: _onRefresh,
                   child: SingleChildScrollView(
-//                      physics: AlwaysScrollableScrollPhysics(),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: <Widget>[
@@ -834,7 +837,7 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
         highlightColor: Colors.transparent,
         onPressed: () {
           kHandleHideMe(_scaffoldKey);
-          setState(() {
+          if (this.mounted) setState(() {
             hideMe = false;
             _locationLoading = true;
           });

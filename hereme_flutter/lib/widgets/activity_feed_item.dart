@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:hereme_flutter/live_chat/live_chat_screen.dart';
 import 'package:hereme_flutter/models/user.dart';
 import 'package:hereme_flutter/registration/create_display_name.dart';
 import 'package:hereme_flutter/utils/custom_image.dart';
+import 'package:hereme_flutter/utils/reusable_bottom_sheet.dart';
 import 'package:hereme_flutter/widgets/user_result.dart';
 import 'package:time_ago_provider/time_ago_provider.dart';
 import '../constants.dart';
@@ -260,23 +262,65 @@ class ActivityFeedItem extends StatelessWidget {
         ),
       ),
       onTap: () {
-        Navigator.push(
-            context,
-            MaterialPageRoute(
-                builder: (context) => currentUser.displayName != null
-                    ? LiveChatScreen(
-                  title: title ?? '',
-                  chatId: chatId,
-                  chatHostDisplayName: chatHostDisplayName ?? '',
-                  chatHostUid: uid ?? '',
-                  hostRed: hostRed ?? 95,
-                  hostGreen: hostGreen ?? 71,
-                  hostBlue: hostBlue ?? 188,
-                  duration: duration,
-                )
-                    : CreateDisplayName()));
+        _liveChatInviteActionSheet(context: context);
       },
     );
+  }
+
+
+  _liveChatInviteActionSheet({BuildContext context}) {
+    List<ReusableBottomActionSheetListTile> sheets = [];
+    sheets.add(
+      ReusableBottomActionSheetListTile(
+        title: 'Ignore',
+        iconData: FontAwesomeIcons.minusCircle,
+        color: kColorRed,
+        onTap: () {
+          _ignoreLiveChat();
+          Navigator.pop(context);
+        },
+      ),
+    );
+    sheets.add(
+      ReusableBottomActionSheetListTile(
+        title: 'Enter Live Chat',
+        iconData: FontAwesomeIcons.commentDots,
+        onTap: () {
+          Navigator.pop(context);
+          Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (context) => currentUser.displayName != null
+                      ? LiveChatScreen(
+                    title: title ?? '',
+                    chatId: chatId,
+                    chatHostDisplayName: chatHostDisplayName ?? '',
+                    chatHostUid: uid ?? '',
+                    hostRed: hostRed ?? 95,
+                    hostGreen: hostGreen ?? 71,
+                    hostBlue: hostBlue ?? 188,
+                    duration: duration,
+                  )
+                      : CreateDisplayName()));
+        },
+      ),
+    );
+    sheets.add(
+      ReusableBottomActionSheetListTile(
+        title: 'Cancel',
+        iconData: FontAwesomeIcons.times,
+        onTap: () => Navigator.pop(context),
+      ),
+    );
+    kActionSheet(context, sheets);
+  }
+
+  _ignoreLiveChat() {
+    activityRef.document(currentUser.uid).collection('feedItems').document(chatId).get().then((snapshot) {
+      if (snapshot.exists) {
+        snapshot.reference.delete();
+      }
+    });
   }
 
   determineFeedItem(context) {

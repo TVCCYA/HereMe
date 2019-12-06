@@ -35,11 +35,11 @@ class _AddRecentState extends State<AddRecent> {
 
   void isValid() {
     if ((url.isNotEmpty && !url.contains(' ') && url.contains('https://')) && title.isNotEmpty && mediaFile != null) {
-      setState(() {
+      if (this.mounted) setState(() {
         _isButtonDisabled = false;
       });
     } else {
-      setState(() {
+      if (this.mounted) setState(() {
         _isButtonDisabled = true;
       });
     }
@@ -236,7 +236,7 @@ class _AddRecentState extends State<AddRecent> {
     await ImagePicker.pickImage(source: ImageSource.gallery).then(
       (profilePic) {
         _cropImage(profilePic);
-        setState(() {
+        if (this.mounted) setState(() {
           showSpinner = false;
         });
       },
@@ -253,7 +253,7 @@ class _AddRecentState extends State<AddRecent> {
       maxWidth: 512,
       maxHeight: 512,
     );
-    setState(() {
+    if (this.mounted) setState(() {
       mediaFile = mediaFile;
       showSpinner = false;
       isValid();
@@ -265,8 +265,9 @@ class _AddRecentState extends State<AddRecent> {
     var succeed = true;
     final filename = Uuid().v4();
 
-    setState(() {
+    if (this.mounted) setState(() {
       showSpinner = true;
+      _isButtonDisabled = true;
     });
     FirebaseUser user = await FirebaseAuth.instance.currentUser();
     final uid = user.uid;
@@ -295,24 +296,24 @@ class _AddRecentState extends State<AddRecent> {
           };
           recentUploadsRef.document(uid).collection('recents').document(filename)
               .setData(photoUrl).whenComplete(() {
-            setState(() {
+            if (this.mounted) setState(() {
               showSpinner = false;
             });
-            kShowSnackbar(
-              key: _scaffoldKey,
-              text: 'Successfully added $title',
-              backgroundColor: kColorGreen,
-            );
-            Future.delayed(Duration(seconds: 2), () => Navigator.pop(context));
+            Navigator.pop(context);
           }).catchError(
-            (e) => kShowAlert(
-                  context: context,
-                  title: 'Upload Failed',
-                  desc:
-                      'Unable to upload your thumbnail image, please try again later',
-                  buttonText: 'Try Again',
-                  onPressed: () => Navigator.pop(context),
-                ),
+            (e) {
+              kShowAlert(
+                context: context,
+                title: 'Upload Failed',
+                desc:
+                'Unable to upload your thumbnail image, please try again later',
+                buttonText: 'Try Again',
+                onPressed: () => Navigator.pop(context),
+              );
+              if (this.mounted) setState(() {
+                _isButtonDisabled = false;
+              });
+            }
           );
         }
       },

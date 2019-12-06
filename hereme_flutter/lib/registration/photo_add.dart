@@ -37,11 +37,11 @@ class _PhotoAddState extends State<PhotoAdd> {
 
   void isValid() {
     if (mediaFile != null) {
-      setState(() {
+      if (this.mounted) setState(() {
         _isButtonDisabled = false;
       });
     } else {
-      setState(() {
+      if (this.mounted) setState(() {
         _isButtonDisabled = true;
       });
     }
@@ -77,7 +77,7 @@ class _PhotoAddState extends State<PhotoAdd> {
               valueColor: AlwaysStoppedAnimation<Color>(kColorPurple),
             ),
             child: Padding(
-              padding: const EdgeInsets.all(24.0),
+              padding: EdgeInsets.all(24.0),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 crossAxisAlignment: CrossAxisAlignment.center,
@@ -87,7 +87,7 @@ class _PhotoAddState extends State<PhotoAdd> {
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius:
-                          BorderRadius.all(const Radius.circular(10.0)),
+                          BorderRadius.all(Radius.circular(10.0)),
                       boxShadow: [
                         BoxShadow(
                           color: Colors.grey[800],
@@ -110,7 +110,10 @@ class _PhotoAddState extends State<PhotoAdd> {
                           Text(
                             'Choose a Profile Image',
                             textAlign: TextAlign.center,
-                            style: kRegistrationPurpleTextStyle,
+                            style: kAppBarTextStyle.copyWith(
+                              fontSize: 26.0,
+                              color: kColorPurple,
+                            ),
                           ),
                           mediaFile != null
                               ? ReusableCard(
@@ -168,7 +171,7 @@ class _PhotoAddState extends State<PhotoAdd> {
     await ImagePicker.pickImage(source: ImageSource.gallery).then(
       (profilePic) {
         _cropImage(profilePic);
-        setState(() {
+        if (this.mounted) setState(() {
           showSpinner = false;
         });
       },
@@ -180,11 +183,11 @@ class _PhotoAddState extends State<PhotoAdd> {
       (profilePic) {
         if (profilePic != null) {
           _cropImage(profilePic);
-          setState(() {
+          if (this.mounted) setState(() {
             showSpinner = false;
           });
         } else {
-          setState(() {
+          if (this.mounted) setState(() {
             showSpinner = false;
           });
         }
@@ -197,13 +200,13 @@ class _PhotoAddState extends State<PhotoAdd> {
     final FirebaseStorage _storage = FirebaseStorage.instance;
     var succeed = true;
 
-    setState(() {
+    if (this.mounted) setState(() {
       showSpinner = true;
     });
     FirebaseUser user = await FirebaseAuth.instance.currentUser();
     final uid = user.uid;
     StorageUploadTask uploadFile =
-    _storage.ref().child('profile_images/$uid').putFile(mediaFile);
+    _storage.ref().child('profile_images_flutter/$uid').putFile(mediaFile);
 
     uploadFile.onComplete.catchError((error) {
       print(error);
@@ -213,7 +216,7 @@ class _PhotoAddState extends State<PhotoAdd> {
         if (succeed == true) {
           final downloadUrl = await _storage
               .ref()
-              .child('profile_images')
+              .child('profile_images_flutter')
               .child(uid)
               .getDownloadURL();
 
@@ -225,7 +228,7 @@ class _PhotoAddState extends State<PhotoAdd> {
           ref.document(uid)
               .updateData(photoUrl).whenComplete(() {
             print('Recent Upload Added');
-            setState(() {
+            if (this.mounted) setState(() {
               showSpinner = false;
             });
             Navigator.pushAndRemoveUntil(context,
@@ -262,7 +265,7 @@ class _PhotoAddState extends State<PhotoAdd> {
       maxWidth: 512,
       maxHeight: 512,
     );
-    setState(() {
+    if (this.mounted) setState(() {
       mediaFile = mediaFile;
       showSpinner = false;
       isValid();

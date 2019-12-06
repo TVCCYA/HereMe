@@ -28,7 +28,7 @@ class _InitialPageState extends State<InitialPage> {
               crossAxisAlignment: CrossAxisAlignment.center,
               children: <Widget>[
                 Container(
-                  height: 250.0,
+                  height: 225.0,
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.all(const Radius.circular(10.0)),
@@ -51,10 +51,10 @@ class _InitialPageState extends State<InitialPage> {
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: <Widget>[
                         Text(
-                          'Welcome to HereMe',
+                          'HereMe',
                           textAlign: TextAlign.center,
                           style: kAppBarTextStyle.copyWith(
-                            fontSize: 26.0,
+                            fontSize: 28.0,
                             color: kColorPurple,
                           ),
                         ),
@@ -63,6 +63,7 @@ class _InitialPageState extends State<InitialPage> {
                           textAlign: TextAlign.center,
                           style: kDefaultTextStyle.copyWith(
                             color: kColorPurple,
+                            fontSize: 18.0
                           ),
                         ),
                         SizedBox(

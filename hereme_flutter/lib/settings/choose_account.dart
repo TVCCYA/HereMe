@@ -11,52 +11,62 @@ class ChooseAccount extends StatefulWidget {
 }
 
 class _ChooseAccountState extends State<ChooseAccount> {
+  final _scaffoldKey = GlobalKey<ScaffoldState>();
 
   List<SocialMedias> allMedias = [
     SocialMedias(
-        platform: 'Instagram',
-        icon: 'images/SocialMedias/instagram120.png',
-        color: kColorInstagramColor),
+      platform: 'Instagram',
+      icon: 'images/SocialMedias/instagram120.png',
+      color: kColorInstagram,
+    ),
     SocialMedias(
         platform: 'Snapchat',
         icon: 'images/SocialMedias/snapchat120.png',
-        color: kColorSnapchatColor),
+        color: kColorSnapchat),
     SocialMedias(
-        platform: 'Twitter',
-        icon: 'images/SocialMedias/twitter120.png',
-        color: kColorTwitterColor),
+        platform: 'TikTok',
+        icon: 'images/SocialMedias/tiktok120.png',
+        color: kColorTikTok),
     SocialMedias(
         platform: 'YouTube',
         icon: 'images/SocialMedias/youtube120.png',
-        color: kColorYoutubeColor),
+        color: kColorYoutube),
     SocialMedias(
-        platform: 'Reddit',
-        icon: 'images/SocialMedias/reddit120.png',
-        color: kColorRedditColor),
-    SocialMedias(
-        platform: 'Twitch',
-        icon: 'images/SocialMedias/twitch120.png',
-        color: kColorTwitchColor),
-    SocialMedias(
-        platform: 'SoundCloud',
-        icon: 'images/SocialMedias/soundcloud120.png',
-        color: kColorSoundcloudColor),
-    SocialMedias(
-        platform: 'Venmo',
-        icon: 'images/SocialMedias/venmo120.png',
-        color: kColorVenmoColor),
-    SocialMedias(
-        platform: 'Spotify',
-        icon: 'images/SocialMedias/spotify120.png',
-        color: kColorSpotifyColor),
-    SocialMedias(
-        platform: 'Tumblr',
-        icon: 'images/SocialMedias/tumblr120.png',
-        color: kColorTumblrColor),
+        platform: 'Twitter',
+        icon: 'images/SocialMedias/twitter120.png',
+        color: kColorTwitter),
     SocialMedias(
         platform: 'Facebook',
         icon: 'images/SocialMedias/facebook120.png',
-        color: kColorFacebookColor),
+        color: kColorFacebook),
+    SocialMedias(
+        platform: 'Reddit',
+        icon: 'images/SocialMedias/reddit120.png',
+        color: kColorReddit),
+    SocialMedias(
+        platform: 'Twitch',
+        icon: 'images/SocialMedias/twitch120.png',
+        color: kColorTwitch),
+    SocialMedias(
+        platform: 'Venmo',
+        icon: 'images/SocialMedias/venmo120.png',
+        color: kColorVenmo),
+    SocialMedias(
+        platform: 'Tumblr',
+        icon: 'images/SocialMedias/tumblr120.png',
+        color: kColorTumblr),
+    SocialMedias(
+        platform: 'Pinterest',
+        icon: 'images/SocialMedias/pinterest120.png',
+        color: kColorPinterest),
+    SocialMedias(
+        platform: 'SoundCloud',
+        icon: 'images/SocialMedias/soundcloud120.png',
+        color: kColorSoundcloud),
+    SocialMedias(
+        platform: 'Spotify',
+        icon: 'images/SocialMedias/spotify120.png',
+        color: kColorSpotify),
     SocialMedias(
         platform: 'Your Website',
         icon: 'images/SocialMedias/website.png',
@@ -68,7 +78,9 @@ class _ChooseAccountState extends State<ChooseAccount> {
     allMedias.forEach((media) {
       gridTiles.add(GridTile(
           child: SocialMediaTile(
-              socialMedia: media)));
+        socialMedia: media,
+        scaffoldKey: _scaffoldKey,
+      )));
     });
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -92,6 +104,7 @@ class _ChooseAccountState extends State<ChooseAccount> {
     final double screenWidth = MediaQuery.of(context).size.width;
     final double screenHeight = MediaQuery.of(context).size.height;
     return Scaffold(
+      key: _scaffoldKey,
       backgroundColor: kColorOffWhite,
       appBar: AppBar(
         centerTitle: true,
@@ -129,23 +142,30 @@ class _ChooseAccountState extends State<ChooseAccount> {
 class SocialMediaTile extends StatelessWidget {
   final SocialMedias socialMedia;
   final Function onTap;
-  SocialMediaTile({this.socialMedia, this.onTap});
+  final GlobalKey<ScaffoldState> scaffoldKey;
+  SocialMediaTile({this.socialMedia, this.onTap, this.scaffoldKey});
 
   @override
   Widget build(BuildContext context) {
     return FlatButton(
       padding: EdgeInsets.all(0),
       splashColor: socialMedia.color.withOpacity(0.1),
-      onPressed: () => Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => AddLink(
-            platform: socialMedia.platform,
-            color: socialMedia.color,
-            icon: socialMedia.icon,
-          ),
-        ),
-      ),
+      onPressed: () async {
+        final result = await Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => AddLink(
+                platform: socialMedia.platform,
+                color: socialMedia.color,
+                icon: socialMedia.icon,
+              ),
+            ));
+        kShowSnackbar(
+          key: scaffoldKey,
+          text: '$result',
+          backgroundColor: kColorGreen,
+        );
+      },
       child: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
@@ -158,21 +178,22 @@ class SocialMediaTile extends StatelessWidget {
           ),
         ),
         child: Align(
-            alignment: Alignment.bottomLeft,
-            child: Padding(
-              padding: EdgeInsets.all(4.0),
-              child: Text(
-                socialMedia.platform,
-                style: kDefaultTextStyle.copyWith(
-                  fontSize: 18.0,
-                  color: socialMedia.platform != 'Snapchat' &&
-                          socialMedia.platform != 'Your Website'
-                      ? Colors.white
-                      : kColorBlack71,
-                  fontWeight: FontWeight.bold,
-                ),
+          alignment: Alignment.bottomLeft,
+          child: Padding(
+            padding: EdgeInsets.all(4.0),
+            child: Text(
+              socialMedia.platform,
+              style: kDefaultTextStyle.copyWith(
+                fontSize: 18.0,
+                color: socialMedia.platform != 'Snapchat' &&
+                        socialMedia.platform != 'Your Website' &&
+                        socialMedia.platform != 'TikTok'
+                    ? Colors.white
+                    : kColorBlack71,
+                fontWeight: FontWeight.bold,
               ),
             ),
+          ),
         ),
       ),
     );

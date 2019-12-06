@@ -3,8 +3,6 @@ import 'dart:io';
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_google_ad_manager/ad_size.dart';
-import 'package:flutter_google_ad_manager/banner.dart';
 import 'package:hereme_flutter/live_chat/live_chat.dart';
 import 'package:hereme_flutter/live_chat/live_chat_screen.dart';
 import 'package:hereme_flutter/settings//recents/add_recents.dart';
@@ -16,7 +14,6 @@ import 'package:hereme_flutter/models/recent_upload.dart';
 import 'package:hereme_flutter/models/user.dart';
 import 'package:hereme_flutter/registration/create_display_name.dart';
 import 'package:hereme_flutter/settings/choose_account.dart';
-import 'package:hereme_flutter/user_profile/profile_image_full_screen.dart';
 import 'package:hereme_flutter/utils/reusable_profile_card.dart';
 import 'package:hereme_flutter/widgets/activity_feed_item.dart';
 import 'package:image_picker/image_picker.dart';
@@ -85,8 +82,7 @@ class _ProfileState extends State<Profile> {
 
   updateCurrentUserCounts() async {
     usersRef.document(currentUserUid).snapshots().listen((doc) {
-      if (this.mounted) {
-        setState(() {
+      if (this.mounted) setState(() {
           weeklyVisitsCount = doc.data['weeklyVisitsCount'];
           totalVisitsCount = doc.data['totalVisitsCount'];
 
@@ -94,7 +90,6 @@ class _ProfileState extends State<Profile> {
               NumberFormat.compact().format(weeklyVisitsCount);
           displayedTotalCount = NumberFormat.compact().format(totalVisitsCount);
         });
-      }
     });
   }
 
@@ -552,14 +547,12 @@ class _ProfileState extends State<Profile> {
                                     return ReusableBottomActionSheetListTile(
                                       iconData: FontAwesomeIcons.upload,
                                       title: 'Add Recent',
-                                      onTap: () {
-                                        Navigator.push(
+                                      onTap: () => Navigator.push(
                                           context,
                                           MaterialPageRoute(
                                               builder: (BuildContext context) =>
                                                   AddRecent()),
-                                        );
-                                      },
+                                        ),
                                     );
                                   }
                                 },
@@ -1057,7 +1050,8 @@ class _ProfileState extends State<Profile> {
     }
     List<ReusableBottomActionSheetListTile> sheets = [];
     _isCurrentUser
-        ? sheets.add(ReusableBottomActionSheetListTile(
+        ? sheets.add(
+        ReusableBottomActionSheetListTile(
             title: 'Unlink $accountUsername',
             iconData: FontAwesomeIcons.unlink,
             color: kColorRed,
@@ -1076,7 +1070,7 @@ class _ProfileState extends State<Profile> {
                 color: kColorRed,
               );
             },
-          ))
+          ),)
         : SizedBox();
     sheets.add(
       ReusableBottomActionSheetListTile(
@@ -1444,7 +1438,7 @@ class _ProfileState extends State<Profile> {
     await ImagePicker.pickImage(source: ImageSource.gallery).then(
       (profilePic) {
         _cropImage(profilePic);
-        setState(() {
+        if (this.mounted) setState(() {
           showSpinner = false;
         });
       },
@@ -1456,11 +1450,11 @@ class _ProfileState extends State<Profile> {
       (profilePic) {
         if (profilePic != null) {
           _cropImage(profilePic);
-          setState(() {
+          if (this.mounted)  setState(() {
             showSpinner = false;
           });
         } else {
-          setState(() {
+          if (this.mounted) setState(() {
             showSpinner = false;
           });
         }
@@ -1470,11 +1464,9 @@ class _ProfileState extends State<Profile> {
 
   _determinePage() async {
     if (currentUserUid == user.uid) {
-      if (this.mounted) {
-        setState(() {
+        if (this.mounted) setState(() {
           _isCurrentUser = true;
         });
-      }
       _getCurrentUserData();
     } else if (user.username != null) {
       _getOtherUserData();
@@ -1486,8 +1478,7 @@ class _ProfileState extends State<Profile> {
   _getUserPageInfo() async {
     await usersRef.document(user.uid).get().then((doc) {
       User user = User.fromDocument(doc);
-      if (this.mounted) {
-        setState(() {
+      if (this.mounted) setState(() {
           _isCurrentUser = false;
           userUid = user.uid;
           username = user.username;
@@ -1503,7 +1494,6 @@ class _ProfileState extends State<Profile> {
               NumberFormat.compact().format(weeklyVisitsCount);
           displayedTotalCount = NumberFormat.compact().format(totalVisitsCount);
         });
-      }
       usersRef.document(userUid).updateData({
         'weeklyVisitsCount': user.weeklyVisitsCount + 1,
         'totalVisitsCount': user.totalVisitsCount + 1,
@@ -1513,8 +1503,7 @@ class _ProfileState extends State<Profile> {
   }
 
   _getOtherUserData() {
-    if (this.mounted) {
-      setState(() {
+    if (this.mounted) setState(() {
         _isCurrentUser = false;
         userUid = user.uid;
         username = user.username;
@@ -1529,7 +1518,6 @@ class _ProfileState extends State<Profile> {
         displayedWeeklyCount = NumberFormat.compact().format(weeklyVisitsCount);
         displayedTotalCount = NumberFormat.compact().format(totalVisitsCount);
       });
-    }
     usersRef.document(userUid).updateData({
       'weeklyVisitsCount': user.weeklyVisitsCount + 1,
       'totalVisitsCount': user.totalVisitsCount + 1,
@@ -1558,8 +1546,7 @@ class _ProfileState extends State<Profile> {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String url = prefs.getString('profileImageUrl');
     String name = prefs.getString('username');
-    if (this.mounted) {
-      setState(() {
+    if (this.mounted) setState(() {
         profileImageUrl = url;
         username = name;
         displayName = currentUser.displayName;
@@ -1567,7 +1554,6 @@ class _ProfileState extends State<Profile> {
         green = currentUser.green;
         blue = currentUser.blue;
       });
-    }
   }
 
   _savePhotoSharedPref(String downloadUrl) async {
@@ -1593,13 +1579,13 @@ class _ProfileState extends State<Profile> {
     final FirebaseStorage _storage = FirebaseStorage.instance;
     var succeed = true;
 
-    setState(() {
+    if (this.mounted) setState(() {
       showSpinner = true;
     });
     FirebaseUser user = await FirebaseAuth.instance.currentUser();
     final uid = user.uid;
     StorageUploadTask uploadFile =
-        _storage.ref().child('profile_images/$uid').putFile(profilePic);
+        _storage.ref().child('profile_images_flutter/$uid').putFile(profilePic);
 
     uploadFile.onComplete.catchError((error) {
       print(error);
@@ -1608,7 +1594,7 @@ class _ProfileState extends State<Profile> {
       if (succeed == true) {
         final downloadUrl = await _storage
             .ref()
-            .child('profile_images')
+            .child('profile_images_flutter')
             .child(uid)
             .getDownloadURL();
 
@@ -1620,7 +1606,7 @@ class _ProfileState extends State<Profile> {
 
         userReference.document(uid).updateData(photoUrl).whenComplete(() {
           print('User Photo Added');
-          setState(() {
+          if (this.mounted) setState(() {
             profileImageUrl = downloadUrl;
             showSpinner = false;
           });
@@ -1678,6 +1664,10 @@ class _ProfileState extends State<Profile> {
       retMap = {'Facebook': url};
     } else if (icon.contains('website')) {
       retMap = {'Your Website': url};
+    } else if (icon.contains('tiktok')) {
+      retMap = {'TikTok': url};
+    } else if (icon.contains('pinterest')) {
+      retMap = {'Pinterest': url};
     } else {
       retMap = {'Browser': url};
     }

@@ -10,13 +10,13 @@ exports.onCreateActivityFeedItem = functions.firestore
         const userId = context.params.userId;
         const userRef = admin.firestore().doc(`users/${userId}`);
         const doc = await userRef.get();
+        const username = doc.data().username;
 
         // 2) Once we have user, check if they have a notification token;
         // send notification if they have a token
         const androidNotificationToken = doc.data().androidNotificationToken;
         const activityFeedItem = snapshot.data();
-        const hostDisplayName = snapshot.data()["hostDisplayName"];
-        const username = doc.data().username;
+        const hostDisplayName = snapshot.data().hostDisplayName;
 
         if (androidNotificationToken) {
             sendNotification(androidNotificationToken, activityFeedItem);
@@ -27,15 +27,14 @@ exports.onCreateActivityFeedItem = functions.firestore
         function sendNotification(androidNotificationToken, activityFeedItem) {
             let body;
 
-            switch (activityFeedItem.type) {
-                case "liveChatInvite":
-                    body = `${hostDisplayName} invited you to their Live Chat: ${activityFeedItem.title}`;
-                    break;
-                case "liveChatMessage":
-                    break;
-                default:
-                    break;
+            if (activityFeedItem.type === "liveChatInvite") {
+                if (hostDisplayName !== '') {
+                    body = `${hostDisplayName} invited you to their Live Chat: ${activityFeedItem.title}!`;
+                } else {
+                    body = `You have been anonymously invited to Live Chat: ${activityFeedItem.title}`
+                }
             }
+
             // 4) Create message for push notification
             const message = {
                 notification: {body},
@@ -45,8 +44,7 @@ exports.onCreateActivityFeedItem = functions.firestore
 
             // 5) Send message with admin.messaging()
             admin.messaging().send(message).then(response => {
-                // Response is a message ID string
-                console.log(`${hostDisplayName} successfully invited ${username} to chat: ${activityFeedItem.title}`, response);
+                console.log(`${hostDisplayName} sent message to ${username}`, response);
             }).catch(error => {
                 console.log("Error sending message: ", error);
             })
@@ -88,7 +86,6 @@ exports.onCreateKnock = functions.firestore
 
             // 5) Send message with admin.messaging()
             admin.messaging().send(message).then(response => {
-                // Response is a message ID string
                 console.log(`${knockData.username} Successfully sent message to ${username}`, response);
             }).catch(error => {
                 console.log("Error sending message ", error);

@@ -33,7 +33,7 @@ class _SignUpState extends State<SignUp> {
     if (email.isNotEmpty &&
         password.isNotEmpty &&
         firstName.isNotEmpty) {
-      setState(() {
+      if (this.mounted) setState(() {
         _termsHidden = false;
       });
     }
@@ -44,11 +44,11 @@ class _SignUpState extends State<SignUp> {
         password.isNotEmpty &&
         firstName.isNotEmpty &&
         _agreed == true) {
-      setState(() {
+      if (this.mounted) setState(() {
         _isButtonDisabled = false;
       });
     } else {
-      setState(() {
+      if (this.mounted) setState(() {
         _isButtonDisabled = true;
       });
     }
@@ -201,7 +201,7 @@ class _SignUpState extends State<SignUp> {
                         activeColor: kColorPurple,
                         value: _agreed,
                         onChanged: (value) {
-                          setState(() {
+                          if (this.mounted) setState(() {
                             _agreed = value;
                           });
                           _isValid();
@@ -263,7 +263,7 @@ class _SignUpState extends State<SignUp> {
     if (_isButtonDisabled) {
       return;
     } else {
-      setState(() {
+      if (this.mounted) setState(() {
         showSpinner = true;
       });
       try {
@@ -272,11 +272,11 @@ class _SignUpState extends State<SignUp> {
         if (newUser != null) {
           _saveUserFirebase();
         }
-        setState(() {
+        if (this.mounted) setState(() {
           showSpinner = false;
         });
       } catch (e) {
-        setState(() {
+        if (this.mounted) setState(() {
           showSpinner = false;
         });
         kShowAlert(
@@ -299,7 +299,7 @@ class _SignUpState extends State<SignUp> {
     final userReference = Firestore.instance.collection('users').document(uid);
 
     Map<String, dynamic> signUpUserData = <String, dynamic>{
-      'username': firstName,
+      'username': firstName.trim(),
       'uid': uid,
       'weeklyVisitsCount': 0,
       'totalVisitsCount': 0,
@@ -311,7 +311,7 @@ class _SignUpState extends State<SignUp> {
       _saveUserSharedPref();
       Navigator.push(
         context,
-        MaterialPageRoute(builder: (context) => new PhotoAdd(uid: uid)),
+        MaterialPageRoute(builder: (context) => PhotoAdd(uid: uid)),
       );
     }).catchError((e) => print(e));
   }

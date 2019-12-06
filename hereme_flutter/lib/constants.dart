@@ -19,19 +19,20 @@ const kColorRed = Color.fromRGBO(188, 71, 89, 1.0);
 const kColorThistle = Color.fromRGBO(197, 188, 230, 1.0);
 const kColorDarkThistle = Color.fromRGBO(164, 150, 216, 1.0);
 // SOCIAL MEDIA COLORS
-const kColorInstagramColor = Color.fromRGBO(185, 0, 180, 1.0);
-const kColorSnapchatColor = Color.fromRGBO(255, 252, 0, 1.0);
-const kColorTwitterColor = Color.fromRGBO(29, 161, 242, 1.0);
-const kColorFacebookColor = Color.fromRGBO(21, 120, 242, 1.0);
-const kColorYoutubeColor = Color.fromRGBO(255, 0, 0, 1.0);
-const kColorSoundcloudColor = Color.fromRGBO(255, 136, 0, 1.0);
-const kColorPinterestColor = Color.fromRGBO(189, 8, 28, 1.0);
-const kColorSpotifyColor = Color.fromRGBO(30, 215, 96, 1.0);
-const kColorVenmoColor = Color.fromRGBO(61, 149, 206, 1.0);
-const kColorTumblrColor = Color.fromRGBO(53, 70, 92, 1.0);
-const kColorRedditColor = Color.fromRGBO(255, 69, 0, 1.0);
-const kColorLinkedInColor = Color.fromRGBO(0, 119, 181, 1.0);
-const kColorTwitchColor = Color.fromRGBO(145, 70, 255, 1.0);
+const kColorInstagram = Color.fromRGBO(185, 0, 180, 1.0);
+const kColorSnapchat = Color.fromRGBO(255, 252, 0, 1.0);
+const kColorTwitter = Color.fromRGBO(29, 161, 242, 1.0);
+const kColorFacebook = Color.fromRGBO(21, 120, 242, 1.0);
+const kColorYoutube = Color.fromRGBO(255, 0, 0, 1.0);
+const kColorSoundcloud = Color.fromRGBO(255, 136, 0, 1.0);
+const kColorPinterest = Color.fromRGBO(230, 0, 35, 1.0);
+const kColorSpotify = Color.fromRGBO(30, 215, 96, 1.0);
+const kColorVenmo = Color.fromRGBO(61, 149, 206, 1.0);
+const kColorTumblr = Color.fromRGBO(53, 70, 92, 1.0);
+const kColorReddit = Color.fromRGBO(255, 69, 0, 1.0);
+const kColorLinkedIn = Color.fromRGBO(0, 119, 181, 1.0);
+const kColorTwitch = Color.fromRGBO(145, 70, 255, 1.0);
+const kColorTikTok = Color.fromRGBO(0, 242, 234, 1.0);
 
 ThemeData kTheme(BuildContext context) {
   return Theme.of(context).copyWith(
@@ -286,6 +287,14 @@ String kIconPath(String socialMedia) {
     case 'your websiteUsername':
       {
         return 'images/SocialMedias/website.png';
+      }
+    case 'tiktokUsername':
+      {
+        return 'images/SocialMedias/tiktok120.png';
+      }
+    case 'pinterestUsername':
+      {
+        return 'images/SocialMedias/pinterest120.png';
       }
     default:
       {

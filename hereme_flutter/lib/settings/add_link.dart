@@ -45,27 +45,27 @@ class _AddLinkState extends State<AddLink> {
     if (platform == 'YouTube' ||
         platform == 'Facebook' ||
         platform == 'Your Website' ||
-        platform == 'SoundCloud') {
+        platform == 'SoundCloud' ||
+        platform == 'Pinterest') {
       if (username.isNotEmpty &&
-          !username.contains(' ') &&
           url.isNotEmpty &&
           !url.contains(' ') &&
           url.contains('https://')) {
-        setState(() {
+        if (this.mounted) setState(() {
           _isButtonDisabled = false;
         });
       } else {
-        setState(() {
+        if (this.mounted) setState(() {
           _isButtonDisabled = true;
         });
       }
     } else {
       if (username.isNotEmpty && !username.contains(' ')) {
-        setState(() {
+        if (this.mounted) setState(() {
           _isButtonDisabled = false;
         });
       } else {
-        setState(() {
+        if (this.mounted) setState(() {
           _isButtonDisabled = true;
         });
       }
@@ -131,23 +131,23 @@ class _AddLinkState extends State<AddLink> {
                   },
                   focusNode: _usernameName,
                   onSubmitted: (v) {
-                    if (username.contains(' ')) {
-                      kShowSnackbar(
-                          key: _scaffoldKey,
-                          text: 'Username cannot contain spaces',
-                          backgroundColor: kColorRed
-                      );
+                    if (platform == 'YouTube' ||
+                        platform == 'Facebook' ||
+                        platform == 'Your Website' ||
+                        platform == 'SoundCloud' ||
+                        platform == 'Pinterest') {
+                      FocusScope.of(context).requestFocus(_urlNode);
                     } else {
-                      if (platform == 'YouTube' ||
-                          platform == 'Facebook' ||
-                          platform == 'Your Website' ||
-                          platform == 'SoundCloud') {
-                        FocusScope.of(context).requestFocus(_urlNode);
-                      } else {
-                        _isButtonDisabled
-                            ? print('disabled')
-                            : _addLinkToFirebase();
+                      if (username.contains(' ')) {
+                        kShowSnackbar(
+                            key: _scaffoldKey,
+                            text: 'Username cannot contain spaces',
+                            backgroundColor: kColorRed
+                        );
                       }
+                      _isButtonDisabled
+                          ? print('disabled')
+                          : _addLinkToFirebase();
                     }
                   },
                   autocorrect: false,
@@ -173,7 +173,8 @@ class _AddLinkState extends State<AddLink> {
                 platform == 'YouTube' ||
                         platform == 'Facebook' ||
                         platform == 'Your Website' ||
-                        platform == 'SoundCloud'
+                        platform == 'SoundCloud' ||
+                        platform == 'Pinterest'
                     ? TextField(
                         cursorColor: kColorPurple,
                         onChanged: (value) {
@@ -231,14 +232,8 @@ class _AddLinkState extends State<AddLink> {
                       if (platform == 'YouTube' ||
                           platform == 'Facebook' ||
                           platform == 'Your Website' ||
-                          platform == 'SoundCloud') {
-                        if (username.contains(' ')) {
-                          kShowSnackbar(
-                              key: _scaffoldKey,
-                              text: 'Username cannot contain spaces',
-                              backgroundColor: kColorRed
-                          );
-                        }
+                          platform == 'SoundCloud' ||
+                          platform == 'Pinterest') {
                         if (url.contains(' ')) {
                           kShowSnackbar(
                               key: _scaffoldKey,
@@ -320,6 +315,10 @@ class _AddLinkState extends State<AddLink> {
       retMap = {'facebook': _urlController.text.trim()};
     } else if (platform == 'Your Website') {
       retMap = {'your website': _urlController.text.trim()};
+    } else if (platform == 'TikTok') {
+      retMap = {'tiktok': 'https://www.tiktok.com/@$username'};
+    } else if (platform == 'Pinterest') {
+      retMap = {'pinterest': _urlController.text.trim()};
     } else {
       retMap = {'Unavailable': _urlController.text.trim()};
     }
@@ -353,12 +352,7 @@ class _AddLinkState extends State<AddLink> {
         'hasAccountLinked': true,
       });
     }).whenComplete(() {
-      kShowSnackbar(
-        key: _scaffoldKey,
-        text: 'Successfully linked $username',
-        backgroundColor: kColorGreen,
-      );
-      Future.delayed(Duration(seconds: 2), () => Navigator.pop(context));
+      Navigator.pop(context, 'Successfully linked $username');
     });
   }
 }

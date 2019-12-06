@@ -67,7 +67,7 @@ class SupportPage extends StatelessWidget {
           onTap: () => showResetPasswordAlert(context),
         ),
         InkWell(
-          onTap: () => _deleteAlert(context),
+          onTap: () => isAdmin ? _resetWeeklyViews() : _deleteAlert(context),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.start,
             children: <Widget>[
@@ -77,7 +77,7 @@ class SupportPage extends StatelessWidget {
                 height: 50.0,
                 child: Center(
                   child: Text(
-                    'Delete HereMe Account',
+                    isAdmin ? 'Reset Weekly Views' : 'Delete HereMe Account',
                     style: kAppBarTextStyle.copyWith(
                         color: Colors.white, fontSize: 16.0),
                     textAlign: TextAlign.center,
@@ -89,6 +89,25 @@ class SupportPage extends StatelessWidget {
         ),
       ]),
     );
+  }
+
+  _resetWeeklyViews() {
+    usersRef.getDocuments().then((snapshot) {
+      snapshot.documents.forEach((doc) {
+        if (doc.exists) {
+          final uid = doc.data['uid'];
+          usersRef.document(uid).updateData({
+            'weeklyVisitsCount': 0,
+          });
+        }
+      });
+    }).whenComplete(() {
+      kShowSnackbar(
+        key: _scaffoldKey,
+        text: 'Good work there bud',
+        backgroundColor: kColorGreen,
+      );
+    });
   }
 
   _nameChangeAlert(BuildContext context) async {
