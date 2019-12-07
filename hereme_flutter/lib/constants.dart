@@ -36,7 +36,7 @@ const kColorTikTok = Color.fromRGBO(0, 242, 234, 1.0);
 
 ThemeData kTheme(BuildContext context) {
   return Theme.of(context).copyWith(
-    accentColor: kColorBlue,
+    accentColor: kColorPurple,
     unselectedWidgetColor: kColorLightGray,
     dividerColor: Colors.grey[200],
     highlightColor: Colors.transparent,
@@ -512,11 +512,18 @@ void kShowSnackbar(
   key.currentState.showSnackBar(snackbar);
 }
 
+void kUpdateHideMe(bool val) {
+  userLocationsRef.document(currentUser.uid).updateData({
+    'hideMe': val
+  });
+}
+
 void kHandleHideMe(GlobalKey<ScaffoldState> key) async {
   SharedPreferences prefs = await SharedPreferences.getInstance();
   bool hideMe = prefs.getBool('hideMe') ?? false;
   if (!hideMe) {
     await prefs.setBool('hideMe', true);
+    kUpdateHideMe(true);
     kShowSnackbar(
       key: key,
       text: 'Hide Me Active: you will not be seen by people nearby, and you cannot see any content nearby',
@@ -524,6 +531,7 @@ void kHandleHideMe(GlobalKey<ScaffoldState> key) async {
     );
   } else {
     await prefs.setBool('hideMe', false);
+    kUpdateHideMe(false);
     kShowSnackbar(
       key: key,
       text: 'Hide Me Disabled',

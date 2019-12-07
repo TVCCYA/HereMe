@@ -59,7 +59,7 @@ class _AddLiveChatState extends State<AddLiveChat> {
   @override
   void initState() {
     super.initState();
-    getUsersAround();
+    if (currentLatitude != null) getUsersAround();
   }
 
   getUsersAround() {
@@ -103,23 +103,6 @@ class _AddLiveChatState extends State<AddLiveChat> {
         }
       }
     });
-  }
-
-  what() {
-//    String userId;
-//    if (usersAroundUid.isNotEmpty) {
-//      usersAroundUid.forEach((uid) {
-//        userId = uid;
-//      });
-//      print(userId ?? 'nah');
-//      print(usersAroundUid);
-//    }
-    for (var i in usersAroundUid.getRange(0, usersAroundUid.length)) {
-      print(i);
-    }
-//    usersAroundUid.forEach((uid) {
-//      print(uid);
-//    });
   }
 
   @override
@@ -291,7 +274,7 @@ class _AddLiveChatState extends State<AddLiveChat> {
                       alignment: Alignment.topRight,
                       child: FlatButton.icon(
                         onPressed: () {
-                          _isButtonDisabled ? what() : _uploadChatToFirebase();
+                          _isButtonDisabled ? print('disabled') : _uploadChatToFirebase();
                         },
                         splashColor: _isButtonDisabled
                             ? Colors.transparent

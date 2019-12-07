@@ -276,6 +276,7 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
       'profileImageUrl': currentUser.profileImageUrl,
       'uid': currentUser.uid,
       'hasAccountLinked': _hasAccountLinked,
+      'hideMe': hideMe,
     });
   }
 
@@ -338,7 +339,8 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
           for (var user in users) {
             final imageUrl = user.data['profileImageUrl'];
             final uid = user.data['uid'];
-            final hasAccountLinked = user.data['hasAccountLinked'];
+            final bool hasAccountLinked = user.data['hasAccountLinked'];
+            final bool hideMe = user.data['hideMe'];
 
             final displayedUser = User(
               profileImageUrl: imageUrl,
@@ -347,6 +349,7 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
             );
 
             if (currentUser.uid != uid &&
+                !hideMe &&
                 hasAccountLinked != null &&
                 hasAccountLinked &&
                 usersAround.length < 4 &&
