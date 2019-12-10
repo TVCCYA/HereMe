@@ -387,7 +387,7 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
                       shrinkWrap: true,
                       children: gridTiles,
                     ),
-                    usersAround.length > 4
+                    users.length > 4
                         ? FlatButton.icon(
                             icon: Icon(
                               FontAwesomeIcons.chevronCircleRight,
@@ -538,7 +538,7 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
                         style: kAppBarTextStyle.copyWith(fontSize: 18.0)),
                   ),
                   Column(children: chatsAround),
-                  chatsAround.length > 3
+                  chats.length > 3
                       ? Align(
                           alignment: Alignment.bottomRight,
                           child: FlatButton.icon(
