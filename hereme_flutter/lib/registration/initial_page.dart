@@ -50,6 +50,7 @@ class _InitialPageState extends State<InitialPage> {
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: <Widget>[
+                        SizedBox(height: 4.0),
                         Text(
                           'HereMe',
                           textAlign: TextAlign.center,

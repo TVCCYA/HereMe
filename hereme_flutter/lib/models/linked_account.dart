@@ -32,7 +32,7 @@ class LinkedAccount extends StatelessWidget {
             softWrap: false,
             style: kDefaultTextStyle.copyWith(
               fontSize: 12.0,
-              color: kColorBlue,
+              color: kColorThistle,
             ),
           ),
           leading: Image.asset(

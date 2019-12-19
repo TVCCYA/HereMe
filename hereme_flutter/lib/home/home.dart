@@ -11,8 +11,10 @@ import 'package:geoflutterfire/geoflutterfire.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:hereme_flutter/home/all_live_chats_close_by.dart';
 import 'package:hereme_flutter/home/all_users_close_by.dart';
+import 'package:hereme_flutter/live_chat/add_live_chat.dart';
 import 'package:hereme_flutter/live_chat/live_chat_result.dart';
 import 'package:hereme_flutter/models/user.dart';
+import 'package:hereme_flutter/registration/create_display_name.dart';
 import 'package:hereme_flutter/registration/photo_add.dart';
 import 'package:hereme_flutter/settings/choose_account.dart';
 import 'package:hereme_flutter/user_profile/profile.dart';
@@ -289,9 +291,9 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
               Padding(
                 padding: EdgeInsets.only(
                     left: 8.0, top: 12.0, bottom: 8.0, right: 8.0),
-                child: Text('People Close By',
+                child: Text('See People Nearby',
                     style: kAppBarTextStyle.copyWith(
-                        fontSize: 18.0, fontWeight: FontWeight.w400)),
+                        fontSize: 16.0)),
               ),
               Container(
                 height: 75.0,
@@ -371,8 +373,8 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
                 Padding(
                   padding: EdgeInsets.only(
                       left: 8.0, top: 12.0, bottom: 8.0, right: 8.0),
-                  child: Text('People Close By',
-                      style: kAppBarTextStyle.copyWith(fontSize: 18.0)),
+                  child: Text('People Nearby',
+                      style: kAppBarTextStyle.copyWith(fontSize: 16.0)),
                 ),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
@@ -392,6 +394,7 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
                             icon: Icon(
                               FontAwesomeIcons.chevronCircleRight,
                               color: kColorBlack71,
+                              size: 20.0,
                             ),
                             // use
                             onPressed: () => Navigator.push(
@@ -534,8 +537,8 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
                   Padding(
                     padding: EdgeInsets.only(
                         left: 8.0, top: 12.0, bottom: 8.0, right: 8.0),
-                    child: Text('Live Chats Close By',
-                        style: kAppBarTextStyle.copyWith(fontSize: 18.0)),
+                    child: Text('Live Chats Nearby',
+                        style: kAppBarTextStyle.copyWith(fontSize: 16.0)),
                   ),
                   Column(children: chatsAround),
                   chats.length > 3
@@ -545,6 +548,7 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
                             icon: Icon(
                               FontAwesomeIcons.chevronCircleRight,
                               color: kColorBlack71,
+                              size: 20.0,
                             ),
                             // use
                             onPressed: () => Navigator.push(
@@ -568,14 +572,37 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
               ),
             );
           } else {
-            return Container(
-              height: 75.0,
-              child: Center(
-                child: Text(
-                  'No Live Chats Nearby',
-                  style: kAppBarTextStyle,
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Padding(
+                  padding: EdgeInsets.only(
+                      left: 8.0, top: 12.0, bottom: 8.0, right: 8.0),
+                  child: Text('No Live Chats',
+                      style: kAppBarTextStyle.copyWith(
+                          fontSize: 16.0, color: kColorRed)),
                 ),
-              ),
+                Container(
+                  height: 75.0,
+                  child: Center(
+                    child: ReusableBottomActionSheetListTile(
+                      iconData: FontAwesomeIcons.comments,
+                      title: 'Create Live Chat',
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) =>
+                              currentUser.displayName !=
+                                  null
+                                  ? AddLiveChat()
+                                  : CreateDisplayName()),
+                        );
+                      },
+                    ),
+                  ),
+                ),
+              ],
             );
           }
         });
@@ -624,9 +651,10 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
               Padding(
-                padding: EdgeInsets.all(8.0),
+                padding: EdgeInsets.only(
+                    left: 8.0, top: 12.0, bottom: 8.0, right: 8.0),
                 child: Text('Most Viewed This Week',
-                    style: kAppBarTextStyle.copyWith(fontSize: 18.0)),
+                    style: kAppBarTextStyle.copyWith(fontSize: 16.0)),
               ),
               Container(
                 height: 150,
@@ -694,9 +722,10 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
               Padding(
-                padding: EdgeInsets.all(8.0),
+                padding: EdgeInsets.only(
+                    left: 8.0, top: 12.0, bottom: 8.0, right: 8.0),
                 child: Text('Top Viewed All Time',
-                    style: kAppBarTextStyle.copyWith(fontSize: 18.0)),
+                    style: kAppBarTextStyle.copyWith(fontSize: 16.0)),
               ),
               Container(
                 height: 150.0,
@@ -744,7 +773,7 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
           textAlign: TextAlign.left,
           style: kAppBarTextStyle.copyWith(
             color: kColorPurple,
-            fontSize: 26.0,
+            fontSize: 25.0,
           ),
         ),
         automaticallyImplyLeading: false,
@@ -794,7 +823,6 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: <Widget>[
-                        SizedBox(height: 4.0),
                         buildTopViewed(),
                         Divider(color: Colors.grey[300]),
                         Center(

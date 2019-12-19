@@ -290,8 +290,9 @@ class _LiveChatScreenState extends State<LiveChatScreen> {
                             : TextSpan(
                                 text: chatHostDisplayName,
                                 style: kAppBarTextStyle.copyWith(
+                                  fontSize: 16.0,
                                   color: Color.fromRGBO(hostRed ?? 95,
-                                      hostGreen ?? 71, hostBlue ?? 188, 1.0),
+                                      hostGreen ?? 71, hostBlue ?? 188, 1.0,),
                                 )),
                       ],
                     ),

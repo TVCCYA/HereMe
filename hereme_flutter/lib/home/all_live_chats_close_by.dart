@@ -107,7 +107,7 @@ class _AllLiveChatsCloseByState extends State<AllLiveChatsCloseBy> {
                         left: 8.0, top: 12.0, bottom: 8.0, right: 8.0),
                     child: Text('All Live Chats Within 1 Mile',
                         style: kAppBarTextStyle.copyWith(
-                            fontSize: 18.0)),
+                            fontSize: 16.0)),
                   ),
                   Column(children: chatsAround),
                 ],

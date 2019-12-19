@@ -16,6 +16,7 @@ import 'package:hereme_flutter/registration/create_display_name.dart';
 import 'package:hereme_flutter/settings/choose_account.dart';
 import 'package:hereme_flutter/utils/reusable_profile_card.dart';
 import 'package:hereme_flutter/widgets/activity_feed_item.dart';
+import 'package:hereme_flutter/widgets/user_result.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -873,6 +874,19 @@ class _ProfileState extends State<Profile> {
     );
     sheets.add(
       ReusableBottomActionSheetListTile(
+        title: 'Visit Profile',
+        iconData: FontAwesomeIcons.doorOpen,
+        onTap: () {
+          Navigator.pop(context);
+          User user = User(uid: uid);
+          UserResult result = UserResult(
+              user: user, locationLabel: 'Around');
+          result.toProfile(context);
+        },
+      ),
+    );
+    sheets.add(
+      ReusableBottomActionSheetListTile(
         title: 'Cancel',
         iconData: FontAwesomeIcons.times,
         onTap: () => Navigator.pop(context),
@@ -1028,6 +1042,19 @@ class _ProfileState extends State<Profile> {
         onTap: () {
           _removePendingKnock(uid, currentUserUid);
           Navigator.pop(context);
+        },
+      ),
+    );
+    sheets.add(
+      ReusableBottomActionSheetListTile(
+        title: 'Visit Profile',
+        iconData: FontAwesomeIcons.doorOpen,
+        onTap: () {
+          Navigator.pop(context);
+          User user = User(uid: uid);
+          UserResult result = UserResult(
+              user: user, locationLabel: 'Around');
+          result.toProfile(context);
         },
       ),
     );
@@ -1714,7 +1741,7 @@ class ReusableSectionLabel extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.only(top: 24.0, bottom: 12.0),
-      child: Text(title, style: kAppBarTextStyle),
+      child: Text(title, style: kAppBarTextStyle.copyWith(fontSize: 16.0)),
     );
   }
 }
