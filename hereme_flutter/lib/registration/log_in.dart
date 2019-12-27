@@ -59,7 +59,7 @@ class _LogInState extends State<LogIn> {
           "Welcome Back",
           textAlign: TextAlign.left,
           style: kAppBarTextStyle.copyWith(
-            color: kColorPurple,
+            color: kColorRed,
           ),
         ),
         leading: IconButton(
@@ -76,7 +76,7 @@ class _LogInState extends State<LogIn> {
         child: ModalProgressHUD(
           inAsyncCall: showSpinner,
           progressIndicator: CircularProgressIndicator(
-            valueColor: AlwaysStoppedAnimation<Color>(kColorPurple),
+            valueColor: AlwaysStoppedAnimation<Color>(kColorRed),
           ),
           child: GestureDetector(
             behavior: HitTestBehavior.translucent,
@@ -92,7 +92,7 @@ class _LogInState extends State<LogIn> {
                   Column(
                     children: <Widget>[
                       TextField(
-                        cursorColor: kColorPurple,
+                        cursorColor: kColorRed,
                         onChanged: (value) {
                           email = value;
                           isTextFieldValid();
@@ -124,7 +124,7 @@ class _LogInState extends State<LogIn> {
                       SizedBox(height: 8.0),
                       TextField(
                         obscureText: true,
-                        cursorColor: kColorPurple,
+                        cursorColor: kColorRed,
                         onChanged: (value) {
                           password = value;
                           isTextFieldValid();
@@ -189,7 +189,7 @@ class _LogInState extends State<LogIn> {
                                 textInputAction: TextInputAction.send,
                                 autofocus: true,
                                 style: kDefaultTextStyle,
-                                cursorColor: kColorPurple,
+                                cursorColor: kColorRed,
                                 decoration:
                                 kRegistrationInputDecoration
                                     .copyWith(
@@ -245,14 +245,14 @@ class _LogInState extends State<LogIn> {
                             size: 30.0,
                             color: _isButtonDisabled
                                 ? kColorLightGray
-                                : kColorPurple,
+                                : kColorRed,
                           ),
                           label: Text(
                             _isButtonDisabled ? 'Not Done' : 'Log In',
                             style: kDefaultTextStyle.copyWith(
                                 color: _isButtonDisabled
                                     ? kColorLightGray
-                                    : kColorPurple),
+                                    : kColorRed),
                           ),
                         ),
                       ),

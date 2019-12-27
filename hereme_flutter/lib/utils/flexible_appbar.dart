@@ -65,7 +65,7 @@ class FlexibleAppBar extends StatelessWidget {
                                           children: <Widget>[
                                             Icon(
                                               FontAwesomeIcons.mapMarkerAlt,
-                                              color: kColorPurple,
+                                              color: kColorRed,
                                               size: 14.0,
                                             ),
                                             SizedBox(width: 4.0),

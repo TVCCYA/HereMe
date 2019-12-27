@@ -137,7 +137,7 @@ class _AddLiveChatState extends State<AddLiveChat> {
             child: ModalProgressHUD(
               inAsyncCall: showSpinner,
               progressIndicator: CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(kColorPurple),
+                valueColor: AlwaysStoppedAnimation<Color>(kColorRed),
               ),
               child: GestureDetector(
                 behavior: HitTestBehavior.translucent,
@@ -156,7 +156,7 @@ class _AddLiveChatState extends State<AddLiveChat> {
                             TextSpan(
                               text: '${usersAround.length}' ?? 0,
                               style: kAppBarTextStyle.copyWith(
-                                  color: kColorPurple, fontSize: 16.0),
+                                  color: kColorRed, fontSize: 16.0),
                             ),
                             TextSpan(
                               text: usersAround.length == 1
@@ -170,7 +170,7 @@ class _AddLiveChatState extends State<AddLiveChat> {
                       ),
                     ),
                     TextField(
-                      cursorColor: kColorPurple,
+                      cursorColor: kColorRed,
                       maxLength: 20,
                       onChanged: (value) {
                         title = value;
@@ -201,7 +201,7 @@ class _AddLiveChatState extends State<AddLiveChat> {
                     ),
                     SizedBox(height: 8.0),
                     TextField(
-                      cursorColor: kColorPurple,
+                      cursorColor: kColorRed,
                       onChanged: (value) {
                         duration = value;
                         isValid();
@@ -259,7 +259,7 @@ class _AddLiveChatState extends State<AddLiveChat> {
                           style: kAppBarTextStyle.copyWith(fontSize: 16.0),
                         ),
                         Checkbox(
-                          activeColor: kColorPurple,
+                          activeColor: kColorRed,
                           value: _isAnonymousChecked,
                           onChanged: (value) {
                             if (this.mounted)
@@ -287,14 +287,14 @@ class _AddLiveChatState extends State<AddLiveChat> {
                           size: 30.0,
                           color: _isButtonDisabled
                               ? kColorLightGray
-                              : kColorPurple,
+                              : kColorRed,
                         ),
                         label: Text(
                           _isButtonDisabled ? 'Not Done' : 'Start Chat',
                           style: kDefaultTextStyle.copyWith(
                               color: _isButtonDisabled
                                   ? kColorLightGray
-                                  : kColorPurple),
+                                  : kColorRed),
                         ),
                       ),
                     ),

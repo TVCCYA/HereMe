@@ -132,7 +132,7 @@ class _CreateDisplayNameState extends State<CreateDisplayName> {
           "Change Username",
           textAlign: TextAlign.left,
           style: kAppBarTextStyle.copyWith(
-            color: kColorPurple,
+            color: kColorRed,
           ),
         ),
         leading: IconButton(
@@ -149,7 +149,7 @@ class _CreateDisplayNameState extends State<CreateDisplayName> {
         child: ModalProgressHUD(
           inAsyncCall: showSpinner,
           progressIndicator: CircularProgressIndicator(
-            valueColor: AlwaysStoppedAnimation<Color>(kColorPurple),
+            valueColor: AlwaysStoppedAnimation<Color>(kColorRed),
           ),
           child: SafeArea(
             child: GestureDetector(
@@ -165,7 +165,7 @@ class _CreateDisplayNameState extends State<CreateDisplayName> {
                   children: <Widget>[
                     TextField(
                       maxLength: 16,
-                      cursorColor: kColorPurple,
+                      cursorColor: kColorRed,
                       onChanged: (value) {
                         displayName = value;
                         _isNameAvailable();
@@ -233,14 +233,14 @@ class _CreateDisplayNameState extends State<CreateDisplayName> {
                           size: 30.0,
                           color: _isButtonDisabled
                               ? kColorLightGray
-                              : kColorPurple,
+                              : kColorRed,
                         ),
                         label: Text(
                           _isButtonDisabled ? 'Not Done' : 'Done',
                           style: kDefaultTextStyle.copyWith(
                               color: _isButtonDisabled
                                   ? kColorLightGray
-                                  : kColorPurple),
+                                  : kColorRed),
                         ),
                       ),
                     ),

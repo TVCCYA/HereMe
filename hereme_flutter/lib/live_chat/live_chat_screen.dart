@@ -506,7 +506,7 @@ class _LiveChatScreenState extends State<LiveChatScreen> {
                                 Expanded(
                                   child: TextField(
                                     style: kDefaultTextStyle,
-                                    cursorColor: kColorPurple,
+                                    cursorColor: kColorRed,
                                     controller: liveChatController,
                                     onChanged: (value) {
                                       message = value;

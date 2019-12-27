@@ -56,14 +56,14 @@ class _InitialPageState extends State<InitialPage> {
                           textAlign: TextAlign.center,
                           style: kAppBarTextStyle.copyWith(
                             fontSize: 28.0,
-                            color: kColorPurple,
+                            color: kColorRed,
                           ),
                         ),
                         Text(
                           'Connect with people nearby',
                           textAlign: TextAlign.center,
                           style: kDefaultTextStyle.copyWith(
-                            color: kColorPurple,
+                            color: kColorRed,
                             fontSize: 18.0
                           ),
                         ),
@@ -87,7 +87,7 @@ class _InitialPageState extends State<InitialPage> {
                             Container(
                               width: 1.0,
                               height: 40.0,
-                              color: kColorPurple,
+                              color: kColorRed,
                             ),
                             ReusableButton(
                               title: 'Sign Up',

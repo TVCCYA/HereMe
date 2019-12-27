@@ -148,7 +148,7 @@ class _AllUsersCloseByState extends State<AllUsersCloseBy> {
             waterDropColor: Colors.grey[200],
             idleIcon: Icon(
               FontAwesomeIcons.user,
-              color: kColorPurple,
+              color: kColorRed,
               size: 18.0,
             ),
             complete: Icon(

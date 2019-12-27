@@ -1399,7 +1399,7 @@ class _ProfileState extends State<Profile> {
       ReusableBottomActionSheetListTile(
         iconData: FontAwesomeIcons.cog,
         title: 'View Settings',
-        color: kColorPurple,
+        color: kColorRed,
         onTap: () {
           Navigator.pop(context);
           Navigator.push(
@@ -1719,13 +1719,6 @@ class ReusableContentContainer extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.all(const Radius.circular(10.0)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey[100],
-            blurRadius: 3.0,
-            spreadRadius: 0.0,
-          )
-        ],
       ),
       child: Column(children: content),
     );

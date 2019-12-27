@@ -86,7 +86,7 @@ class LiveChatResult extends StatelessWidget {
               distanceFromChat < 0.16 ? Icon(
                 FontAwesomeIcons.mapMarkerAlt,
                 size: 12.0,
-                color: kColorPurple,
+                color: kColorRed,
               ) : Icon(
                 FontAwesomeIcons.searchLocation,
                 size: 12.0,

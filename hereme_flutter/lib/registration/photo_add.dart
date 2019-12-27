@@ -74,7 +74,7 @@ class _PhotoAddState extends State<PhotoAdd> {
           child: ModalProgressHUD(
             inAsyncCall: showSpinner,
             progressIndicator: CircularProgressIndicator(
-              valueColor: AlwaysStoppedAnimation<Color>(kColorPurple),
+              valueColor: AlwaysStoppedAnimation<Color>(kColorRed),
             ),
             child: Padding(
               padding: EdgeInsets.all(24.0),
@@ -112,7 +112,7 @@ class _PhotoAddState extends State<PhotoAdd> {
                             textAlign: TextAlign.center,
                             style: kAppBarTextStyle.copyWith(
                               fontSize: 26.0,
-                              color: kColorPurple,
+                              color: kColorRed,
                             ),
                           ),
                           mediaFile != null
@@ -141,7 +141,7 @@ class _PhotoAddState extends State<PhotoAdd> {
                                 size: 30.0,
                                 color: _isButtonDisabled
                                     ? kColorLightGray
-                                    : kColorPurple,
+                                    : kColorRed,
                               ),
                               label: Text(
                                 _isButtonDisabled
@@ -150,7 +150,7 @@ class _PhotoAddState extends State<PhotoAdd> {
                                 style: kDefaultTextStyle.copyWith(
                                     color: _isButtonDisabled
                                         ? kColorLightGray
-                                        : kColorPurple),
+                                        : kColorRed),
                               ),
                             ),
                           ),

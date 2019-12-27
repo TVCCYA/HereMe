@@ -769,10 +769,10 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
         elevation: 2.0,
         backgroundColor: kColorOffWhite,
         title: Text(
-          hideMe ? 'HideMe' : 'HereMe',
+          hideMe ? 'HideMe' : 'Spred',
           textAlign: TextAlign.left,
           style: kAppBarTextStyle.copyWith(
-            color: kColorPurple,
+            color: kColorRed,
             fontSize: 25.0,
           ),
         ),
@@ -803,7 +803,7 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
                     waterDropColor: Colors.grey[200],
                     idleIcon: Icon(
                       FontAwesomeIcons.mapMarkerAlt,
-                      color: kColorPurple,
+                      color: kColorRed,
                       size: 18.0,
                     ),
                     complete: Icon(

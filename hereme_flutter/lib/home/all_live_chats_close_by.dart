@@ -158,7 +158,7 @@ class _AllLiveChatsCloseByState extends State<AllLiveChatsCloseBy> {
             waterDropColor: Colors.grey[200],
             idleIcon: Icon(
               FontAwesomeIcons.commentDots,
-              color: kColorPurple,
+              color: kColorRed,
               size: 18.0,
             ),
             complete: Icon(

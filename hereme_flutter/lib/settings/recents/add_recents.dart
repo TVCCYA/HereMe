@@ -88,7 +88,7 @@ class _AddRecentState extends State<AddRecent> {
             child: ModalProgressHUD(
               inAsyncCall: showSpinner,
               progressIndicator: CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(kColorPurple),
+                valueColor: AlwaysStoppedAnimation<Color>(kColorRed),
               ),
               child: GestureDetector(
                 behavior: HitTestBehavior.translucent,
@@ -211,14 +211,14 @@ class _AddRecentState extends State<AddRecent> {
                           size: 30.0,
                           color: _isButtonDisabled
                               ? kColorLightGray
-                              : kColorPurple,
+                              : kColorRed,
                         ),
                         label: Text(
                           _isButtonDisabled ? 'Not Done' : 'Add Recent',
                           style: kDefaultTextStyle.copyWith(
                               color: _isButtonDisabled
                                   ? kColorLightGray
-                                  : kColorPurple),
+                                  : kColorRed),
                         ),
                       ),
                     ),

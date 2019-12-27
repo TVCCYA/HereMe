@@ -66,7 +66,7 @@ class _SignUpState extends State<SignUp> {
           "Create Account",
           textAlign: TextAlign.left,
           style: kAppBarTextStyle.copyWith(
-            color: kColorPurple,
+            color: kColorRed,
           ),
         ),
         leading: IconButton(
@@ -83,7 +83,7 @@ class _SignUpState extends State<SignUp> {
         child: ModalProgressHUD(
           inAsyncCall: showSpinner,
           progressIndicator: CircularProgressIndicator(
-            valueColor: AlwaysStoppedAnimation<Color>(kColorPurple),
+            valueColor: AlwaysStoppedAnimation<Color>(kColorRed),
           ),
           child: GestureDetector(
             behavior: HitTestBehavior.translucent,
@@ -97,7 +97,7 @@ class _SignUpState extends State<SignUp> {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: <Widget>[
                   TextField(
-                    cursorColor: kColorPurple,
+                    cursorColor: kColorRed,
                     onChanged: (value) {
                       email = value;
                       _isValid();
@@ -129,7 +129,7 @@ class _SignUpState extends State<SignUp> {
                   ),
                   SizedBox(height: 8.0),
                   TextField(
-                    cursorColor: kColorPurple,
+                    cursorColor: kColorRed,
                     onChanged: (value) {
                       firstName = value;
                       _isValid();
@@ -162,7 +162,7 @@ class _SignUpState extends State<SignUp> {
                   SizedBox(height: 8.0),
                   TextField(
                     obscureText: true,
-                    cursorColor: kColorPurple,
+                    cursorColor: kColorRed,
                     onChanged: (value) {
                       password = value;
                       _isValid();
@@ -198,7 +198,7 @@ class _SignUpState extends State<SignUp> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: <Widget>[
                       Checkbox(
-                        activeColor: kColorPurple,
+                        activeColor: kColorRed,
                         value: _agreed,
                         onChanged: (value) {
                           if (this.mounted) setState(() {
@@ -237,7 +237,7 @@ class _SignUpState extends State<SignUp> {
                         size: 30.0,
                         color: _isButtonDisabled
                             ? kColorLightGray
-                            : kColorPurple,
+                            : kColorRed,
                       ),
                       label: Text(
                         _isButtonDisabled
@@ -246,7 +246,7 @@ class _SignUpState extends State<SignUp> {
                         style: kDefaultTextStyle.copyWith(
                             color: _isButtonDisabled
                                 ? kColorLightGray
-                                : kColorPurple),
+                                : kColorRed),
                       ),
                     ),
                   ),

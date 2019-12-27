@@ -34,7 +34,7 @@ class ReusableRegistrationTextField extends StatelessWidget {
       autofocus: true,
       focusNode: focusNode,
       onSubmitted: onSubmitted,
-      cursorColor: kColorPurple,
+      cursorColor: kColorRed,
       keyboardType: keyboardType,
       style: kDefaultTextStyle.copyWith(color: color ?? kColorBlack71),
       autocorrect: false,
@@ -45,7 +45,7 @@ class ReusableRegistrationTextField extends StatelessWidget {
         hintStyle: kDefaultTextStyle.copyWith(color: kColorLightGray),
         icon: Icon(
           icon,
-          color: kColorPurple,
+          color: kColorRed,
         ),
       ),
     );

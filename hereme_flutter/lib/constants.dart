@@ -6,18 +6,17 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:rflutter_alert/rflutter_alert.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'home/home.dart';
+const kColorRed = Color.fromRGBO(201, 62, 62, 1.0);
+const kColorBlue = Color.fromRGBO(91, 117, 212, 1.0);
+const kColorGreen = Color.fromRGBO(62, 201, 62, 1.0);
 
-const kColorPurple = Color.fromRGBO(95, 71, 188, 1.0);
-const kColorBlue = Color.fromRGBO(71, 106, 188, 1.0);
-const kColorGreen = Color.fromRGBO(71, 188, 153, 1.0);
-
-const kColorBlack71 = Color.fromRGBO(71, 71, 71, 1.0);
+const kColorBlack71 = Color.fromRGBO(47, 47, 46, 1.0);
 const kColorOffWhite = Color.fromRGBO(245, 245, 245, 1.0);
 const kColorOffBlack = Color.fromRGBO(11, 8, 19, 1.0);
-const kColorLightGray = Color.fromRGBO(188, 188, 188, 1.0);
-const kColorRed = Color.fromRGBO(188, 71, 89, 1.0);
-const kColorThistle = Color.fromRGBO(197, 188, 230, 1.0);
-const kColorDarkThistle = Color.fromRGBO(164, 150, 216, 1.0);
+const kColorLightGray = Color.fromRGBO(171, 171, 171, 1.0);
+const kColorExtraLightGray = Color.fromRGBO(234, 234, 234, 1.0);
+const kColorThistle = Color.fromRGBO(228, 162, 162, 1.0);
+const kColorDarkThistle = Color.fromRGBO(215, 115, 115, 1.0);
 // SOCIAL MEDIA COLORS
 const kColorInstagram = Color.fromRGBO(185, 0, 180, 1.0);
 const kColorSnapchat = Color.fromRGBO(255, 252, 0, 1.0);
@@ -36,11 +35,11 @@ const kColorTikTok = Color.fromRGBO(0, 242, 234, 1.0);
 
 ThemeData kTheme(BuildContext context) {
   return Theme.of(context).copyWith(
-    accentColor: kColorPurple,
+    accentColor: kColorBlack71,
     unselectedWidgetColor: kColorLightGray,
-    dividerColor: Colors.grey[200],
+    dividerColor: kColorExtraLightGray,
     highlightColor: Colors.transparent,
-    splashColor: Colors.grey[200],
+    splashColor: kColorExtraLightGray,
   );
 }
 
@@ -222,7 +221,7 @@ void kActionSheet(context, sheets) {
 }
 
 const kRegistrationPurpleTextStyle = TextStyle(
-  color: kColorPurple,
+  color: kColorRed,
   fontSize: 32.0,
   fontFamily: 'Berlin-Sans',
 );
@@ -308,7 +307,7 @@ Container circularProgress() {
     alignment: Alignment.center,
     padding: EdgeInsets.only(top: 10.0),
     child: CircularProgressIndicator(
-      valueColor: AlwaysStoppedAnimation(kColorPurple),
+      valueColor: AlwaysStoppedAnimation(kColorRed),
       backgroundColor: kColorLightGray,
     ),
   );
@@ -318,7 +317,7 @@ Container linearProgress() {
   return Container(
     padding: EdgeInsets.all(10.0),
     child: LinearProgressIndicator(
-      valueColor: AlwaysStoppedAnimation(kColorPurple),
+      valueColor: AlwaysStoppedAnimation(kColorRed),
       backgroundColor: kColorLightGray,
     ),
   );
