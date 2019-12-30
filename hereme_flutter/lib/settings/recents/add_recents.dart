@@ -72,7 +72,7 @@ class _AddRecentState extends State<AddRecent> {
               Navigator.pop(context);
             },
             color: kColorBlack71,
-            splashColor: Colors.grey[200],
+            splashColor: kColorExtraLightGray,
             highlightColor: Colors.transparent,
           ),
           title: Text(
@@ -202,7 +202,7 @@ class _AddRecentState extends State<AddRecent> {
                         },
                         splashColor: _isButtonDisabled
                             ? Colors.transparent
-                            : Colors.grey[200],
+                            : kColorExtraLightGray,
                         highlightColor: Colors.transparent,
                         icon: Icon(
                           _isButtonDisabled

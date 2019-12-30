@@ -86,14 +86,14 @@ class LiveChat extends StatelessWidget {
             softWrap: false,
             style: kDefaultTextStyle.copyWith(
               fontSize: 12.0,
-              color: kColorRed,
+              color: kColorLightGray,
             ),
           ),
           onTap: onTap,
         ),
         Padding(
-          padding: const EdgeInsets.only(left: 12.0),
-          child: Container(height: 0.5, color: Colors.grey[100]),
+          padding: EdgeInsets.only(left: 12.0),
+          child: Container(height: 0.5, color: kColorExtraLightGray),
         )
       ],
     );

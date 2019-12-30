@@ -145,7 +145,7 @@ class _AllLiveChatsCloseByState extends State<AllLiveChatsCloseBy> {
             Navigator.pop(context);
           },
           color: kColorBlack71,
-          splashColor: Colors.grey[200],
+          splashColor: kColorExtraLightGray,
           highlightColor: Colors.transparent,
         ),
       ),
@@ -155,7 +155,7 @@ class _AllLiveChatsCloseByState extends State<AllLiveChatsCloseBy> {
           child: SmartRefresher(
           enablePullDown: true,
           header: WaterDropHeader(
-            waterDropColor: Colors.grey[200],
+            waterDropColor: kColorExtraLightGray,
             idleIcon: Icon(
               FontAwesomeIcons.commentDots,
               color: kColorRed,

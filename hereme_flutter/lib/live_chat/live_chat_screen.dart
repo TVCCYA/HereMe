@@ -324,7 +324,7 @@ class _LiveChatScreenState extends State<LiveChatScreen> {
         ),
         Container(
           height: 1.0,
-          color: Colors.grey[200],
+          color: kColorExtraLightGray,
         )
       ],
     );
@@ -449,7 +449,7 @@ class _LiveChatScreenState extends State<LiveChatScreen> {
         title: FlatButton(
           onPressed: () => _settingsActionSheet(context),
           child: Text(title, style: kAppBarTextStyle),
-          splashColor: Colors.grey[200],
+          splashColor: kColorExtraLightGray,
           highlightColor: Colors.transparent,
         ),
         backgroundColor: Colors.white,
@@ -460,7 +460,7 @@ class _LiveChatScreenState extends State<LiveChatScreen> {
             Navigator.pop(context);
           },
           color: kColorBlack71,
-          splashColor: Colors.grey[200],
+          splashColor: kColorExtraLightGray,
           highlightColor: Colors.transparent,
         ),
         actions: <Widget>[
@@ -470,7 +470,7 @@ class _LiveChatScreenState extends State<LiveChatScreen> {
               child: Text(
                 duration,
                 style:
-                    kAppBarTextStyle.copyWith(color: kColorRed, fontSize: 16.0),
+                    kAppBarTextStyle.copyWith(color: kColorLightGray, fontSize: 16.0),
               ),
             ),
           ),
@@ -497,7 +497,7 @@ class _LiveChatScreenState extends State<LiveChatScreen> {
                             decoration: BoxDecoration(
                               border: Border(
                                 top: BorderSide(
-                                    color: Colors.grey[200], width: 2.0),
+                                    color: kColorExtraLightGray, width: 2.0),
                               ),
                             ),
                             child: Row(
@@ -556,7 +556,7 @@ class _LiveChatScreenState extends State<LiveChatScreen> {
                                                   FontAwesomeIcons
                                                       .chevronCircleRight,
                                                   color: kColorBlack71),
-                                              splashColor: Colors.grey[200],
+                                              splashColor: kColorExtraLightGray,
                                               highlightColor:
                                                   Colors.transparent,
                                               iconSize: 20.0,

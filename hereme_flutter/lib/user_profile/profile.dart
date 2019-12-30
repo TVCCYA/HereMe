@@ -5,12 +5,10 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:hereme_flutter/live_chat/live_chat.dart';
 import 'package:hereme_flutter/live_chat/live_chat_screen.dart';
-import 'package:hereme_flutter/settings//recents/add_recents.dart';
 import 'package:hereme_flutter/constants.dart';
 import 'package:hereme_flutter/live_chat/add_live_chat.dart';
 import 'package:hereme_flutter/models/knock.dart';
 import 'package:hereme_flutter/models/linked_account.dart';
-import 'package:hereme_flutter/models/recent_upload.dart';
 import 'package:hereme_flutter/models/user.dart';
 import 'package:hereme_flutter/registration/create_display_name.dart';
 import 'package:hereme_flutter/settings/choose_account.dart';
@@ -55,6 +53,7 @@ class _ProfileState extends State<Profile> {
 
   bool showSpinner = false;
   bool _isCurrentUser = false;
+  bool _isFollowing = false;
   String username;
   String displayName;
   String userUid;
@@ -83,7 +82,8 @@ class _ProfileState extends State<Profile> {
 
   updateCurrentUserCounts() async {
     usersRef.document(currentUserUid).snapshots().listen((doc) {
-      if (this.mounted) setState(() {
+      if (this.mounted)
+        setState(() {
           weeklyVisitsCount = doc.data['weeklyVisitsCount'];
           totalVisitsCount = doc.data['totalVisitsCount'];
 
@@ -125,8 +125,8 @@ class _ProfileState extends State<Profile> {
                           Navigator.pop(context);
                         },
                         color: kColorBlack71,
-                        splashColor: Colors.transparent,
-                        highlightColor: Colors.grey[200],
+                        splashColor: kColorExtraLightGray,
+                        highlightColor: Colors.transparent,
                       ),
                       actions: <Widget>[
                         IconButton(
@@ -137,10 +137,13 @@ class _ProfileState extends State<Profile> {
                                 ? _quickSettings()
                                 : _reportBlockSettings();
                           },
+                          splashColor: kColorExtraLightGray,
+                          highlightColor: Colors.transparent,
                         )
                       ],
                       elevation: 2.0,
-                      expandedHeight: topProfileContainerHeight + 50.0,
+                      expandedHeight: !_isCurrentUser ? topProfileContainerHeight + 110.0
+                          : topProfileContainerHeight + 75,
                       title: Text(
                         username != null ? username : '',
                         style: kAppBarTextStyle,
@@ -154,14 +157,13 @@ class _ProfileState extends State<Profile> {
                           topProfileContainerHeight: topProfileContainerHeight,
                           weeklyVisitsCount: displayedWeeklyCount,
                           totalVisitsCount: displayedTotalCount,
-                          locationLabel: _isCurrentUser
-                              ? 'Here'
-                              : locationLabel ?? 'Around',
+                          locationLabel: locationLabel ?? 'Around',
                           displayName: displayName,
                           red: red,
                           green: green,
                           blue: blue,
                           isCurrentUser: _isCurrentUser,
+                          isFollowing: _isFollowing,
                         ),
                       ),
                     ),
@@ -169,661 +171,527 @@ class _ProfileState extends State<Profile> {
                 ),
               ];
             },
-            body: SafeArea(
-              child: Theme(
-                data: kTheme(context),
-                child: Padding(
-                  padding: EdgeInsets.only(left: 16.0, right: 16.0),
-                  child: ListView.builder(
-                    padding: EdgeInsets.only(bottom: 60),
-                    itemCount: _isCurrentUser ? 5 : 4,
-                    itemBuilder: (context, index) {
-                      if (_isCurrentUser) {
-                        if (index == 0) {
-                          //Current User Activity Feed
-                          return ExpansionTile(
-                            initiallyExpanded: true,
-                            title: ReusableSectionLabel(title: 'Activity'),
-                            children: <Widget>[
-                              StreamBuilder(
-                                stream: activityRef
-                                    .document(currentUserUid)
-                                    .collection('feedItems')
-                                    .orderBy('creationDate', descending: true)
-                                    .snapshots(),
-                                builder: (context, snapshot) {
-                                  if (!snapshot.hasData) {
-                                    return circularProgress();
-                                  }
-                                  final activityItems = snapshot.data.documents;
-                                  List<ActivityFeedItem> displayedItems = [];
-                                  for (var item in activityItems) {
-                                    final type = item.data['type'];
-                                    final username =
-                                        item.data['username'] ?? '';
-                                    final uid = item.data['uid'];
-                                    final city = item.data['city'] ?? '';
-                                    final profileImageUrl =
-                                        item.data['profileImageUrl'] ?? '';
-                                    final creationDate =
-                                        item.data['creationDate'];
+            body: Theme(
+              data: kTheme(context),
+              child: Padding(
+                padding: EdgeInsets.only(left: 16.0, right: 16.0),
+                child: ListView.builder(
+                  padding: EdgeInsets.only(bottom: 60),
+                  itemCount: _isCurrentUser ? 4 : 3,
+                  itemBuilder: (context, index) {
+                    if (_isCurrentUser) {
+                      if (index == 0) {
+                        //Current User Activity Feed
+                        return ExpansionTile(
+                          initiallyExpanded: true,
+                          title: ReusableSectionLabel(title: 'Activity'),
+                          children: <Widget>[
+                            StreamBuilder(
+                              stream: activityRef
+                                  .document(currentUserUid)
+                                  .collection('feedItems')
+                                  .orderBy('creationDate', descending: true)
+                                  .snapshots(),
+                              builder: (context, snapshot) {
+                                if (!snapshot.hasData) {
+                                  return circularProgress();
+                                }
+                                final activityItems = snapshot.data.documents;
+                                List<ActivityFeedItem> displayedItems = [];
+                                for (var item in activityItems) {
+                                  final type = item.data['type'];
+                                  final username = item.data['username'] ?? '';
+                                  final uid = item.data['uid'];
+                                  final city = item.data['city'] ?? 'Around';
+                                  final profileImageUrl =
+                                      item.data['profileImageUrl'] ?? '';
+                                  final creationDate =
+                                      item.data['creationDate'];
 
-                                    final title = item.data['title'] ?? '';
-                                    final chatId = item.data['chatId'] ?? '';
-                                    final chatHostDisplayName =
-                                        item.data['hostDisplayName'] ?? '';
-                                    final hostRed = item.data['hostRed'] ?? 0;
-                                    final hostGreen =
-                                        item.data['hostGreen'] ?? 0;
-                                    final hostBlue = item.data['hostBlue'] ?? 0;
-                                    final lastMessage =
-                                        item.data['message'] ?? '';
+                                  final title = item.data['title'] ?? '';
+                                  final chatId = item.data['chatId'] ?? '';
+                                  final chatHostDisplayName =
+                                      item.data['hostDisplayName'] ?? '';
+                                  final hostRed = item.data['hostRed'] ?? 0;
+                                  final hostGreen = item.data['hostGreen'] ?? 0;
+                                  final hostBlue = item.data['hostBlue'] ?? 0;
+                                  final lastMessage =
+                                      item.data['message'] ?? '';
 
-                                    final endDate = item.data['endDate'] ?? 0;
-                                    int timeLeft = endDate -
-                                        DateTime.now().millisecondsSinceEpoch;
+                                  final endDate = item.data['endDate'] ?? 0;
+                                  int timeLeft = endDate -
+                                      DateTime.now().millisecondsSinceEpoch;
 
-                                    final displayedItem = ActivityFeedItem(
-                                      type: type,
+                                  final displayedItem = ActivityFeedItem(
+                                    type: type,
+                                    uid: uid,
+                                    username: username,
+                                    city: city,
+                                    imageUrl: profileImageUrl,
+                                    onTap: () => _pendingKnocksActionSheet(
+                                      context: context,
                                       uid: uid,
-                                      username: username,
-                                      city: city,
-                                      imageUrl: profileImageUrl,
-                                      onTap: () => _pendingKnocksActionSheet(
-                                        context: context,
-                                        uid: uid,
-                                      ),
-                                      creationDate: creationDate,
-                                      title: title,
-                                      chatId: chatId,
-                                      chatHostDisplayName: chatHostDisplayName,
-                                      hostRed: hostRed,
-                                      hostGreen: hostGreen,
-                                      hostBlue: hostBlue,
-                                      duration: kTimeRemaining(timeLeft),
-                                      lastMessage: lastMessage,
-                                    );
-                                    if (!currentUser.blockedUids
-                                        .contains(uid)) {
-                                      displayedItems.add(displayedItem);
-                                    }
+                                    ),
+                                    creationDate: creationDate,
+                                    title: title,
+                                    chatId: chatId,
+                                    chatHostDisplayName: chatHostDisplayName,
+                                    hostRed: hostRed,
+                                    hostGreen: hostGreen,
+                                    hostBlue: hostBlue,
+                                    duration: kTimeRemaining(timeLeft),
+                                    lastMessage: lastMessage,
+                                  );
+                                  if (!currentUser.blockedUids.contains(uid)) {
+                                    displayedItems.add(displayedItem);
                                   }
-                                  if (displayedItems.isNotEmpty) {
-                                    return ReusableContentContainer(
-                                      content: displayedItems,
-                                    );
-                                  } else {
-                                    return Padding(
-                                      padding: EdgeInsets.only(
-                                          top: 2.0, bottom: 8.0),
-                                      child: Text(
-                                        'No Activity Yet',
-                                        style: kDefaultTextStyle,
-                                      ),
-                                    );
-                                  }
-                                },
-                              )
-                            ],
-                          );
-                        } else if (index == 1) {
-                          //Current User Knocks
-                          return ExpansionTile(
-                            initiallyExpanded: false,
-                            title: ReusableSectionLabel(title: 'Knocks'),
-                            children: <Widget>[
-                              StreamBuilder<QuerySnapshot>(
-                                stream: knocksRef
-                                    .document(currentUserUid)
-                                    .collection('receivedKnockFrom')
-                                    .orderBy('creationDate', descending: true)
-                                    .snapshots(),
-                                builder: (context, snapshot) {
-                                  if (!snapshot.hasData) {
-                                    return circularProgress();
-                                  }
-                                  final knocks = snapshot.data.documents;
-                                  List<Knock> displayedKnocks = [];
-                                  for (var knock in knocks) {
-                                    final knockUsername =
-                                        knock.data['username'];
-                                    final knockProfileImageUrl =
-                                        knock.data['profileImageUrl'];
-                                    final creationDate =
-                                        knock.data['creationDate'];
-                                    final uid = knock.data['uid'];
+                                }
+                                if (displayedItems.isNotEmpty) {
+                                  return ReusableContentContainer(
+                                    content: displayedItems,
+                                  );
+                                } else {
+                                  return Padding(
+                                    padding:
+                                        EdgeInsets.only(top: 2.0, bottom: 8.0),
+                                    child: Text(
+                                      'No Activity Yet',
+                                      style: kDefaultTextStyle,
+                                    ),
+                                  );
+                                }
+                              },
+                            )
+                          ],
+                        );
+                      } else if (index == 1) {
+                        //Current User Knocks
+                        return ExpansionTile(
+                          initiallyExpanded: false,
+                          title: ReusableSectionLabel(title: 'Knocks'),
+                          children: <Widget>[
+                            StreamBuilder<QuerySnapshot>(
+                              stream: knocksRef
+                                  .document(currentUserUid)
+                                  .collection('receivedKnockFrom')
+                                  .orderBy('creationDate', descending: true)
+                                  .snapshots(),
+                              builder: (context, snapshot) {
+                                if (!snapshot.hasData) {
+                                  return circularProgress();
+                                }
+                                final knocks = snapshot.data.documents;
+                                List<Knock> displayedKnocks = [];
+                                for (var knock in knocks) {
+                                  final knockUsername = knock.data['username'];
+                                  final knockProfileImageUrl =
+                                      knock.data['profileImageUrl'];
+                                  final creationDate =
+                                      knock.data['creationDate'];
+                                  final uid = knock.data['uid'];
 
-                                    final displayedKnock = Knock(
-                                      username: knockUsername,
-                                      imageUrl: knockProfileImageUrl,
-                                      creationDate: creationDate,
-                                      onTap: () {
-                                        _knocksActionSheet(
-                                            context: context,
-                                            uid: uid,
-                                            username: knockUsername,
-                                            profileImageUrl:
-                                                knockProfileImageUrl);
-                                      },
-                                    );
-                                    displayedKnocks.add(displayedKnock);
-                                  }
-                                  if (displayedKnocks.isNotEmpty) {
-                                    return ReusableContentContainer(
-                                      content: displayedKnocks,
-                                    );
-                                  } else {
-                                    return Padding(
-                                      padding: EdgeInsets.only(
-                                          top: 2.0, bottom: 8.0),
-                                      child: Text(
-                                        'No Knocks Yet',
-                                        style: kDefaultTextStyle,
-                                      ),
-                                    );
-                                  }
-                                },
-                              ),
-                            ],
-                          );
-                        } else if (index == 2) {
-                          //Current User Links
-                          return ExpansionTile(
-                            initiallyExpanded: false,
-                            title: ReusableSectionLabel(title: 'Links'),
-                            children: <Widget>[
-                              StreamBuilder<QuerySnapshot>(
-                                stream: socialMediasRef
-                                    .document(currentUserUid)
-                                    .collection('socials')
-                                    .orderBy('creationDate', descending: true)
-                                    .snapshots(),
-                                builder: (context, snapshot) {
-                                  if (!snapshot.hasData) {
-                                    return circularProgress();
-                                  }
-                                  final accounts = snapshot.data.documents;
-                                  List<LinkedAccount> displayedAccounts = [];
-                                  for (var account in accounts) {
-                                    account.data.forEach(
-                                      (key, value) {
-                                        if (key.contains('Username')) {
-                                          final iconString = key;
-                                          final accountUsername = value;
-                                          final url = account.data['url'];
-                                          final linkId = account.data['linkId'];
+                                  final displayedKnock = Knock(
+                                    username: knockUsername,
+                                    imageUrl: knockProfileImageUrl,
+                                    creationDate: creationDate,
+                                    onTap: () {
+                                      _knocksActionSheet(
+                                          context: context,
+                                          uid: uid,
+                                          username: knockUsername,
+                                          profileImageUrl:
+                                              knockProfileImageUrl);
+                                    },
+                                  );
+                                  displayedKnocks.add(displayedKnock);
+                                }
+                                if (displayedKnocks.isNotEmpty) {
+                                  return ReusableContentContainer(
+                                    content: displayedKnocks,
+                                  );
+                                } else {
+                                  return Padding(
+                                    padding:
+                                        EdgeInsets.only(top: 2.0, bottom: 8.0),
+                                    child: Text(
+                                      'No Knocks Yet',
+                                      style: kDefaultTextStyle,
+                                    ),
+                                  );
+                                }
+                              },
+                            ),
+                          ],
+                        );
+                      } else if (index == 2) {
+                        //Current User Links
+                        return ExpansionTile(
+                          initiallyExpanded: false,
+                          title: ReusableSectionLabel(title: 'Links'),
+                          children: <Widget>[
+                            StreamBuilder<QuerySnapshot>(
+                              stream: socialMediasRef
+                                  .document(currentUserUid)
+                                  .collection('socials')
+                                  .orderBy('creationDate', descending: true)
+                                  .snapshots(),
+                              builder: (context, snapshot) {
+                                if (!snapshot.hasData) {
+                                  return circularProgress();
+                                }
+                                final accounts = snapshot.data.documents;
+                                List<LinkedAccount> displayedAccounts = [];
+                                for (var account in accounts) {
+                                  account.data.forEach(
+                                    (key, value) {
+                                      if (key.contains('Username')) {
+                                        final iconString = key;
+                                        final accountUsername = value;
+                                        final url = account.data['url'];
+                                        final linkId = account.data['linkId'];
 
-                                          _determineUrl(
-                                              accountUsername, iconString, url);
+                                        _determineUrl(
+                                            accountUsername, iconString, url);
 
-                                          final displayedAccount =
-                                              LinkedAccount(
-                                            accountUsername: accountUsername,
-                                            accountUrl: url,
-                                            iconString: iconString,
-                                            onTap: () {
-                                              _linksActionSheet(
-                                                  context,
-                                                  accountUsername,
-                                                  iconString,
-                                                  url,
-                                                  linkId);
-                                            },
-                                          );
-                                          displayedAccounts
-                                              .add(displayedAccount);
-                                        }
-                                      },
-                                    );
-                                  }
-                                  if (displayedAccounts.isNotEmpty) {
-                                    return ReusableContentContainer(
-                                      content: displayedAccounts,
-                                    );
-                                  } else {
-                                    _updateFirestoreHasAccountLinked();
-                                    return ReusableBottomActionSheetListTile(
-                                      iconData: FontAwesomeIcons.link,
-                                      title: 'Link Account',
-                                      onTap: () {
-                                        Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                              builder: (BuildContext context) =>
-                                                  ChooseAccount()),
+                                        final displayedAccount = LinkedAccount(
+                                          accountUsername: accountUsername,
+                                          accountUrl: url,
+                                          iconString: iconString,
+                                          onTap: () {
+                                            _linksActionSheet(
+                                                context,
+                                                accountUsername,
+                                                iconString,
+                                                url,
+                                                linkId);
+                                          },
                                         );
-                                      },
-                                    );
+                                        displayedAccounts.add(displayedAccount);
+                                      }
+                                    },
+                                  );
+                                }
+                                if (displayedAccounts.isNotEmpty) {
+                                  return ReusableContentContainer(
+                                    content: displayedAccounts,
+                                  );
+                                } else {
+                                  _updateFirestoreHasAccountLinked();
+                                  return ReusableBottomActionSheetListTile(
+                                    iconData: FontAwesomeIcons.link,
+                                    title: 'Link Account',
+                                    onTap: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                            builder: (BuildContext context) =>
+                                                ChooseAccount()),
+                                      );
+                                    },
+                                  );
+                                }
+                              },
+                            ),
+                          ],
+                        );
+                      } else {
+                        //Current User Created Live Chats
+                        return ExpansionTile(
+                          title: ReusableSectionLabel(title: 'Live Chats'),
+                          children: <Widget>[
+                            StreamBuilder(
+                              stream: liveChatsRef
+                                  .document(currentUserUid)
+                                  .collection('chats')
+                                  .orderBy('creationDate', descending: true)
+                                  .snapshots(),
+                              builder: (context, snapshot) {
+                                if (!snapshot.hasData) {
+                                  return circularProgress();
+                                }
+                                final chats = snapshot.data.documents;
+                                List<LiveChat> displayedChats = [];
+                                for (var chat in chats) {
+                                  final title = chat.data['title'];
+                                  final creationDate =
+                                      chat.data['creationDate'];
+                                  final chatId = chat.data['chatId'];
+                                  final hostDisplayName =
+                                      chat.data['hostDisplayName'] ?? '';
+                                  final lastMessage = chat.data['lastMessage'];
+                                  final lastMessageDisplayName =
+                                      chat.data['lastMessageDisplayName'];
+                                  final lastRed = chat.data['lastRed'];
+                                  final lastGreen = chat.data['lastGreen'];
+                                  final lastBlue = chat.data['lastBlue'];
+                                  final endDate = chat.data['endDate'];
+
+                                  int timeLeft = endDate -
+                                      DateTime.now().millisecondsSinceEpoch;
+                                  String duration = kTimeRemaining(timeLeft);
+
+                                  bool hasChatEnded = timeLeft <= 0;
+
+                                  if (hasChatEnded) {
+                                    kHandleRemoveAllLiveChatData(
+                                        chatId, currentUserUid);
                                   }
-                                },
-                              ),
-                            ],
-                          );
-                        } else if (index == 3) {
-                          //Current User Created Live Chats
-                          return ExpansionTile(
-                            title: ReusableSectionLabel(title: 'Live Chats'),
-                            children: <Widget>[
-                              StreamBuilder(
-                                stream: liveChatsRef
-                                    .document(currentUserUid)
-                                    .collection('chats')
-                                    .orderBy('creationDate', descending: true)
-                                    .snapshots(),
-                                builder: (context, snapshot) {
-                                  if (!snapshot.hasData) {
-                                    return circularProgress();
+
+                                  final displayedChat = LiveChat(
+                                    title: title,
+                                    creationDate: creationDate,
+                                    duration: duration,
+                                    chatId: chatId,
+                                    chatHostDisplayName: hostDisplayName,
+                                    chatHostUid: currentUserUid,
+                                    hostRed: red,
+                                    hostGreen: green,
+                                    hostBlue: blue,
+                                    lastMessage: lastMessage,
+                                    lastMessageDisplayName:
+                                        lastMessageDisplayName,
+                                    lastRed: lastRed,
+                                    lastGreen: lastGreen,
+                                    lastBlue: lastBlue,
+                                    onTap: () {
+                                      _liveChatsActionSheet(
+                                          context,
+                                          title,
+                                          chatId,
+                                          hostDisplayName,
+                                          red,
+                                          green,
+                                          blue,
+                                          currentUserUid,
+                                          duration);
+                                    },
+                                  );
+                                  displayedChats.add(displayedChat);
+                                }
+                                if (displayedChats.isNotEmpty) {
+                                  return ReusableContentContainer(
+                                    content: displayedChats,
+                                  );
+                                } else {
+                                  return ReusableBottomActionSheetListTile(
+                                    iconData: FontAwesomeIcons.comments,
+                                    title: 'Create Live Chat',
+                                    onTap: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                            builder: (context) =>
+                                                currentUser.displayName != null
+                                                    ? AddLiveChat()
+                                                    : CreateDisplayName()),
+                                      );
+                                    },
+                                  );
+                                }
+                              },
+                            )
+                          ],
+                        );
+                      }
+                    } else {
+                      if (index == 0) {
+                        //User Links
+                        return ExpansionTile(
+                          initiallyExpanded: true,
+                          title: ReusableSectionLabel(title: 'Links'),
+                          children: <Widget>[
+                            StreamBuilder<QuerySnapshot>(
+                              stream: socialMediasRef
+                                  .document(userUid)
+                                  .collection('socials')
+                                  .snapshots(),
+                              builder: (context, snapshot) {
+                                if (!snapshot.hasData) {
+                                  return circularProgress();
+                                }
+                                final accounts = snapshot.data.documents;
+                                List<LinkedAccount> displayedAccounts = [];
+                                for (var account in accounts) {
+                                  account.data.forEach(
+                                    (key, value) {
+                                      if (key.contains('Username')) {
+                                        final iconString = key;
+                                        final accountUsername = value;
+                                        final url = account.data['url'];
+                                        final linkId = account.data['linkId'];
+
+                                        _determineUrl(
+                                            accountUsername, iconString, url);
+
+                                        final displayedAccount = LinkedAccount(
+                                          accountUsername: accountUsername,
+                                          accountUrl: url,
+                                          iconString: iconString,
+                                          onTap: () {
+                                            _linksActionSheet(
+                                              context,
+                                              accountUsername,
+                                              iconString,
+                                              url,
+                                              linkId,
+                                            );
+                                          },
+                                        );
+                                        displayedAccounts.add(displayedAccount);
+                                      }
+                                    },
+                                  );
+                                }
+                                if (displayedAccounts.isNotEmpty) {
+                                  return ReusableContentContainer(
+                                    content: displayedAccounts,
+                                  );
+                                } else {
+                                  return Padding(
+                                    padding: const EdgeInsets.only(
+                                        top: 2.0, bottom: 8.0),
+                                    child: Text(
+                                      'No Accounts Linked',
+                                      style: kDefaultTextStyle,
+                                    ),
+                                  );
+                                }
+                              },
+                            ),
+                          ],
+                        );
+                      } else if (index == 1) {
+                        //User Created Live Chats
+                        return ExpansionTile(
+                          title: ReusableSectionLabel(title: 'Live Chats'),
+                          children: <Widget>[
+                            StreamBuilder(
+                              stream: liveChatsRef
+                                  .document(userUid)
+                                  .collection('chats')
+                                  .orderBy('creationDate', descending: true)
+                                  .snapshots(),
+                              builder: (context, snapshot) {
+                                if (!snapshot.hasData) {
+                                  return circularProgress();
+                                }
+                                final chats = snapshot.data.documents;
+                                List<LiveChat> displayedChats = [];
+                                for (var chat in chats) {
+                                  final title = chat.data['title'];
+                                  final creationDate =
+                                      chat.data['creationDate'];
+                                  final chatId = chat.data['chatId'];
+                                  final hostDisplayName =
+                                      chat.data['hostDisplayName'] ?? '';
+                                  final lastMessage = chat.data['lastMessage'];
+                                  final lastMessageDisplayName =
+                                      chat.data['lastMessageDisplayName'];
+                                  final lastRed = chat.data['lastRed'];
+                                  final lastGreen = chat.data['lastGreen'];
+                                  final lastBlue = chat.data['lastBlue'];
+                                  final endDate = chat.data['endDate'];
+
+                                  int timeLeft = endDate -
+                                      DateTime.now().millisecondsSinceEpoch;
+                                  String duration = kTimeRemaining(timeLeft);
+
+                                  bool hasChatEnded = timeLeft <= 0;
+
+                                  if (hasChatEnded) {
+                                    kHandleRemoveAllLiveChatData(
+                                        chatId, userUid);
                                   }
-                                  final chats = snapshot.data.documents;
-                                  List<LiveChat> displayedChats = [];
-                                  for (var chat in chats) {
-                                    final title = chat.data['title'];
-                                    final creationDate =
-                                        chat.data['creationDate'];
-                                    final chatId = chat.data['chatId'];
-                                    final hostDisplayName =
-                                        chat.data['hostDisplayName'] ?? '';
-                                    final lastMessage =
-                                        chat.data['lastMessage'];
-                                    final lastMessageDisplayName =
-                                        chat.data['lastMessageDisplayName'];
-                                    final lastRed = chat.data['lastRed'];
-                                    final lastGreen = chat.data['lastGreen'];
-                                    final lastBlue = chat.data['lastBlue'];
-                                    final endDate = chat.data['endDate'];
 
-                                    int timeLeft = endDate -
-                                        DateTime.now().millisecondsSinceEpoch;
-                                    String duration = kTimeRemaining(timeLeft);
-
-                                    bool hasChatEnded = timeLeft <= 0;
-
-                                    if (hasChatEnded) {
-                                      kHandleRemoveAllLiveChatData(
-                                          chatId, currentUserUid);
-                                    }
-
-                                    final displayedChat = LiveChat(
-                                      title: title,
-                                      creationDate: creationDate,
-                                      duration: duration,
-                                      chatId: chatId,
-                                      chatHostDisplayName: hostDisplayName,
-                                      chatHostUid: currentUserUid,
-                                      hostRed: red,
-                                      hostGreen: green,
-                                      hostBlue: blue,
-                                      lastMessage: lastMessage,
-                                      lastMessageDisplayName:
-                                          lastMessageDisplayName,
-                                      lastRed: lastRed,
-                                      lastGreen: lastGreen,
-                                      lastBlue: lastBlue,
-                                      onTap: () {
-                                        _liveChatsActionSheet(
-                                            context,
-                                            title,
-                                            chatId,
-                                            hostDisplayName,
-                                            red,
-                                            green,
-                                            blue,
-                                            currentUserUid,
-                                            duration);
-                                      },
-                                    );
-                                    displayedChats.add(displayedChat);
-                                  }
-                                  if (displayedChats.isNotEmpty) {
-                                    return ReusableContentContainer(
-                                      content: displayedChats,
-                                    );
-                                  } else {
-                                    return ReusableBottomActionSheetListTile(
-                                      iconData: FontAwesomeIcons.comments,
-                                      title: 'Create Live Chat',
-                                      onTap: () {
-                                        Navigator.push(
+                                  final displayedChat = LiveChat(
+                                    title: title,
+                                    creationDate: creationDate,
+                                    duration: duration,
+                                    chatId: chatId,
+                                    chatHostDisplayName: hostDisplayName,
+                                    chatHostUid: userUid,
+                                    hostRed: red,
+                                    hostGreen: green,
+                                    hostBlue: blue,
+                                    lastMessage: lastMessage,
+                                    lastMessageDisplayName:
+                                        lastMessageDisplayName,
+                                    lastRed: lastRed,
+                                    lastGreen: lastGreen,
+                                    lastBlue: lastBlue,
+                                    onTap: () {
+                                      Navigator.push(
                                           context,
                                           MaterialPageRoute(
                                               builder: (context) =>
                                                   currentUser.displayName !=
                                                           null
-                                                      ? AddLiveChat()
-                                                      : CreateDisplayName()),
-                                        );
-                                      },
-                                    );
-                                  }
-                                },
-                              )
-                            ],
-                          );
-                        } else {
-                          //Current User Recents
-                          return ExpansionTile(
-                            title: ReusableSectionLabel(title: 'Recents'),
-                            children: <Widget>[
-                              StreamBuilder<QuerySnapshot>(
-                                stream: recentUploadsRef
-                                    .document(currentUserUid)
-                                    .collection('recents')
-                                    .orderBy('creationDate', descending: true)
-                                    .snapshots(),
-                                builder: (context, snapshot) {
-                                  if (!snapshot.hasData) {
-                                    return circularProgress();
-                                  }
-                                  final recents = snapshot.data.documents;
-                                  List<RecentUpload> displayedRecents = [];
-                                  for (var recent in recents) {
-                                    final imageUrl =
-                                        recent.data['thumbnailImageUrl'];
-                                    final title = recent.data['title'];
-                                    final url = recent.data['url'];
-                                    final creationDate =
-                                        recent.data['creationDate'];
-                                    final storageFilename =
-                                        recent.data['storageFilename'];
-
-                                    _determineUrl(title, '', url);
-
-                                    final displayedRecent = RecentUpload(
-                                      title: title,
-                                      url: url,
-                                      imageUrl: imageUrl,
-                                      creationDate: creationDate,
-                                      onTap: () {
-                                        _recentsActionSheet(context, title, url,
-                                            storageFilename);
-                                      },
-                                    );
-                                    displayedRecents.add(displayedRecent);
-                                  }
-                                  if (displayedRecents.isNotEmpty) {
-                                    return ReusableContentContainer(
-                                      content: displayedRecents,
-                                    );
-                                  } else {
-                                    return ReusableBottomActionSheetListTile(
-                                      iconData: FontAwesomeIcons.upload,
-                                      title: 'Add Recent',
-                                      onTap: () => Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                              builder: (BuildContext context) =>
-                                                  AddRecent()),
-                                        ),
-                                    );
-                                  }
-                                },
-                              ),
-                            ],
-                          );
-                        }
+                                                      ? LiveChatScreen(
+                                                          title: title ?? '',
+                                                          chatId: chatId,
+                                                          chatHostDisplayName:
+                                                              hostDisplayName,
+                                                          chatHostUid: userUid,
+                                                          hostRed: red,
+                                                          hostGreen: green,
+                                                          hostBlue: blue,
+                                                          duration: duration,
+                                                        )
+                                                      : CreateDisplayName()));
+                                    },
+                                  );
+                                  displayedChats.add(displayedChat);
+                                }
+                                if (displayedChats.isNotEmpty) {
+                                  return ReusableContentContainer(
+                                    content: displayedChats,
+                                  );
+                                } else {
+                                  return Padding(
+                                    padding:
+                                        EdgeInsets.only(top: 2.0, bottom: 8.0),
+                                    child: Text(
+                                      'No Live Chats',
+                                      style: kDefaultTextStyle,
+                                    ),
+                                  );
+                                }
+                              },
+                            )
+                          ],
+                        );
                       } else {
-                        if (index == 0) {
-                          //User Links
-                          return ExpansionTile(
-                            initiallyExpanded: true,
-                            title: ReusableSectionLabel(title: 'Links'),
-                            children: <Widget>[
-                              StreamBuilder<QuerySnapshot>(
-                                stream: socialMediasRef
-                                    .document(userUid)
-                                    .collection('socials')
-                                    .snapshots(),
-                                builder: (context, snapshot) {
-                                  if (!snapshot.hasData) {
-                                    return circularProgress();
-                                  }
-                                  final accounts = snapshot.data.documents;
-                                  List<LinkedAccount> displayedAccounts = [];
-                                  for (var account in accounts) {
-                                    account.data.forEach(
-                                      (key, value) {
-                                        if (key.contains('Username')) {
-                                          final iconString = key;
-                                          final accountUsername = value;
-                                          final url = account.data['url'];
-                                          final linkId = account.data['linkId'];
-
-                                          _determineUrl(
-                                              accountUsername, iconString, url);
-
-                                          final displayedAccount =
-                                              LinkedAccount(
-                                            accountUsername: accountUsername,
-                                            accountUrl: url,
-                                            iconString: iconString,
-                                            onTap: () {
-                                              _linksActionSheet(
-                                                context,
-                                                accountUsername,
-                                                iconString,
-                                                url,
-                                                linkId,
-                                              );
-                                            },
-                                          );
-                                          displayedAccounts
-                                              .add(displayedAccount);
-                                        }
-                                      },
-                                    );
-                                  }
-                                  if (displayedAccounts.isNotEmpty) {
-                                    return ReusableContentContainer(
-                                      content: displayedAccounts,
-                                    );
-                                  } else {
-                                    return Padding(
-                                      padding: const EdgeInsets.only(
-                                          top: 2.0, bottom: 8.0),
-                                      child: Text(
-                                        'No Accounts Linked',
-                                        style: kDefaultTextStyle,
-                                      ),
-                                    );
-                                  }
+                        //User Knock
+                        return ExpansionTile(
+                          trailing: Icon(
+                            Icons.chevron_right,
+                            size: 24,
+                          ),
+                          title: ReusableSectionLabel(title: 'Knock'),
+                          onExpansionChanged: (expanded) {
+                            kShowAlertMultiButtons(
+                                context: context,
+                                title: 'Knock Knock',
+                                desc: 'Did you mean to Knock $username?',
+                                buttonText1: 'Yes',
+                                color1: kColorGreen,
+                                buttonText2: 'Cancel',
+                                color2: kColorLightGray,
+                                onPressed1: () {
+                                  _handleKnock(
+                                      uid: userUid,
+                                      username: username,
+                                      profileImageUrl: profileImageUrl);
+                                  Navigator.pop(context);
                                 },
-                              ),
-                            ],
-                          );
-                        } else if (index == 1) {
-                          //User Created Live Chats
-                          return ExpansionTile(
-                            title: ReusableSectionLabel(title: 'Live Chats'),
-                            children: <Widget>[
-                              StreamBuilder(
-                                stream: liveChatsRef
-                                    .document(userUid)
-                                    .collection('chats')
-                                    .orderBy('creationDate', descending: true)
-                                    .snapshots(),
-                                builder: (context, snapshot) {
-                                  if (!snapshot.hasData) {
-                                    return circularProgress();
-                                  }
-                                  final chats = snapshot.data.documents;
-                                  List<LiveChat> displayedChats = [];
-                                  for (var chat in chats) {
-                                    final title = chat.data['title'];
-                                    final creationDate =
-                                        chat.data['creationDate'];
-                                    final chatId = chat.data['chatId'];
-                                    final hostDisplayName =
-                                        chat.data['hostDisplayName'] ?? '';
-                                    final lastMessage =
-                                        chat.data['lastMessage'];
-                                    final lastMessageDisplayName =
-                                        chat.data['lastMessageDisplayName'];
-                                    final lastRed = chat.data['lastRed'];
-                                    final lastGreen = chat.data['lastGreen'];
-                                    final lastBlue = chat.data['lastBlue'];
-                                    final endDate = chat.data['endDate'];
-
-                                    int timeLeft = endDate -
-                                        DateTime.now().millisecondsSinceEpoch;
-                                    String duration = kTimeRemaining(timeLeft);
-
-                                    bool hasChatEnded = timeLeft <= 0;
-
-                                    if (hasChatEnded) {
-                                      kHandleRemoveAllLiveChatData(
-                                          chatId, userUid);
-                                    }
-
-                                    final displayedChat = LiveChat(
-                                      title: title,
-                                      creationDate: creationDate,
-                                      duration: duration,
-                                      chatId: chatId,
-                                      chatHostDisplayName: hostDisplayName,
-                                      chatHostUid: userUid,
-                                      hostRed: red,
-                                      hostGreen: green,
-                                      hostBlue: blue,
-                                      lastMessage: lastMessage,
-                                      lastMessageDisplayName:
-                                          lastMessageDisplayName,
-                                      lastRed: lastRed,
-                                      lastGreen: lastGreen,
-                                      lastBlue: lastBlue,
-                                      onTap: () {
-                                        Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                                builder: (context) =>
-                                                    currentUser.displayName !=
-                                                            null
-                                                        ? LiveChatScreen(
-                                                            title: title ?? '',
-                                                            chatId: chatId,
-                                                            chatHostDisplayName:
-                                                                hostDisplayName,
-                                                            chatHostUid:
-                                                                userUid,
-                                                            hostRed: red,
-                                                            hostGreen: green,
-                                                            hostBlue: blue,
-                                                            duration: duration,
-                                                          )
-                                                        : CreateDisplayName()));
-                                      },
-                                    );
-                                    displayedChats.add(displayedChat);
-                                  }
-                                  if (displayedChats.isNotEmpty) {
-                                    return ReusableContentContainer(
-                                      content: displayedChats,
-                                    );
-                                  } else {
-                                    return Padding(
-                                      padding: EdgeInsets.only(
-                                          top: 2.0, bottom: 8.0),
-                                      child: Text(
-                                        'No Live Chats',
-                                        style: kDefaultTextStyle,
-                                      ),
-                                    );
-                                  }
-                                },
-                              )
-                            ],
-                          );
-                        } else if (index == 2) {
-                          //User Recents
-                          return ExpansionTile(
-                            title: ReusableSectionLabel(title: 'Recents'),
-                            children: <Widget>[
-                              StreamBuilder<QuerySnapshot>(
-                                stream: recentUploadsRef
-                                    .document(userUid)
-                                    .collection('recents')
-                                    .orderBy('creationDate', descending: true)
-                                    .snapshots(),
-                                builder: (context, snapshot) {
-                                  if (!snapshot.hasData) {
-                                    return circularProgress();
-                                  }
-                                  final recents = snapshot.data.documents;
-                                  List<RecentUpload> displayedRecents = [];
-                                  for (var recent in recents) {
-                                    final imageUrl =
-                                        recent.data['thumbnailImageUrl'];
-                                    final title = recent.data['title'];
-                                    final url = recent.data['url'];
-                                    final creationDate =
-                                        recent.data['creationDate'];
-                                    final storageFilename =
-                                        recent.data['storageFilename'];
-
-                                    _determineUrl(title, '', url);
-
-                                    final displayedRecent = RecentUpload(
-                                      title: title,
-                                      url: url,
-                                      imageUrl: imageUrl,
-                                      creationDate: creationDate,
-                                      onTap: () {
-                                        _recentsActionSheet(context, title, url,
-                                            storageFilename);
-                                      },
-                                    );
-                                    displayedRecents.add(displayedRecent);
-                                  }
-                                  if (displayedRecents.isNotEmpty) {
-                                    return ReusableContentContainer(
-                                      content: displayedRecents,
-                                    );
-                                  } else {
-                                    return Padding(
-                                      padding: EdgeInsets.only(
-                                          top: 2.0, bottom: 8.0),
-                                      child: Text(
-                                        'No Recent Uploads',
-                                        style: kDefaultTextStyle,
-                                      ),
-                                    );
-                                  }
-                                },
-                              ),
-                            ],
-                          );
-                        } else {
-                          //User Knock
-                          return ExpansionTile(
-                            trailing: Icon(
-                              Icons.chevron_right,
-                              size: 24,
-                            ),
-                            title: ReusableSectionLabel(title: 'Knock'),
-                            onExpansionChanged: (expanded) {
-                              kShowAlertMultiButtons(
-                                  context: context,
-                                  title: 'Knock Knock',
-                                  desc: 'Did you mean to Knock $username?',
-                                  buttonText1: 'Yes',
-                                  color1: kColorGreen,
-                                  buttonText2: 'Cancel',
-                                  color2: kColorLightGray,
-                                  onPressed1: () {
-                                    _handleKnock(
-                                        uid: userUid,
-                                        username: username,
-                                        profileImageUrl: profileImageUrl);
-                                    Navigator.pop(context);
-                                  },
-                                  onPressed2: () {
-                                    Navigator.pop(context);
-                                  });
-                            },
-                          );
-                        }
+                                onPressed2: () {
+                                  Navigator.pop(context);
+                                });
+                          },
+                        );
                       }
-                    },
-                  ),
+                    }
+                  },
                 ),
               ),
             ),
@@ -879,8 +747,7 @@ class _ProfileState extends State<Profile> {
         onTap: () {
           Navigator.pop(context);
           User user = User(uid: uid);
-          UserResult result = UserResult(
-              user: user, locationLabel: 'Around');
+          UserResult result = UserResult(user: user, locationLabel: 'Around');
           result.toProfile(context);
         },
       ),
@@ -1052,8 +919,7 @@ class _ProfileState extends State<Profile> {
         onTap: () {
           Navigator.pop(context);
           User user = User(uid: uid);
-          UserResult result = UserResult(
-              user: user, locationLabel: 'Around');
+          UserResult result = UserResult(user: user, locationLabel: 'Around');
           result.toProfile(context);
         },
       ),
@@ -1078,26 +944,27 @@ class _ProfileState extends State<Profile> {
     List<ReusableBottomActionSheetListTile> sheets = [];
     _isCurrentUser
         ? sheets.add(
-        ReusableBottomActionSheetListTile(
-            title: 'Unlink $accountUsername',
-            iconData: FontAwesomeIcons.unlink,
-            color: kColorRed,
-            onTap: () {
-              kShowAlert(
-                context: context,
-                title: "Unlink Account?",
-                desc: "Are you sure you want to unlink $accountUsername?",
-                buttonText: "Unlink",
-                onPressed: () {
-                  Navigator.pop(context);
-                  kHandleRemoveDataAtId(
-                      linkId, currentUserUid, 'socialMedias', 'socials');
-                  Navigator.pop(context);
-                },
-                color: kColorRed,
-              );
-            },
-          ),)
+            ReusableBottomActionSheetListTile(
+              title: 'Unlink $accountUsername',
+              iconData: FontAwesomeIcons.unlink,
+              color: kColorRed,
+              onTap: () {
+                kShowAlert(
+                  context: context,
+                  title: "Unlink Account?",
+                  desc: "Are you sure you want to unlink $accountUsername?",
+                  buttonText: "Unlink",
+                  onPressed: () {
+                    Navigator.pop(context);
+                    kHandleRemoveDataAtId(
+                        linkId, currentUserUid, 'socialMedias', 'socials');
+                    Navigator.pop(context);
+                  },
+                  color: kColorRed,
+                );
+              },
+            ),
+          )
         : SizedBox();
     sheets.add(
       ReusableBottomActionSheetListTile(
@@ -1198,69 +1065,6 @@ class _ProfileState extends State<Profile> {
       ),
     );
     kActionSheet(context, sheets);
-  }
-
-  _recentsActionSheet(
-      BuildContext context, String title, String url, String storageFilename) {
-    String platform;
-    for (var platformString in _determineUrl(title, '', url).keys) {
-      platform = platformString;
-    }
-    List<ReusableBottomActionSheetListTile> sheets = [];
-    _isCurrentUser
-        ? sheets.add(ReusableBottomActionSheetListTile(
-            title: 'Remove $title',
-            iconData: FontAwesomeIcons.minusCircle,
-            color: kColorRed,
-            onTap: () {
-              kShowAlert(
-                  context: context,
-                  title: "Remove Recent?",
-                  desc: "Are you sure you want to remove $title?",
-                  buttonText: "Delete",
-                  onPressed: () {
-                    Navigator.pop(context);
-                    _handleRemoveRecentThumbnailFromStorage(storageFilename);
-                    kHandleRemoveDataAtId(storageFilename, currentUserUid,
-                        'recentUploads', 'recents');
-                    Navigator.pop(context);
-                  },
-                  color: kColorRed);
-            },
-          ))
-        : SizedBox();
-    sheets.add(
-      ReusableBottomActionSheetListTile(
-        title: 'Open in $platform',
-        iconData: FontAwesomeIcons.externalLinkAlt,
-        onTap: () async {
-          _launchUrl(title, '', url);
-          Navigator.pop(context);
-        },
-      ),
-    );
-    sheets.add(
-      ReusableBottomActionSheetListTile(
-        title: 'Cancel',
-        iconData: FontAwesomeIcons.times,
-        onTap: () => Navigator.pop(context),
-      ),
-    );
-    kActionSheet(context, sheets);
-  }
-
-  _handleRemoveRecentThumbnailFromStorage(String storageFilename) {
-    final FirebaseStorage _storage = FirebaseStorage.instance;
-    try {
-      _storage
-          .ref()
-          .child('recent_upload_thumbnail')
-          .child(currentUserUid)
-          .child(storageFilename)
-          .delete();
-    } catch (e) {
-      print(e);
-    }
   }
 
   _changeUserPhoto() {
@@ -1425,19 +1229,6 @@ class _ProfileState extends State<Profile> {
     );
     sheets.add(
       ReusableBottomActionSheetListTile(
-        iconData: FontAwesomeIcons.upload,
-        title: 'Add Recent Upload',
-        onTap: () {
-          Navigator.pop(context);
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (BuildContext context) => AddRecent()),
-          );
-        },
-      ),
-    );
-    sheets.add(
-      ReusableBottomActionSheetListTile(
         iconData: FontAwesomeIcons.comments,
         title: 'Create Live Chat',
         onTap: () {
@@ -1465,9 +1256,10 @@ class _ProfileState extends State<Profile> {
     await ImagePicker.pickImage(source: ImageSource.gallery).then(
       (profilePic) {
         _cropImage(profilePic);
-        if (this.mounted) setState(() {
-          showSpinner = false;
-        });
+        if (this.mounted)
+          setState(() {
+            showSpinner = false;
+          });
       },
     );
   }
@@ -1477,13 +1269,15 @@ class _ProfileState extends State<Profile> {
       (profilePic) {
         if (profilePic != null) {
           _cropImage(profilePic);
-          if (this.mounted)  setState(() {
-            showSpinner = false;
-          });
+          if (this.mounted)
+            setState(() {
+              showSpinner = false;
+            });
         } else {
-          if (this.mounted) setState(() {
-            showSpinner = false;
-          });
+          if (this.mounted)
+            setState(() {
+              showSpinner = false;
+            });
         }
       },
     );
@@ -1491,7 +1285,8 @@ class _ProfileState extends State<Profile> {
 
   _determinePage() async {
     if (currentUserUid == user.uid) {
-        if (this.mounted) setState(() {
+      if (this.mounted)
+        setState(() {
           _isCurrentUser = true;
         });
       _getCurrentUserData();
@@ -1505,7 +1300,8 @@ class _ProfileState extends State<Profile> {
   _getUserPageInfo() async {
     await usersRef.document(user.uid).get().then((doc) {
       User user = User.fromDocument(doc);
-      if (this.mounted) setState(() {
+      if (this.mounted)
+        setState(() {
           _isCurrentUser = false;
           userUid = user.uid;
           username = user.username;
@@ -1530,7 +1326,8 @@ class _ProfileState extends State<Profile> {
   }
 
   _getOtherUserData() {
-    if (this.mounted) setState(() {
+    if (this.mounted)
+      setState(() {
         _isCurrentUser = false;
         userUid = user.uid;
         username = user.username;
@@ -1573,7 +1370,8 @@ class _ProfileState extends State<Profile> {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String url = prefs.getString('profileImageUrl');
     String name = prefs.getString('username');
-    if (this.mounted) setState(() {
+    if (this.mounted)
+      setState(() {
         profileImageUrl = url;
         username = name;
         displayName = currentUser.displayName;
@@ -1606,9 +1404,10 @@ class _ProfileState extends State<Profile> {
     final FirebaseStorage _storage = FirebaseStorage.instance;
     var succeed = true;
 
-    if (this.mounted) setState(() {
-      showSpinner = true;
-    });
+    if (this.mounted)
+      setState(() {
+        showSpinner = true;
+      });
     FirebaseUser user = await FirebaseAuth.instance.currentUser();
     final uid = user.uid;
     StorageUploadTask uploadFile =
@@ -1633,10 +1432,11 @@ class _ProfileState extends State<Profile> {
 
         userReference.document(uid).updateData(photoUrl).whenComplete(() {
           print('User Photo Added');
-          if (this.mounted) setState(() {
-            profileImageUrl = downloadUrl;
-            showSpinner = false;
-          });
+          if (this.mounted)
+            setState(() {
+              profileImageUrl = downloadUrl;
+              showSpinner = false;
+            });
         }).catchError(
           (e) => kShowAlert(
             context: context,
@@ -1753,6 +1553,7 @@ class FlexibleProfileAppBar extends StatelessWidget {
   final int green;
   final int blue;
   final bool isCurrentUser;
+  final bool isFollowing;
 
   const FlexibleProfileAppBar({
     @required this.userPhotoUrl,
@@ -1766,81 +1567,137 @@ class FlexibleProfileAppBar extends StatelessWidget {
     this.green,
     this.blue,
     this.isCurrentUser,
+    this.isFollowing,
   });
 
   @override
   Widget build(BuildContext context) {
-    final double statusBarHeight = MediaQuery.of(context).padding.top;
-    final double screenWidth = MediaQuery.of(context).size.width;
-
-    return Container(
-      padding: EdgeInsets.only(top: statusBarHeight),
-      height: statusBarHeight + appBarHeight,
-      child: Center(
-          child: Column(
-        mainAxisAlignment: MainAxisAlignment.end,
-        children: <Widget>[
-          Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: <Widget>[
-              Container(
-                height: topProfileContainerHeight,
-                width: screenWidth,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: <Widget>[
-                    ReusableProfileCard(
-                      imageUrl: userPhotoUrl,
-                      cardSize: topProfileContainerHeight,
-                      onTap: onTap,
-                    ),
-                    GestureDetector(
-                      onTap: () => isCurrentUser
-                          ? goToCreateDisplayName(context)
-                          : print('do nothing'),
-                      child: Text(
-                        displayName ?? '',
-                        style: kDefaultTextStyle.copyWith(
-                            color: Color.fromRGBO(
-                              red ?? 95,
-                              green ?? 71,
-                              blue ?? 188,
-                              1.0,
-                            ),
-                            fontSize: 18.0),
+    return SafeArea(
+      child: Padding(
+        padding: EdgeInsets.only(top: 50.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: <Widget>[
+            ReusableProfileCard(
+              imageUrl: userPhotoUrl,
+              cardSize: topProfileContainerHeight,
+              onTap: onTap,
+            ),
+            !isCurrentUser ? FlatButton(
+              child: !isFollowing ? Text(
+                'Follow',
+                style: kAppBarTextStyle.copyWith(
+                    fontSize: 16.0, color: Colors.white),
+              ) : Text(
+                'Unfollow',
+                style: kAppBarTextStyle.copyWith(
+                    fontSize: 16.0),
+              ),
+              color: !isFollowing ? kColorBlue : Colors.transparent,
+              onPressed: () => !isFollowing ? print('follow') : print('unfollow'),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(5.0),
+                  side: BorderSide(color: !isFollowing ? Colors.transparent : kColorBlack71),
+              ),
+              splashColor: !isFollowing ? kColorGreen : kColorRed,
+              highlightColor: Colors.transparent,
+            ) : SizedBox(),
+            displayName != null
+                ? GestureDetector(
+                    onTap: () => isCurrentUser
+                        ? goToCreateDisplayName(context)
+                        : print('do nothing'),
+                    child: Text(
+                      displayName ?? '',
+                      style: kAppBarTextStyle.copyWith(
+                          color: Color.fromRGBO(
+                            red ?? 95,
+                            green ?? 71,
+                            blue ?? 188,
+                            1.0,
+                          ),
+                          fontWeight: FontWeight.w500,
+                          fontSize: 18.0,
                       ),
                     ),
-                    Text('Visits this week: $weeklyVisitsCount',
-                        style: kAppBarTextStyle.copyWith(
-                            fontSize: 14.0, fontWeight: FontWeight.normal)),
-                    Text('Total Visits: $totalVisitsCount',
-                        style: kAppBarTextStyle.copyWith(
-                            fontSize: 14.0, fontWeight: FontWeight.normal)),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: <Widget>[
-                        Icon(
-                          FontAwesomeIcons.mapMarkerAlt,
-                          color: kColorDarkThistle,
-                          size: 14.0,
-                        ),
-                        SizedBox(width: 2.0),
-                        Text(
-                          locationLabel,
-                          style:
-                              kAppBarTextStyle.copyWith(color: kColorThistle),
-                        ),
-                      ],
+                  )
+                : SizedBox(),
+            RichText(
+              text: TextSpan(
+                children: [
+                  TextSpan(
+                    text: 'Followers: ',
+                    style: kAppBarTextStyle.copyWith(
+                      fontSize: 16.0,
+                      fontWeight: FontWeight.w500,
                     ),
-                  ],
-                ),
+                  ),
+                  TextSpan(
+                    text: '100',
+                    style: kDefaultTextStyle,
+                  ),
+                ],
               ),
-            ],
-          ),
-        ],
-      )),
-      decoration: BoxDecoration(
-        color: kColorOffWhite,
+            ),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[
+                RichText(
+                  text: TextSpan(
+                    children: [
+                      TextSpan(
+                        text: 'Total Visits: ',
+                        style: kAppBarTextStyle.copyWith(
+                          fontSize: 16.0,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      TextSpan(
+                        text: totalVisitsCount,
+                        style: kDefaultTextStyle,
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(width: 8.0),
+                RichText(
+                  text: TextSpan(
+                    children: [
+                      TextSpan(
+                        text: 'This Week: ',
+                        style: kAppBarTextStyle.copyWith(
+                          fontSize: 16.0,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      TextSpan(
+                        text: weeklyVisitsCount,
+                        style: kDefaultTextStyle,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[
+                Icon(
+                  FontAwesomeIcons.mapMarkerAlt,
+                  color: kColorDarkThistle,
+                  size: 16.0,
+                ),
+                SizedBox(width: 4.0),
+                Text(
+                  locationLabel,
+                  style: kAppBarTextStyle.copyWith(color: kColorThistle),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }

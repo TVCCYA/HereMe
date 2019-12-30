@@ -410,7 +410,7 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
                                   fontWeight: FontWeight.w300, fontSize: 16.0),
                             ),
                             splashColor: Colors.transparent,
-                            highlightColor: Colors.grey[200],
+                            highlightColor: kColorExtraLightGray,
                           )
                         : SizedBox(),
                   ],
@@ -564,7 +564,7 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
                                   fontWeight: FontWeight.w300, fontSize: 16.0),
                             ),
                             splashColor: Colors.transparent,
-                            highlightColor: Colors.grey[200],
+                            highlightColor: kColorExtraLightGray,
                           ),
                         )
                       : SizedBox(),
@@ -783,11 +783,11 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
             child: GestureDetector(
               child: _isAuth
                   ? cachedUserResultImage(currentUser.profileImageUrl)
-                  : Icon(FontAwesomeIcons.user, color: Colors.grey[200]),
+                  : Icon(FontAwesomeIcons.user, color: kColorLightGray),
               onTap: () => Navigator.push(
                   context,
                   MaterialPageRoute(
-                      builder: (context) => Profile(user: currentUser))),
+                      builder: (context) => Profile(user: currentUser, locationLabel: currentUser.city ?? 'Here'))),
             ),
           )
         ],
@@ -800,7 +800,7 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
               : SmartRefresher(
                   enablePullDown: true,
                   header: WaterDropHeader(
-                    waterDropColor: Colors.grey[200],
+                    waterDropColor: kColorExtraLightGray,
                     idleIcon: Icon(
                       FontAwesomeIcons.mapMarkerAlt,
                       color: kColorRed,
@@ -824,30 +824,30 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: <Widget>[
                         buildTopViewed(),
-                        Divider(color: Colors.grey[300]),
-                        Center(
-                          child: Container(
-                            height: 50.0,
-                            child: Center(
-                              child: DFPBanner(
-                                isDevelop: false,
-                                adUnitId: Platform.isAndroid
-                                    ? 'ca-app-pub-5239326709670732/8292225666'
-                                    : 'ca-app-pub-5239326709670732/4791964351',
-                                adSize: DFPAdSize.SMART_BANNER,
-                              ),
-                            ),
-                          ),
-                        ),
-                        Divider(color: Colors.grey[300]),
+                        Divider(color: kColorExtraLightGray),
                         enabledLocationFetchUsers(),
-                        Divider(color: Colors.grey[300]),
+                        Divider(color: kColorExtraLightGray),
                         enabledLocationFetchChats(),
-                        Divider(color: Colors.grey[300]),
+                        Divider(color: kColorExtraLightGray),
                       ],
                     ),
                   ),
                 ),
+        ),
+      ),
+      bottomNavigationBar:
+      SafeArea(
+        child: Container(
+          height: 50.0,
+          child: Center(
+            child: DFPBanner(
+              isDevelop: false,
+              adUnitId: Platform.isAndroid
+                  ? 'ca-app-pub-5239326709670732/8292225666'
+                  : 'ca-app-pub-5239326709670732/4791964351',
+              adSize: DFPAdSize.SMART_BANNER,
+            ),
+          ),
         ),
       ),
     );
@@ -864,7 +864,7 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
       height: 50.0,
       color: kColorBlue.withOpacity(0.75),
       child: FlatButton(
-        splashColor: Colors.grey[200],
+        splashColor: kColorExtraLightGray,
         highlightColor: Colors.transparent,
         onPressed: () {
           kHandleHideMe(_scaffoldKey);
@@ -899,7 +899,7 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
       ),
       mainButton: FlatButton(
         onPressed: () => PermissionHandler().openAppSettings(),
-        splashColor: Colors.grey[200],
+        splashColor: kColorExtraLightGray,
         highlightColor: Colors.transparent,
         child: Text(
           "Open",

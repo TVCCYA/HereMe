@@ -141,7 +141,7 @@ class _CreateDisplayNameState extends State<CreateDisplayName> {
             Navigator.pop(context);
           },
           color: kColorBlack71,
-          splashColor: Colors.grey[200],
+          splashColor: kColorExtraLightGray,
           highlightColor: Colors.transparent,
         ),
       ),
@@ -210,7 +210,7 @@ class _CreateDisplayNameState extends State<CreateDisplayName> {
                         'Randomize Display Color',
                         style: kDefaultTextStyle.copyWith(color: Colors.white),
                       ),
-                      splashColor: Colors.grey[200],
+                      splashColor: kColorExtraLightGray,
                       highlightColor: Colors.transparent,
                     ),
                     Align(

@@ -137,7 +137,7 @@ class _AllUsersCloseByState extends State<AllUsersCloseBy> {
             Navigator.pop(context);
           },
           color: kColorBlack71,
-          splashColor: Colors.grey[200],
+          splashColor: kColorExtraLightGray,
           highlightColor: Colors.transparent,
         ),
       ),
@@ -145,7 +145,7 @@ class _AllUsersCloseByState extends State<AllUsersCloseBy> {
         child: SmartRefresher(
           enablePullDown: true,
           header: WaterDropHeader(
-            waterDropColor: Colors.grey[200],
+            waterDropColor: kColorExtraLightGray,
             idleIcon: Icon(
               FontAwesomeIcons.user,
               color: kColorRed,

@@ -35,7 +35,7 @@ class SupportPage extends StatelessWidget {
             Navigator.pop(context);
           },
           color: kColorBlack71,
-          splashColor: Colors.grey[200],
+          splashColor: kColorExtraLightGray,
           highlightColor: Colors.transparent,
         ),
       ),

@@ -61,7 +61,7 @@ class RecentUpload extends StatelessWidget {
         // separator line
         Padding(
           padding: const EdgeInsets.only(left: 12.0),
-          child: Container(height: 0.5, color: Colors.grey[100]),
+          child: Container(height: 0.5, color: kColorExtraLightGray),
         )
       ],
     );

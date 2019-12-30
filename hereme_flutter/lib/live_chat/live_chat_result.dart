@@ -105,7 +105,7 @@ class LiveChatResult extends StatelessWidget {
             softWrap: false,
             style: kDefaultTextStyle.copyWith(
               fontSize: 12.0,
-              color: kColorRed,
+              color: kColorLightGray,
             ),
           ),
           onTap: () {
@@ -128,8 +128,8 @@ class LiveChatResult extends StatelessWidget {
         ),
         // separator line
         Padding(
-          padding: const EdgeInsets.only(left: 12.0),
-          child: Container(height: 0.5, color: Colors.grey[300]),
+          padding: EdgeInsets.only(left: 12.0),
+          child: Container(height: 0.5, color: kColorExtraLightGray),
         )
       ],
     );

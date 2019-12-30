@@ -3,6 +3,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:hereme_flutter/live_chat/live_chat_screen.dart';
 import 'package:hereme_flutter/models/user.dart';
 import 'package:hereme_flutter/registration/create_display_name.dart';
+import 'package:hereme_flutter/user_profile/profile.dart';
 import 'package:hereme_flutter/utils/custom_image.dart';
 import 'package:hereme_flutter/utils/reusable_bottom_sheet.dart';
 import 'package:hereme_flutter/widgets/user_result.dart';
@@ -38,7 +39,6 @@ class ActivityFeedItem extends StatelessWidget {
     this.imageUrl,
     this.onTap,
     this.creationDate,
-
     this.title,
     this.chatId,
     this.chatHostDisplayName,
@@ -58,7 +58,7 @@ class ActivityFeedItem extends StatelessWidget {
     return ListTile(
       dense: true,
       contentPadding:
-      EdgeInsets.only(left: 16.0, right: 16.0, top: 8.0, bottom: 8.0),
+          EdgeInsets.only(left: 16.0, right: 16.0, top: 8.0, bottom: 8.0),
       title: Text(
         username,
         overflow: TextOverflow.fade,
@@ -67,7 +67,8 @@ class ActivityFeedItem extends StatelessWidget {
       ),
       subtitle: Text(
         'Pending Knock',
-        style: kDefaultTextStyle.copyWith(color: kColorLightGray, fontSize: 14.0),
+        style:
+            kDefaultTextStyle.copyWith(color: kColorLightGray, fontSize: 14.0),
       ),
       leading: ClipRRect(
         borderRadius: BorderRadius.circular(10.0),
@@ -89,42 +90,45 @@ class ActivityFeedItem extends StatelessWidget {
   buildLiveChatMessage(context) {
     return ListTile(
       dense: true,
-      contentPadding: EdgeInsets.only(left: 16.0, right: 16.0, top: 4.0, bottom: 4.0),
+      contentPadding:
+          EdgeInsets.only(left: 16.0, right: 16.0, top: 4.0, bottom: 4.0),
       title: RichText(
-        text: chatHostDisplayName.isNotEmpty ? TextSpan(
-          children: [
-            TextSpan(
-              text: title,
-              style: kAppBarTextStyle.copyWith(
-                fontSize: 16.0,
+        text: chatHostDisplayName.isNotEmpty
+            ? TextSpan(
+                children: [
+                  TextSpan(
+                    text: title,
+                    style: kAppBarTextStyle.copyWith(
+                      fontSize: 16.0,
+                    ),
+                  ),
+                  TextSpan(
+                    text: " hosted by: ",
+                    style: kDefaultTextStyle,
+                  ),
+                  TextSpan(
+                    text: chatHostDisplayName,
+                    style: kDefaultTextStyle.copyWith(
+                      color: Color.fromRGBO(hostRed, hostGreen, hostBlue, 1.0),
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
+              )
+            : TextSpan(
+                children: [
+                  TextSpan(
+                    text: title,
+                    style: kAppBarTextStyle.copyWith(
+                      fontSize: 16.0,
+                    ),
+                  ),
+                  TextSpan(
+                    text: " hosted anonymously",
+                    style: kDefaultTextStyle,
+                  ),
+                ],
               ),
-            ),
-            TextSpan(
-              text: " hosted by: ",
-              style: kDefaultTextStyle,
-            ),
-            TextSpan(
-              text: chatHostDisplayName,
-              style: kDefaultTextStyle.copyWith(
-                color: Color.fromRGBO(hostRed, hostGreen, hostBlue, 1.0),
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ],
-        ) : TextSpan(
-          children: [
-            TextSpan(
-              text: title,
-              style: kAppBarTextStyle.copyWith(
-                fontSize: 16.0,
-              ),
-            ),
-            TextSpan(
-              text: " hosted anonymously",
-              style: kDefaultTextStyle,
-            ),
-          ],
-        ),
       ),
       subtitle: RichText(
         overflow: TextOverflow.ellipsis,
@@ -135,12 +139,12 @@ class ActivityFeedItem extends StatelessWidget {
               style: kDefaultTextStyle.copyWith(
                   color: kColorLightGray,
                   fontWeight: FontWeight.w700,
-                  fontSize: 14.0
-              ),
+                  fontSize: 14.0),
             ),
             TextSpan(
               text: lastMessage,
-              style: kDefaultTextStyle.copyWith(fontSize: 14.0, color: kColorLightGray),
+              style: kDefaultTextStyle.copyWith(
+                  fontSize: 14.0, color: kColorLightGray),
             ),
           ],
         ),
@@ -160,25 +164,25 @@ class ActivityFeedItem extends StatelessWidget {
             MaterialPageRoute(
                 builder: (context) => currentUser.displayName != null
                     ? LiveChatScreen(
-                  title: title ?? '',
-                  chatId: chatId,
-                  chatHostDisplayName: chatHostDisplayName ?? '',
-                  chatHostUid: uid ?? '',
-                  hostRed: hostRed ?? 95,
-                  hostGreen: hostGreen ?? 71,
-                  hostBlue: hostBlue ?? 188,
-                  duration: duration,
-                )
+                        title: title ?? '',
+                        chatId: chatId,
+                        chatHostDisplayName: chatHostDisplayName ?? '',
+                        chatHostUid: uid ?? '',
+                        hostRed: hostRed ?? 95,
+                        hostGreen: hostGreen ?? 71,
+                        hostBlue: hostBlue ?? 188,
+                        duration: duration,
+                      )
                     : CreateDisplayName()));
       },
     );
   }
-  
+
   buildRecentProfileVisit(context) {
     return ListTile(
       dense: true,
       contentPadding:
-      EdgeInsets.only(left: 16.0, right: 16.0, top: 8.0, bottom: 8.0),
+          EdgeInsets.only(left: 16.0, right: 16.0, top: 8.0, bottom: 8.0),
       title: Text(
         username,
         overflow: TextOverflow.fade,
@@ -187,7 +191,8 @@ class ActivityFeedItem extends StatelessWidget {
       ),
       subtitle: Text(
         'Last Profile Visited',
-        style: kDefaultTextStyle.copyWith(color: kColorLightGray, fontSize: 14.0),
+        style:
+            kDefaultTextStyle.copyWith(color: kColorLightGray, fontSize: 14.0),
       ),
       leading: ClipRRect(
         borderRadius: BorderRadius.circular(10.0),
@@ -195,8 +200,11 @@ class ActivityFeedItem extends StatelessWidget {
       ),
       onTap: () {
         User user = User(uid: uid);
-        UserResult result = UserResult(user: user, locationLabel: city ?? 'Around');
-        result.toProfile(context);
+        Navigator.push(
+            context,
+            MaterialPageRoute(
+                builder: (context) =>
+                    Profile(user: user, locationLabel: city)));
       },
       trailing: Text(
         date(),
@@ -213,7 +221,8 @@ class ActivityFeedItem extends StatelessWidget {
   buildLiveChatInvite(context) {
     return ListTile(
       dense: true,
-      contentPadding: EdgeInsets.only(left: 16.0, right: 16.0, top: 4.0, bottom: 4.0),
+      contentPadding:
+          EdgeInsets.only(left: 16.0, right: 16.0, top: 4.0, bottom: 4.0),
       title: RichText(
         text: TextSpan(
           children: [
@@ -230,28 +239,32 @@ class ActivityFeedItem extends StatelessWidget {
           ],
         ),
       ),
-      subtitle: chatHostDisplayName.isNotEmpty ? RichText(
-        overflow: TextOverflow.ellipsis,
-        text: TextSpan(
-          children: [
-            TextSpan(
-              text: 'Hosted by: ',
+      subtitle: chatHostDisplayName.isNotEmpty
+          ? RichText(
+              overflow: TextOverflow.ellipsis,
+              text: TextSpan(
+                children: [
+                  TextSpan(
+                    text: 'Hosted by: ',
+                    style: kDefaultTextStyle.copyWith(
+                        color: kColorLightGray,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 14.0),
+                  ),
+                  TextSpan(
+                    text: chatHostDisplayName,
+                    style: kDefaultTextStyle.copyWith(
+                        fontSize: 14.0,
+                        color:
+                            Color.fromRGBO(hostRed, hostGreen, hostBlue, 1.0)),
+                  ),
+                ],
+              ))
+          : Text(
+              'Hosted Anonymously',
               style: kDefaultTextStyle.copyWith(
-                  color: kColorLightGray,
-                  fontWeight: FontWeight.w600,
-                  fontSize: 14.0
-              ),
+                  fontSize: 14.0, color: kColorLightGray),
             ),
-            TextSpan(
-              text: chatHostDisplayName,
-              style: kDefaultTextStyle.copyWith(fontSize: 14.0, color: Color.fromRGBO(hostRed, hostGreen, hostBlue, 1.0)),
-            ),
-          ],
-        )
-      ) : Text(
-      'Hosted Anonymously',
-      style: kDefaultTextStyle.copyWith(fontSize: 14.0, color: kColorLightGray),
-    ),
       trailing: Text(
         date(),
         overflow: TextOverflow.fade,
@@ -266,7 +279,6 @@ class ActivityFeedItem extends StatelessWidget {
       },
     );
   }
-
 
   _liveChatInviteActionSheet({BuildContext context}) {
     List<ReusableBottomActionSheetListTile> sheets = [];
@@ -292,15 +304,15 @@ class ActivityFeedItem extends StatelessWidget {
               MaterialPageRoute(
                   builder: (context) => currentUser.displayName != null
                       ? LiveChatScreen(
-                    title: title ?? '',
-                    chatId: chatId,
-                    chatHostDisplayName: chatHostDisplayName ?? '',
-                    chatHostUid: uid ?? '',
-                    hostRed: hostRed ?? 95,
-                    hostGreen: hostGreen ?? 71,
-                    hostBlue: hostBlue ?? 188,
-                    duration: duration,
-                  )
+                          title: title ?? '',
+                          chatId: chatId,
+                          chatHostDisplayName: chatHostDisplayName ?? '',
+                          chatHostUid: uid ?? '',
+                          hostRed: hostRed ?? 95,
+                          hostGreen: hostGreen ?? 71,
+                          hostBlue: hostBlue ?? 188,
+                          duration: duration,
+                        )
                       : CreateDisplayName()));
         },
       ),
@@ -316,7 +328,12 @@ class ActivityFeedItem extends StatelessWidget {
   }
 
   _ignoreLiveChat() {
-    activityRef.document(currentUser.uid).collection('feedItems').document(chatId).get().then((snapshot) {
+    activityRef
+        .document(currentUser.uid)
+        .collection('feedItems')
+        .document(chatId)
+        .get()
+        .then((snapshot) {
       if (snapshot.exists) {
         snapshot.reference.delete();
       }
@@ -345,7 +362,7 @@ class ActivityFeedItem extends StatelessWidget {
         // separator line
         Padding(
           padding: const EdgeInsets.only(left: 12.0),
-          child: Container(height: 0.5, color: Colors.grey[100]),
+          child: Container(height: 0.5, color: kColorExtraLightGray),
         )
       ],
     );

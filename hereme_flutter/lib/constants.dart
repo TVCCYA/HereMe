@@ -47,13 +47,13 @@ const kAppBarTextStyle = TextStyle(
   fontFamily: 'Avenir',
   fontSize: 18.0,
   color: kColorBlack71,
-  fontWeight: FontWeight.bold,
+  fontWeight: FontWeight.w800,
 );
 
 const kDefaultTextStyle = TextStyle(
   color: kColorBlack71,
   fontFamily: 'Avenir',
-  fontWeight: FontWeight.w500,
+  fontWeight: FontWeight.w400,
   fontSize: 16.0,
 );
 

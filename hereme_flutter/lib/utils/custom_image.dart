@@ -18,7 +18,7 @@ Widget cachedUserResultImage(imageUrl) {
       imageUrl: imageUrl,
       fit: BoxFit.cover,
       placeholder: (context, url) => Padding(
-            child: Container(color: Colors.grey[200]),
+            child: Container(color: kColorExtraLightGray),
             padding: EdgeInsets.all(0.0),
           ),
       errorWidget: (context, url, error) => Icon(FontAwesomeIcons.userAlt, color: kColorLightGray,),

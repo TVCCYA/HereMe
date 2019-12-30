@@ -75,7 +75,7 @@ class _SignUpState extends State<SignUp> {
             Navigator.pop(context);
           },
           color: kColorBlack71,
-          splashColor: Colors.grey[200],
+          splashColor: kColorExtraLightGray,
           highlightColor: Colors.transparent,
         ),
       ),
@@ -210,7 +210,7 @@ class _SignUpState extends State<SignUp> {
                       FlatButton(
                         padding: EdgeInsets.all(0.0),
                         onPressed: _launchURL,
-                        splashColor: Colors.grey[200],
+                        splashColor: kColorExtraLightGray,
                         highlightColor: Colors.transparent,
                         child: Text(
                           'Agree to Terms & Conditions',

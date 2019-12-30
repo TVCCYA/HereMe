@@ -33,7 +33,7 @@ class ReusableProfileCard extends StatelessWidget {
                     child: Container(
                       height: (cardSize / 2) - 12,
                       width: (cardSize / 2) - 12,
-                      color: Colors.grey[200],
+                      color: kColorExtraLightGray,
                     ),
                   )),
       ),

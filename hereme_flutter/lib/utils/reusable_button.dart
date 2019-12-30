@@ -15,7 +15,7 @@ class ReusableButton extends StatelessWidget {
       child: Material(
         color: Colors.white,
         child: MaterialButton(
-          splashColor: Colors.grey[200],
+          splashColor: kColorExtraLightGray,
           highlightColor: Colors.transparent,
           onPressed: onPressed,
           child: Text(
