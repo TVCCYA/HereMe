@@ -1600,7 +1600,7 @@ class FlexibleProfileAppBar extends StatelessWidget {
                 borderRadius: BorderRadius.circular(5.0),
                   side: BorderSide(color: !isFollowing ? Colors.transparent : kColorBlack71),
               ),
-              splashColor: !isFollowing ? kColorGreen : kColorRed,
+              splashColor: !isFollowing ? kColorDarkBlue : kColorRed,
               highlightColor: Colors.transparent,
             ) : SizedBox(),
             displayName != null

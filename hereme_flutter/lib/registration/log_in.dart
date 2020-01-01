@@ -54,7 +54,7 @@ class _LogInState extends State<LogIn> {
         centerTitle: true,
         brightness: Brightness.light,
         elevation: 2.0,
-        backgroundColor: Colors.white,
+        backgroundColor: kColorOffWhite,
         title: Text(
           "Welcome Back",
           textAlign: TextAlign.left,
@@ -92,7 +92,7 @@ class _LogInState extends State<LogIn> {
                   Column(
                     children: <Widget>[
                       TextField(
-                        cursorColor: kColorRed,
+                        cursorColor: kColorLightGray,
                         onChanged: (value) {
                           email = value;
                           isTextFieldValid();
@@ -124,7 +124,7 @@ class _LogInState extends State<LogIn> {
                       SizedBox(height: 8.0),
                       TextField(
                         obscureText: true,
-                        cursorColor: kColorRed,
+                        cursorColor: kColorLightGray,
                         onChanged: (value) {
                           password = value;
                           isTextFieldValid();
@@ -189,7 +189,7 @@ class _LogInState extends State<LogIn> {
                                 textInputAction: TextInputAction.send,
                                 autofocus: true,
                                 style: kDefaultTextStyle,
-                                cursorColor: kColorRed,
+                                cursorColor: kColorLightGray,
                                 decoration:
                                 kRegistrationInputDecoration
                                     .copyWith(
@@ -245,14 +245,14 @@ class _LogInState extends State<LogIn> {
                             size: 30.0,
                             color: _isButtonDisabled
                                 ? kColorLightGray
-                                : kColorRed,
+                                : kColorBlue,
                           ),
                           label: Text(
                             _isButtonDisabled ? 'Not Done' : 'Log In',
                             style: kDefaultTextStyle.copyWith(
                                 color: _isButtonDisabled
                                     ? kColorLightGray
-                                    : kColorRed),
+                                    : kColorBlue),
                           ),
                         ),
                       ),

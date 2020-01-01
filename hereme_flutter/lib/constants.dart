@@ -17,6 +17,8 @@ const kColorLightGray = Color.fromRGBO(171, 171, 171, 1.0);
 const kColorExtraLightGray = Color.fromRGBO(234, 234, 234, 1.0);
 const kColorThistle = Color.fromRGBO(228, 162, 162, 1.0);
 const kColorDarkThistle = Color.fromRGBO(215, 115, 115, 1.0);
+const kColorDarkRed = Color.fromRGBO(120, 37, 37, 1.0);
+const kColorDarkBlue = Color.fromRGBO(63, 81, 148, 1.0);
 // SOCIAL MEDIA COLORS
 const kColorInstagram = Color.fromRGBO(185, 0, 180, 1.0);
 const kColorSnapchat = Color.fromRGBO(255, 252, 0, 1.0);
@@ -64,7 +66,7 @@ const kRegistrationInputDecoration = InputDecoration(
     ),
   ),
   focusedBorder: UnderlineInputBorder(
-    borderSide: BorderSide(color: kColorThistle),
+    borderSide: BorderSide(color: kColorLightGray),
   ),
 );
 

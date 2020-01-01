@@ -97,7 +97,7 @@ class _SignUpState extends State<SignUp> {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: <Widget>[
                   TextField(
-                    cursorColor: kColorRed,
+                    cursorColor: kColorLightGray,
                     onChanged: (value) {
                       email = value;
                       _isValid();
@@ -129,7 +129,7 @@ class _SignUpState extends State<SignUp> {
                   ),
                   SizedBox(height: 8.0),
                   TextField(
-                    cursorColor: kColorRed,
+                    cursorColor: kColorLightGray,
                     onChanged: (value) {
                       firstName = value;
                       _isValid();
@@ -162,7 +162,7 @@ class _SignUpState extends State<SignUp> {
                   SizedBox(height: 8.0),
                   TextField(
                     obscureText: true,
-                    cursorColor: kColorRed,
+                    cursorColor: kColorLightGray,
                     onChanged: (value) {
                       password = value;
                       _isValid();
@@ -237,7 +237,7 @@ class _SignUpState extends State<SignUp> {
                         size: 30.0,
                         color: _isButtonDisabled
                             ? kColorLightGray
-                            : kColorRed,
+                            : kColorBlue,
                       ),
                       label: Text(
                         _isButtonDisabled
@@ -246,7 +246,7 @@ class _SignUpState extends State<SignUp> {
                         style: kDefaultTextStyle.copyWith(
                             color: _isButtonDisabled
                                 ? kColorLightGray
-                                : kColorRed),
+                                : kColorBlue),
                       ),
                     ),
                   ),

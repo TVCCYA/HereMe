@@ -124,7 +124,7 @@ class _AddLinkState extends State<AddLink> {
               children: <Widget>[
                 TextField(
                   controller: _usernameController,
-                  cursorColor: kColorRed,
+                  cursorColor: kColorLightGray,
                   onChanged: (value) {
                     username = value;
                     isValid();
@@ -176,7 +176,7 @@ class _AddLinkState extends State<AddLink> {
                         platform == 'SoundCloud' ||
                         platform == 'Pinterest'
                     ? TextField(
-                        cursorColor: kColorRed,
+                        cursorColor: kColorLightGray,
                         onChanged: (value) {
                           url = value;
                           isValid();
@@ -266,14 +266,14 @@ class _AddLinkState extends State<AddLink> {
                           ? FontAwesomeIcons.arrowAltCircleUp
                           : FontAwesomeIcons.arrowAltCircleRight,
                       size: 30.0,
-                      color: _isButtonDisabled ? kColorLightGray : kColorRed,
+                      color: _isButtonDisabled ? kColorLightGray : kColorBlue,
                     ),
                     label: Text(
                       _isButtonDisabled ? 'Not Done' : 'Add Link',
                       style: kDefaultTextStyle.copyWith(
                           color: _isButtonDisabled
                               ? kColorLightGray
-                              : kColorRed),
+                              : kColorBlue),
                     ),
                   ),
                 ),

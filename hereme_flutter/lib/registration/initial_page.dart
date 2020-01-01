@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:zoom_widget/zoom_widget.dart';
 import 'log_in.dart';
 import 'sign_up.dart';
 import 'package:hereme_flutter/constants.dart';
-import 'package:hereme_flutter/utils/reusable_button.dart';
 
 class InitialPage extends StatefulWidget {
   @override
@@ -12,101 +12,102 @@ class InitialPage extends StatefulWidget {
 class _InitialPageState extends State<InitialPage> {
   @override
   Widget build(BuildContext context) {
+    double screenHeight = MediaQuery.of(context).size.height;
+    double screenWidth = MediaQuery.of(context).size.width;
     return Scaffold(
-      body: Container(
-        decoration: BoxDecoration(
-          image: DecorationImage(
-            image: AssetImage("images/bubbly.png"),
-            fit: BoxFit.none,
+      backgroundColor: kColorRed,
+      appBar: AppBar(
+        backgroundColor: kColorRed,
+        elevation: 0.0,
+        centerTitle: false,
+        title: Text(
+          'Spred',
+          textAlign: TextAlign.left,
+          style: kAppBarTextStyle.copyWith(
+            color: kColorOffWhite,
+            fontSize: 25.0,
           ),
         ),
-        child: SafeArea(
-          child: Padding(
-            padding: EdgeInsets.all(32.0),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: <Widget>[
-                Container(
-                  height: 225.0,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.all(const Radius.circular(10.0)),
-                    boxShadow: [
-                      BoxShadow(
-                        color: kColorOffBlack,
-                        blurRadius: 5.0,
-                        spreadRadius: 2.0,
-                        offset: Offset(
-                          8.0, // horizontal, move right 10
-                          8.0, // vertical, move down 10
-                        ),
-                      )
-                    ],
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.only(left: 8.0, right: 8.0),
-                    child: Column(
+      ),
+      body: SafeArea(
+        child: Padding(
+          padding: EdgeInsets.all(32.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: <Widget>[
+              Padding(
+                padding: const EdgeInsets.only(left: 8.0, right: 8.0),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: <Widget>[
+                    Text(
+                      'Connect with\nPeople Nearby',
+                      textAlign: TextAlign.left,
+                      style: kAppBarTextStyle.copyWith(
+                        color: kColorOffWhite,
+                        fontSize: 32.0
+                      ),
+                    ),
+                    SizedBox(
+                      height: 36.0,
+                    ),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: <Widget>[
-                        SizedBox(height: 4.0),
-                        Text(
-                          'HereMe',
-                          textAlign: TextAlign.center,
-                          style: kAppBarTextStyle.copyWith(
-                            fontSize: 28.0,
-                            color: kColorRed,
-                          ),
-                        ),
-                        Text(
-                          'Connect with people nearby',
-                          textAlign: TextAlign.center,
-                          style: kDefaultTextStyle.copyWith(
-                            color: kColorRed,
-                            fontSize: 18.0
-                          ),
-                        ),
-                        SizedBox(
-                          height: 8.0,
-                        ),
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                          children: <Widget>[
-                            ReusableButton(
-                              title: 'Log In',
-                              textColor: kColorDarkThistle,
-                              onPressed: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(builder: (context) => LogIn()),
-                                );
-                              },
+                        ButtonTheme(
+                          minWidth: 125.0,
+                          child: FlatButton(
+                            child: Text(
+                              'Sign Up',
+                              style: kAppBarTextStyle.copyWith(
+                                  fontSize: 16.0, color: Colors.white),
                             ),
-                            Container(
-                              width: 1.0,
-                              height: 40.0,
-                              color: kColorRed,
-                            ),
-                            ReusableButton(
-                              title: 'Sign Up',
-                              textColor: kColorDarkThistle,
-                              onPressed: () {
+                            color: Colors.transparent,
+                            onPressed: () =>
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(builder: (context) => SignUp()),
-                                );
-                              },
+                                ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(5.0),
+                              side: BorderSide(color: Colors.white),
                             ),
-                          ],
+                            splashColor: kColorDarkRed,
+                            highlightColor: Colors.transparent,
+                          ),
+                        ),
+                        ButtonTheme(
+                          minWidth: 125.0,
+                          child: FlatButton(
+                            child: Text(
+                              'Log In',
+                              style: kAppBarTextStyle.copyWith(
+                                  fontSize: 16.0, color: Colors.white),
+                            ),
+                            color: Colors.transparent,
+                            onPressed: () =>
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(builder: (context) => LogIn()),
+                                ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(5.0),
+                              side: BorderSide(color: Colors.white),
+
+                            ),
+                            splashColor: kColorDarkRed,
+                            highlightColor: Colors.transparent,
+                          ),
                         ),
                       ],
                     ),
-                  ),
+                  ],
                 ),
-              ].toList(),
-            ),
+              ),
+            ].toList(),
           ),
         ),
       ),

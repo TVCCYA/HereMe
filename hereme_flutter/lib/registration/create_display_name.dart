@@ -165,7 +165,7 @@ class _CreateDisplayNameState extends State<CreateDisplayName> {
                   children: <Widget>[
                     TextField(
                       maxLength: 16,
-                      cursorColor: kColorRed,
+                      cursorColor: kColorLightGray,
                       onChanged: (value) {
                         displayName = value;
                         _isNameAvailable();
@@ -233,14 +233,14 @@ class _CreateDisplayNameState extends State<CreateDisplayName> {
                           size: 30.0,
                           color: _isButtonDisabled
                               ? kColorLightGray
-                              : kColorRed,
+                              : kColorBlue,
                         ),
                         label: Text(
                           _isButtonDisabled ? 'Not Done' : 'Done',
                           style: kDefaultTextStyle.copyWith(
                               color: _isButtonDisabled
                                   ? kColorLightGray
-                                  : kColorRed),
+                                  : kColorBlue),
                         ),
                       ),
                     ),

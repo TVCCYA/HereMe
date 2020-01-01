@@ -170,7 +170,7 @@ class _AddLiveChatState extends State<AddLiveChat> {
                       ),
                     ),
                     TextField(
-                      cursorColor: kColorRed,
+                      cursorColor: kColorLightGray,
                       maxLength: 20,
                       onChanged: (value) {
                         title = value;
@@ -201,7 +201,7 @@ class _AddLiveChatState extends State<AddLiveChat> {
                     ),
                     SizedBox(height: 8.0),
                     TextField(
-                      cursorColor: kColorRed,
+                      cursorColor: kColorLightGray,
                       onChanged: (value) {
                         duration = value;
                         isValid();
@@ -287,14 +287,14 @@ class _AddLiveChatState extends State<AddLiveChat> {
                           size: 30.0,
                           color: _isButtonDisabled
                               ? kColorLightGray
-                              : kColorRed,
+                              : kColorBlue,
                         ),
                         label: Text(
                           _isButtonDisabled ? 'Not Done' : 'Start Chat',
                           style: kDefaultTextStyle.copyWith(
                               color: _isButtonDisabled
                                   ? kColorLightGray
-                                  : kColorRed),
+                                  : kColorBlue),
                         ),
                       ),
                     ),

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'package:circle_list/circle_list.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -768,14 +769,18 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
         centerTitle: false,
         elevation: 2.0,
         backgroundColor: kColorOffWhite,
-        title: Text(
-          hideMe ? 'HideMe' : 'Spred',
-          textAlign: TextAlign.left,
-          style: kAppBarTextStyle.copyWith(
-            color: kColorRed,
-            fontSize: 25.0,
-          ),
+        title: Image.asset(
+          'images/spredTop.png',
+          scale: 11,
         ),
+//        title: Text(
+//          hideMe ? 'HideMe' : 'Spred',
+//          textAlign: TextAlign.left,
+//          style: kAppBarTextStyle.copyWith(
+//            color: kColorRed,
+//            fontSize: 25.0,
+//          ),
+//        ),
         automaticallyImplyLeading: false,
         actions: <Widget>[
           Padding(
@@ -919,3 +924,24 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
     );
   }
 }
+
+//Zoom(
+//backgroundColor: kColorRed,
+//canvasColor: kColorRed,
+//width: screenHeight,
+//height: screenWidth,
+//colorScrollBars: Colors.transparent,
+//opacityScrollBars: 0.0,
+//scrollWeight: 10.0,
+//centerOnScale: true,
+//enableScroll: true,
+//doubleTapZoom: true,
+//zoomSensibility: 5.0,)
+
+
+//Center(
+//child: CircleList(
+//origin: Offset(0, 0),
+//children: gridTiles,
+//),
+//),

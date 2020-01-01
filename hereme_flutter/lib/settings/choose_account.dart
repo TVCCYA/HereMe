@@ -160,11 +160,11 @@ class SocialMediaTile extends StatelessWidget {
                 icon: socialMedia.icon,
               ),
             ));
-        kShowSnackbar(
+        result != null ? kShowSnackbar(
           key: scaffoldKey,
           text: '$result',
           backgroundColor: kColorGreen,
-        );
+        ) : SizedBox();
       },
       child: Container(
         decoration: BoxDecoration(

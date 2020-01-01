@@ -57,109 +57,100 @@ class _PhotoAddState extends State<PhotoAdd> {
         'images/add-image.png',
         height: (screenHeight / 5) / 1.75,
         width: (screenHeight / 5) / 1.75,
+        color: Colors.white,
       ),
     );
 
     return Scaffold(
-      body: Container(
-        constraints: BoxConstraints.expand(),
-        decoration: BoxDecoration(
-          image: DecorationImage(
-            image: AssetImage("images/bubbly2.png"),
-            fit: BoxFit.none,
-            alignment: Alignment.topCenter,
+      backgroundColor: kColorRed,
+      appBar: AppBar(
+        backgroundColor: kColorRed,
+        elevation: 0.0,
+        centerTitle: false,
+        title: Text(
+          'Spred',
+          textAlign: TextAlign.left,
+          style: kAppBarTextStyle.copyWith(
+            color: kColorOffWhite,
+            fontSize: 25.0,
           ),
         ),
-        child: SafeArea(
-          child: ModalProgressHUD(
-            inAsyncCall: showSpinner,
-            progressIndicator: CircularProgressIndicator(
-              valueColor: AlwaysStoppedAnimation<Color>(kColorRed),
-            ),
-            child: Padding(
-              padding: EdgeInsets.all(24.0),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: <Widget>[
-                  Container(
-                    height: screenHeight / 2.35,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius:
-                          BorderRadius.all(Radius.circular(10.0)),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.grey[800],
-                          blurRadius:
-                              5.0, // has the effect of softening the shadow
-                          spreadRadius:
-                              2.0, // has the effect of extending the shadow
-                          offset: Offset(
-                            8.0, // horizontal, move right 10
-                            8.0, // vertical, move down 10
+      ),
+      body: SafeArea(
+        child: ModalProgressHUD(
+          inAsyncCall: showSpinner,
+          progressIndicator: CircularProgressIndicator(
+            valueColor: AlwaysStoppedAnimation<Color>(kColorRed),
+          ),
+          child: Padding(
+            padding: EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: <Widget>[
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 24.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: <Widget>[
+                      Text(
+                        'Choose a\nProfile Image',
+                        textAlign: TextAlign.center,
+                        style: kAppBarTextStyle.copyWith(
+                          fontSize: 26.0,
+                          color: kColorOffWhite,
+                        ),
+                      ),
+                      SizedBox(
+                        height: 24.0,
+                      ),
+                      mediaFile != null
+                          ? ReusableCard(
+                              imageFile: mediaFile,
+                              cardSize: screenHeight / 4,
+                              onTap: () {
+                                _openPhotoLibrary();
+                              },
+                            )
+                          : polaroidPic,
+                      SizedBox(
+                        height: 24.0,
+                      ),
+                      Align(
+                        alignment: Alignment.topRight,
+                        child: FlatButton.icon(
+                          onPressed: () => _isButtonDisabled
+                              ? print('Disabled')
+                              : _uploadImageToFirebase(mediaFile),
+                          splashColor: _isButtonDisabled
+                              ? Colors.transparent
+                              : kColorOffWhite,
+                          highlightColor: Colors.transparent,
+                          icon: Icon(
+                            _isButtonDisabled
+                                ? FontAwesomeIcons.arrowAltCircleUp
+                                : FontAwesomeIcons.arrowAltCircleRight,
+                            size: 30.0,
+                            color: _isButtonDisabled
+                                ? Colors.white
+                                : Colors.white,
+                          ),
+                          label: Text(
+                            _isButtonDisabled
+                                ? 'Add Image'
+                                : 'Complete',
+                            style: kDefaultTextStyle.copyWith(
+                                color: _isButtonDisabled
+                                    ? Colors.white
+                                    : Colors.white),
                           ),
                         ),
-                      ],
-                    ),
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 24.0),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: <Widget>[
-                          Text(
-                            'Choose a Profile Image',
-                            textAlign: TextAlign.center,
-                            style: kAppBarTextStyle.copyWith(
-                              fontSize: 26.0,
-                              color: kColorRed,
-                            ),
-                          ),
-                          mediaFile != null
-                              ? ReusableCard(
-                                  imageFile: mediaFile,
-                                  cardSize: screenHeight / 4,
-                                  onTap: () {
-                                    _openPhotoLibrary();
-                                  },
-                                )
-                              : polaroidPic,
-                          Align(
-                            alignment: Alignment.topRight,
-                            child: FlatButton.icon(
-                              onPressed: () => _isButtonDisabled
-                                  ? print('Disabled')
-                                  : _uploadImageToFirebase(mediaFile),
-                              splashColor: _isButtonDisabled
-                                  ? Colors.transparent
-                                  : kColorOffWhite,
-                              highlightColor: Colors.transparent,
-                              icon: Icon(
-                                _isButtonDisabled
-                                    ? FontAwesomeIcons.arrowAltCircleUp
-                                    : FontAwesomeIcons.arrowAltCircleRight,
-                                size: 30.0,
-                                color: _isButtonDisabled
-                                    ? kColorLightGray
-                                    : kColorRed,
-                              ),
-                              label: Text(
-                                _isButtonDisabled
-                                    ? 'Add Image'
-                                    : 'Complete',
-                                style: kDefaultTextStyle.copyWith(
-                                    color: _isButtonDisabled
-                                        ? kColorLightGray
-                                        : kColorRed),
-                              ),
-                            ),
-                          ),
-                        ],
                       ),
-                    ),
+                    ],
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         ),

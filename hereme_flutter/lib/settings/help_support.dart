@@ -132,7 +132,7 @@ class SupportPage extends StatelessWidget {
               controller: _nameChangeController,
               style: kDefaultTextStyle,
               onSubmitted: (v) => _submitUpdateNameChange(context),
-              cursorColor: kColorRed,
+              cursorColor: kColorLightGray,
               decoration: kRegistrationInputDecoration.copyWith(
                 labelText: 'First Name',
                 labelStyle: kDefaultTextStyle.copyWith(
