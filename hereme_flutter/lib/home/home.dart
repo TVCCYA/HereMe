@@ -41,6 +41,8 @@ final liveChatLocationsRef = Firestore.instance.collection('liveChatLocations');
 final liveChatMessagesRef = Firestore.instance.collection('liveChatMessages');
 final activityRef = Firestore.instance.collection('activity');
 final usersInChatRef = Firestore.instance.collection('usersInChat');
+final followersRef = Firestore.instance.collection('followers');
+final followingRef = Firestore.instance.collection('following');
 User currentUser;
 double currentLatitude;
 double currentLongitude;
@@ -765,6 +767,7 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
       key: _scaffoldKey,
       backgroundColor: kColorOffWhite,
       appBar: AppBar(
+        titleSpacing: 8,
         brightness: Brightness.light,
         centerTitle: false,
         elevation: 2.0,

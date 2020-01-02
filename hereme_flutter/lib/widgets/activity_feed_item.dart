@@ -6,7 +6,6 @@ import 'package:hereme_flutter/registration/create_display_name.dart';
 import 'package:hereme_flutter/user_profile/profile.dart';
 import 'package:hereme_flutter/utils/custom_image.dart';
 import 'package:hereme_flutter/utils/reusable_bottom_sheet.dart';
-import 'package:hereme_flutter/widgets/user_result.dart';
 import 'package:time_ago_provider/time_ago_provider.dart';
 import '../constants.dart';
 import 'package:hereme_flutter/home/home.dart';
@@ -200,11 +199,12 @@ class ActivityFeedItem extends StatelessWidget {
       ),
       onTap: () {
         User user = User(uid: uid);
+        print(uid);
         Navigator.push(
             context,
             MaterialPageRoute(
                 builder: (context) =>
-                    Profile(user: user, locationLabel: city)));
+                    Profile(user: user, locationLabel: 'Around')));
       },
       trailing: Text(
         date(),

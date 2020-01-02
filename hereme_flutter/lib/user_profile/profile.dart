@@ -60,6 +60,8 @@ class _ProfileState extends State<Profile> {
   int red;
   int green;
   int blue;
+  int followersCount;
+  String displayedFollowersCount;
   String profileImageUrl;
   int weeklyVisitsCount;
   String displayedWeeklyCount;
@@ -75,8 +77,11 @@ class _ProfileState extends State<Profile> {
   void initState() {
     super.initState();
     _determinePage();
+    getFollowers();
     if (_isCurrentUser) {
       updateCurrentUserCounts();
+    } else {
+      checkIfFollowing();
     }
   }
 
@@ -164,6 +169,57 @@ class _ProfileState extends State<Profile> {
                           blue: blue,
                           isCurrentUser: _isCurrentUser,
                           isFollowing: _isFollowing,
+                          followersCount: displayedFollowersCount,
+                          followUser: () {
+                            print('following');
+                            setState(() {
+                              _isFollowing = true;
+                            });
+
+                            followersRef
+                                .document(user.uid)
+                                .collection('users')
+                                .document(currentUserUid)
+                                .setData({});
+
+                            followingRef
+                                .document(currentUserUid)
+                                .collection('users')
+                                .document(user.uid)
+                                .setData({}).whenComplete(() {
+                                  getFollowers();
+                            });
+                          },
+                          unfollowUser: () {
+                            print('unfollow');
+                            setState(() {
+                              _isFollowing = false;
+                            });
+
+                            followersRef
+                                .document(user.uid)
+                                .collection('users')
+                                .document(currentUserUid)
+                                .get()
+                                .then((doc) {
+                              if (doc.exists) {
+                                doc.reference.delete();
+                              }
+                            });
+
+                            followingRef
+                                .document(currentUserUid)
+                                .collection('users')
+                                .document(user.uid)
+                                .get()
+                                .then((doc) {
+                              if (doc.exists) {
+                                doc.reference.delete();
+                              }
+                            }).whenComplete(() {
+                              getFollowers();
+                            });
+                          },
                         ),
                       ),
                     ),
@@ -711,11 +767,7 @@ class _ProfileState extends State<Profile> {
     });
   }
 
-  _knocksActionSheet(
-      {BuildContext context,
-      String uid,
-      String username,
-      String profileImageUrl}) {
+  _knocksActionSheet({BuildContext context, String uid, String username, String profileImageUrl}) {
     List<ReusableBottomActionSheetListTile> sheets = [];
     sheets.add(
       ReusableBottomActionSheetListTile(
@@ -1297,6 +1349,28 @@ class _ProfileState extends State<Profile> {
     }
   }
 
+  getFollowers() async {
+    QuerySnapshot snapshot = await followersRef
+        .document(user.uid)
+        .collection('users')
+        .getDocuments();
+    setState(() {
+      followersCount = snapshot.documents.length;
+      displayedFollowersCount = NumberFormat.compact().format(followersCount);
+    });
+  }
+
+  checkIfFollowing() async {
+    DocumentSnapshot doc = await followersRef
+        .document(user.uid)
+        .collection('users')
+        .document(currentUserUid)
+        .get();
+    setState(() {
+      _isFollowing = doc.exists;
+    });
+  }
+
   _getUserPageInfo() async {
     await usersRef.document(user.uid).get().then((doc) {
       User user = User.fromDocument(doc);
@@ -1540,8 +1614,6 @@ class ReusableSectionLabel extends StatelessWidget {
 }
 
 class FlexibleProfileAppBar extends StatelessWidget {
-  final double appBarHeight = 66.0;
-
   final String userPhotoUrl;
   final Function onTap;
   final double topProfileContainerHeight;
@@ -1554,6 +1626,9 @@ class FlexibleProfileAppBar extends StatelessWidget {
   final int blue;
   final bool isCurrentUser;
   final bool isFollowing;
+  final String followersCount;
+  final Function followUser;
+  final Function unfollowUser;
 
   const FlexibleProfileAppBar({
     @required this.userPhotoUrl,
@@ -1568,6 +1643,9 @@ class FlexibleProfileAppBar extends StatelessWidget {
     this.blue,
     this.isCurrentUser,
     this.isFollowing,
+    this.followersCount,
+    this.followUser,
+    this.unfollowUser,
   });
 
   @override
@@ -1595,7 +1673,7 @@ class FlexibleProfileAppBar extends StatelessWidget {
                     fontSize: 16.0),
               ),
               color: !isFollowing ? kColorBlue : Colors.transparent,
-              onPressed: () => !isFollowing ? print('follow') : print('unfollow'),
+              onPressed: !isFollowing ? followUser : unfollowUser,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(5.0),
                   side: BorderSide(color: !isFollowing ? Colors.transparent : kColorBlack71),
@@ -1634,7 +1712,7 @@ class FlexibleProfileAppBar extends StatelessWidget {
                     ),
                   ),
                   TextSpan(
-                    text: '100',
+                    text: followersCount,
                     style: kDefaultTextStyle,
                   ),
                 ],

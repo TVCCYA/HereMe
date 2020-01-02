@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:zoom_widget/zoom_widget.dart';
 import 'log_in.dart';
 import 'sign_up.dart';
 import 'package:hereme_flutter/constants.dart';
