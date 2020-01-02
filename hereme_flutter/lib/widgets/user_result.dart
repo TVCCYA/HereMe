@@ -22,7 +22,10 @@ class UserResult extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () => toProfile(context),
-      child: cachedUserResultImage(user.profileImageUrl),
+      child: Padding(
+        padding: const EdgeInsets.all(6.0),
+        child: cachedUserResultImage(user.profileImageUrl),
+      ),
     );
   }
 }

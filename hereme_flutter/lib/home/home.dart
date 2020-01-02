@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'package:carousel_slider/carousel_slider.dart';
 import 'package:circle_list/circle_list.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
@@ -56,7 +57,8 @@ class Home extends StatefulWidget {
 
 class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
   final _scaffoldKey = GlobalKey<ScaffoldState>();
-  RefreshController _refreshController = RefreshController(initialRefresh: false);
+  RefreshController _refreshController =
+      RefreshController(initialRefresh: false);
   FirebaseMessaging _firebaseMessaging = FirebaseMessaging();
   final auth = FirebaseAuth.instance;
   bool _isAuth = false;
@@ -104,20 +106,22 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
   handleLoggedIn() async {
     if (await auth.currentUser() != null) {
       await getCurrentUser();
-      if (this.mounted) setState(() {
-        _isAuth = true;
-        pageLoading = false;
-      });
+      if (this.mounted)
+        setState(() {
+          _isAuth = true;
+          pageLoading = false;
+        });
       await configurePushNotifications();
     } else {
       Navigator.pushAndRemoveUntil(
           context,
           MaterialPageRoute(builder: (BuildContext context) => InitialPage()),
           (Route<dynamic> route) => false);
-      if (this.mounted) setState(() {
-        _isAuth = false;
-        pageLoading = false;
-      });
+      if (this.mounted)
+        setState(() {
+          _isAuth = false;
+          pageLoading = false;
+        });
     }
   }
 
@@ -177,15 +181,17 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
     await prefs.setString('username', currentUser.username);
     await prefs.setString('profileImageUrl', currentUser.profileImageUrl);
     await prefs.setString('uid', currentUser.uid);
-    if (this.mounted) setState(() {
-      hideMe = prefs.getBool('hideMe') ?? false;
-    });
+    if (this.mounted)
+      setState(() {
+        hideMe = prefs.getBool('hideMe') ?? false;
+      });
 
     await getStreamedLocation();
     if (currentUser.hasAccountLinked) {
-      if (this.mounted) setState(() {
-        _hasAccountLinked = true;
-      });
+      if (this.mounted)
+        setState(() {
+          _hasAccountLinked = true;
+        });
     } else {
       _hasAccountLinked = false;
     }
@@ -196,13 +202,14 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
     if (currentUser.blockedUserUids != null) {
       currentUser.blockedUserUids.forEach((uid, val) {
         uids.add(uid);
-        if (this.mounted) setState(() {
-          uids.forEach((i) {
-            if (!blockedUids.contains(i)) {
-              this.blockedUids.add(i);
-            }
+        if (this.mounted)
+          setState(() {
+            uids.forEach((i) {
+              if (!blockedUids.contains(i)) {
+                this.blockedUids.add(i);
+              }
+            });
           });
-        });
       });
     }
   }
@@ -212,19 +219,21 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
         await Geolocator().checkGeolocationPermissionStatus();
 
     if (geolocationStatus != GeolocationStatus.granted || hideMe) {
-      if (this.mounted) setState(() {
-        _locationLoading = false;
-        _locationEnabled = false;
-      });
+      if (this.mounted)
+        setState(() {
+          _locationLoading = false;
+          _locationEnabled = false;
+        });
     } else {
       Position position = await Geolocator()
           .getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
-      if (this.mounted) setState(() {
-        _locationLoading = false;
-        _locationEnabled = true;
-        latitude = position.latitude;
-        longitude = position.longitude;
-      });
+      if (this.mounted)
+        setState(() {
+          _locationLoading = false;
+          _locationEnabled = true;
+          latitude = position.latitude;
+          longitude = position.longitude;
+        });
       await setGeoFireData();
       await setUserCityInFirestore();
     }
@@ -236,10 +245,11 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
     geolocationStatus = GeolocationStatus.granted;
 
     if (geolocationStatus != GeolocationStatus.granted) {
-      if (this.mounted) setState(() {
-        _locationLoading = false;
-        _locationEnabled = false;
-      });
+      if (this.mounted)
+        setState(() {
+          _locationLoading = false;
+          _locationEnabled = false;
+        });
     } else {
       LocationOptions locationOptions = LocationOptions(
         accuracy: LocationAccuracy.high,
@@ -248,14 +258,15 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
       positionStream = geolocator
           .getPositionStream(locationOptions)
           .listen((Position newPosition) async {
-        if (this.mounted) setState(() {
-          _locationLoading = false;
-          _locationEnabled = true;
-          latitude = newPosition.latitude;
-          longitude = newPosition.longitude;
-          currentLatitude = newPosition.latitude;
-          currentLongitude = newPosition.longitude;
-        });
+        if (this.mounted)
+          setState(() {
+            _locationLoading = false;
+            _locationEnabled = true;
+            latitude = newPosition.latitude;
+            longitude = newPosition.longitude;
+            currentLatitude = newPosition.latitude;
+            currentLongitude = newPosition.longitude;
+          });
         await setGeoFireData();
         await setUserCityInFirestore();
       });
@@ -295,8 +306,7 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
                 padding: EdgeInsets.only(
                     left: 8.0, top: 12.0, bottom: 8.0, right: 8.0),
                 child: Text('See People Nearby',
-                    style: kAppBarTextStyle.copyWith(
-                        fontSize: 16.0)),
+                    style: kAppBarTextStyle.copyWith(fontSize: 16.0)),
               ),
               Container(
                 height: 75.0,
@@ -527,8 +537,7 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
               duration: kTimeRemaining(timeLeft),
               distanceFromChat: distanceFromChat,
             );
-            if (!blockedUids.contains(hostUid) &&
-                chatsAround.length < 3) {
+            if (!blockedUids.contains(hostUid) && chatsAround.length < 3) {
               chatsAround.add(displayedChat);
             }
           }
@@ -596,10 +605,9 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
                           context,
                           MaterialPageRoute(
                               builder: (context) =>
-                              currentUser.displayName !=
-                                  null
-                                  ? AddLiveChat()
-                                  : CreateDisplayName()),
+                                  currentUser.displayName != null
+                                      ? AddLiveChat()
+                                      : CreateDisplayName()),
                         );
                       },
                     ),
@@ -611,7 +619,15 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
         });
   }
 
-  buildTopViewed() {
+  getUserInfo(String uid) {
+    usersRef.document(uid).get().then((snapshot) {
+      String username = snapshot.data['username'];
+      return username;
+    });
+  }
+
+  buildWeeklyTopViewed() {
+    double screenHeight = MediaQuery.of(context).size.height;
     return StreamBuilder(
       stream: usersRef
           .where('weeklyVisitsCount', isGreaterThan: 0)
@@ -629,12 +645,15 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
           final uid = user.data['uid'];
           final hasAccountLinked = user.data['hasAccountLinked'];
           final city = user.data['city'];
+          final username = '';
 
           final displayedUser = User(
-              profileImageUrl: imageUrl,
-              uid: uid,
-              city: city,
-              hasAccountLinked: hasAccountLinked);
+            profileImageUrl: imageUrl,
+            uid: uid,
+            city: city,
+            hasAccountLinked: hasAccountLinked,
+            username: username ?? 'ugh',
+          );
           if (hasAccountLinked != null &&
               hasAccountLinked &&
               !blockedUids.contains(uid)) {
@@ -643,11 +662,15 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
         }
         List<GridTile> gridTiles = [];
         topUsers.forEach((user) {
-          gridTiles.add(GridTile(
+          print(user.username);
+          gridTiles.add(
+            GridTile(
               child: UserResult(
-            user: user,
-            locationLabel: user.city,
-          )));
+                user: user,
+                locationLabel: user.city,
+              ),
+            ),
+          );
         });
         if (topUsers.isNotEmpty) {
           return Column(
@@ -659,18 +682,23 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
                 child: Text('Most Viewed This Week',
                     style: kAppBarTextStyle.copyWith(fontSize: 16.0)),
               ),
-              Container(
-                height: 150,
-                child: GridView.count(
-                  padding: EdgeInsets.only(left: 8, right: 8),
-                  crossAxisCount: 1,
-                  childAspectRatio: 1.33,
-                  mainAxisSpacing: 2.5,
-                  crossAxisSpacing: 1.0,
-                  physics: AlwaysScrollableScrollPhysics(),
-                  scrollDirection: Axis.horizontal,
-                  children: gridTiles,
-                ),
+//              Container(
+//                height: 150,
+//                child: GridView.count(
+//                  padding: EdgeInsets.only(left: 8, right: 8),
+//                  crossAxisCount: 1,
+//                  childAspectRatio: 1.33,
+//                  mainAxisSpacing: 2.5,
+//                  crossAxisSpacing: 1.0,
+//                  physics: AlwaysScrollableScrollPhysics(),
+//                  scrollDirection: Axis.horizontal,
+//                  children: gridTiles,
+//                ),
+//              ),
+              CarouselSlider(
+                height: screenHeight / 1.75,
+                items: gridTiles,
+                viewportFraction: 0.9,
               ),
             ],
           );
@@ -776,14 +804,6 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
           'images/spredTop.png',
           scale: 11,
         ),
-//        title: Text(
-//          hideMe ? 'HideMe' : 'Spred',
-//          textAlign: TextAlign.left,
-//          style: kAppBarTextStyle.copyWith(
-//            color: kColorRed,
-//            fontSize: 25.0,
-//          ),
-//        ),
         automaticallyImplyLeading: false,
         actions: <Widget>[
           Padding(
@@ -795,7 +815,9 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
               onTap: () => Navigator.push(
                   context,
                   MaterialPageRoute(
-                      builder: (context) => Profile(user: currentUser, locationLabel: currentUser.city ?? 'Here'))),
+                      builder: (context) => Profile(
+                          user: currentUser,
+                          locationLabel: currentUser.city ?? 'Here'))),
             ),
           )
         ],
@@ -830,32 +852,10 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
                   child: SingleChildScrollView(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      children: <Widget>[
-                        buildTopViewed(),
-                        Divider(color: kColorExtraLightGray),
-                        enabledLocationFetchUsers(),
-                        Divider(color: kColorExtraLightGray),
-                        enabledLocationFetchChats(),
-                        Divider(color: kColorExtraLightGray),
-                      ],
+                      children: <Widget>[buildWeeklyTopViewed()],
                     ),
                   ),
                 ),
-        ),
-      ),
-      bottomNavigationBar:
-      SafeArea(
-        child: Container(
-          height: 50.0,
-          child: Center(
-            child: DFPBanner(
-              isDevelop: false,
-              adUnitId: Platform.isAndroid
-                  ? 'ca-app-pub-5239326709670732/8292225666'
-                  : 'ca-app-pub-5239326709670732/4791964351',
-              adSize: DFPAdSize.SMART_BANNER,
-            ),
-          ),
         ),
       ),
     );
@@ -876,10 +876,11 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
         highlightColor: Colors.transparent,
         onPressed: () {
           kHandleHideMe(_scaffoldKey);
-          if (this.mounted) setState(() {
-            hideMe = false;
-            _locationLoading = true;
-          });
+          if (this.mounted)
+            setState(() {
+              hideMe = false;
+              _locationLoading = true;
+            });
           getCurrentLocation();
         },
         child: Center(
@@ -927,24 +928,3 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
     );
   }
 }
-
-//Zoom(
-//backgroundColor: kColorRed,
-//canvasColor: kColorRed,
-//width: screenHeight,
-//height: screenWidth,
-//colorScrollBars: Colors.transparent,
-//opacityScrollBars: 0.0,
-//scrollWeight: 10.0,
-//centerOnScale: true,
-//enableScroll: true,
-//doubleTapZoom: true,
-//zoomSensibility: 5.0,)
-
-
-//Center(
-//child: CircleList(
-//origin: Offset(0, 0),
-//children: gridTiles,
-//),
-//),
