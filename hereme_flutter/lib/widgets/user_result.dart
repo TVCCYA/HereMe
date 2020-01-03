@@ -1,4 +1,7 @@
+import 'package:animated_text_kit/animated_text_kit.dart';
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:hereme_flutter/constants.dart';
 import 'package:hereme_flutter/models/user.dart';
 import 'package:hereme_flutter/user_profile/profile.dart';
 import 'package:hereme_flutter/utils/custom_image.dart';
@@ -20,11 +23,33 @@ class UserResult extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    double screenHeight = MediaQuery.of(context).size.height;
     return GestureDetector(
       onTap: () => toProfile(context),
-      child: Padding(
-        padding: const EdgeInsets.all(6.0),
-        child: cachedUserResultImage(user.profileImageUrl),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: <Widget>[
+          Text(user.username ?? '', style: kAppBarTextStyle.copyWith(fontSize: 20)),
+          Padding(
+            padding: EdgeInsets.all(8.0),
+            child: Stack(
+              alignment: Alignment.bottomCenter,
+              children: <Widget>[
+                Container(
+                  height: screenHeight / 1.85,
+                  child: cachedUserResultImage(user.profileImageUrl),
+                ),
+                Padding(
+                  padding: EdgeInsets.all(12.0),
+                  child: Image.asset(
+                    'images/live.png',
+                    scale: 6.0,
+                  )
+                )
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -43,4 +68,3 @@ class BlockedUserResult extends StatelessWidget {
     );
   }
 }
-

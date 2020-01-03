@@ -645,14 +645,14 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
           final uid = user.data['uid'];
           final hasAccountLinked = user.data['hasAccountLinked'];
           final city = user.data['city'];
-          final username = '';
+          final username = user.data['username'];
 
           final displayedUser = User(
             profileImageUrl: imageUrl,
             uid: uid,
             city: city,
             hasAccountLinked: hasAccountLinked,
-            username: username ?? 'ugh',
+            username: username,
           );
           if (hasAccountLinked != null &&
               hasAccountLinked &&
@@ -662,7 +662,6 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
         }
         List<GridTile> gridTiles = [];
         topUsers.forEach((user) {
-          print(user.username);
           gridTiles.add(
             GridTile(
               child: UserResult(
@@ -696,10 +695,16 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
 //                ),
 //              ),
               CarouselSlider(
-                height: screenHeight / 1.75,
+                height: screenHeight / 1.3,
                 items: gridTiles,
                 viewportFraction: 0.9,
               ),
+//              Center(
+//                child: CircleList(
+//                  origin: Offset(0, 0),
+//                  children: gridTiles,
+//                ),
+//              ),
             ],
           );
         } else {
@@ -850,10 +855,7 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
                   controller: _refreshController,
                   onRefresh: _onRefresh,
                   child: SingleChildScrollView(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: <Widget>[buildWeeklyTopViewed()],
-                    ),
+                    child: buildWeeklyTopViewed()
                   ),
                 ),
         ),

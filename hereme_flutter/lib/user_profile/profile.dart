@@ -1342,9 +1342,11 @@ class _ProfileState extends State<Profile> {
           _isCurrentUser = true;
         });
       _getCurrentUserData();
-    } else if (user.username != null) {
-      _getOtherUserData();
-    } else {
+    }
+//    else if (user.username != null) {
+//      _getOtherUserData();
+//    }
+    else {
       _getUserPageInfo();
     }
   }
