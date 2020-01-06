@@ -681,30 +681,11 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
                 child: Text('Most Viewed This Week',
                     style: kAppBarTextStyle.copyWith(fontSize: 16.0)),
               ),
-//              Container(
-//                height: 150,
-//                child: GridView.count(
-//                  padding: EdgeInsets.only(left: 8, right: 8),
-//                  crossAxisCount: 1,
-//                  childAspectRatio: 1.33,
-//                  mainAxisSpacing: 2.5,
-//                  crossAxisSpacing: 1.0,
-//                  physics: AlwaysScrollableScrollPhysics(),
-//                  scrollDirection: Axis.horizontal,
-//                  children: gridTiles,
-//                ),
-//              ),
               CarouselSlider(
                 height: screenHeight / 1.3,
                 items: gridTiles,
                 viewportFraction: 0.9,
               ),
-//              Center(
-//                child: CircleList(
-//                  origin: Offset(0, 0),
-//                  children: gridTiles,
-//                ),
-//              ),
             ],
           );
         } else {

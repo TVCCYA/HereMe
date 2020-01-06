@@ -1,4 +1,3 @@
-import 'package:animated_text_kit/animated_text_kit.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:hereme_flutter/constants.dart';
@@ -42,7 +41,7 @@ class UserResult extends StatelessWidget {
                 Padding(
                   padding: EdgeInsets.all(12.0),
                   child: Image.asset(
-                    'images/live.png',
+                    'images/spredTop.png',
                     scale: 6.0,
                   )
                 )
