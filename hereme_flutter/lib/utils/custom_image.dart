@@ -11,9 +11,9 @@ Widget cachedNetworkImage(String imageUrl) {
   ) : Icon(FontAwesomeIcons.exclamationCircle, color: kColorRed);
 }
 
-Widget cachedUserResultImage(imageUrl) {
+Widget cachedUserResultImage(imageUrl, double radius) {
   return ClipRRect(
-    borderRadius: BorderRadius.circular(5),
+      borderRadius: BorderRadius.circular(radius),
     child: imageUrl != null ? CachedNetworkImage(
       imageUrl: imageUrl,
       fit: BoxFit.cover,

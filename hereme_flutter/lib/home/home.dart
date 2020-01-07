@@ -796,7 +796,7 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
             padding: const EdgeInsets.all(10.0),
             child: GestureDetector(
               child: _isAuth
-                  ? cachedUserResultImage(currentUser.profileImageUrl)
+                  ? cachedUserResultImage(currentUser.profileImageUrl, 5)
                   : Icon(FontAwesomeIcons.user, color: kColorLightGray),
               onTap: () => Navigator.push(
                   context,

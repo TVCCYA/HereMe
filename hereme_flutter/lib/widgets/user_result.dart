@@ -36,12 +36,13 @@ class UserResult extends StatelessWidget {
               children: <Widget>[
                 Container(
                   height: screenHeight / 1.85,
-                  child: cachedUserResultImage(user.profileImageUrl),
+                  child: cachedUserResultImage(user.profileImageUrl, 15),
                 ),
                 Padding(
                   padding: EdgeInsets.all(12.0),
                   child: Image.asset(
-                    'images/spredTop.png',
+                    'images/live.png',
+                    color: Colors.white,
                     scale: 6.0,
                   )
                 )
@@ -63,7 +64,7 @@ class BlockedUserResult extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
-      child: cachedUserResultImage(user.profileImageUrl),
+      child: cachedUserResultImage(user.profileImageUrl, 5),
     );
   }
 }
