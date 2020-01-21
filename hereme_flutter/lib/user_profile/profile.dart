@@ -1,3 +1,4 @@
+import 'package:animator/animator.dart';
 import 'package:flutter/material.dart';
 import 'dart:io';
 import 'dart:async';
@@ -12,6 +13,8 @@ import 'package:hereme_flutter/models/linked_account.dart';
 import 'package:hereme_flutter/models/user.dart';
 import 'package:hereme_flutter/registration/create_display_name.dart';
 import 'package:hereme_flutter/settings/choose_account.dart';
+import 'package:hereme_flutter/user_profile/profile_image_full_screen.dart';
+import 'package:hereme_flutter/utils/reusable_button.dart';
 import 'package:hereme_flutter/utils/reusable_profile_card.dart';
 import 'package:hereme_flutter/widgets/activity_feed_item.dart';
 import 'package:hereme_flutter/widgets/user_result.dart';
@@ -28,6 +31,7 @@ import 'package:modal_progress_hud/modal_progress_hud.dart';
 import 'package:hereme_flutter/settings//menu_list.dart';
 import 'package:hereme_flutter/home/home.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:uuid/uuid.dart';
 
 final _firestore = Firestore.instance;
 final reportedUsersRef = Firestore.instance.collection('reportedUsers');
@@ -69,6 +73,10 @@ class _ProfileState extends State<Profile> {
   String displayedTotalCount;
   final String currentUserUid = currentUser?.uid;
 
+  bool _hasStartedTyping = false;
+  TextEditingController updateTextController = TextEditingController();
+  String status;
+
   final User user;
   final String locationLabel;
   _ProfileState({this.user, this.locationLabel});
@@ -101,664 +109,1247 @@ class _ProfileState extends State<Profile> {
 
   Widget build(BuildContext context) {
     double screenHeight = MediaQuery.of(context).size.height;
-    double topProfileContainerHeight = screenHeight / 4 + 32;
-
-    return Scaffold(
-      key: _scaffoldKey,
-      backgroundColor: kColorOffWhite,
-      body: ModalProgressHUD(
-        inAsyncCall: showSpinner,
-        progressIndicator: circularProgress(),
-        child: SafeArea(
-          child: NestedScrollView(
-            headerSliverBuilder: (context, value) {
-              return [
-                SliverOverlapAbsorber(
-                  handle:
-                      NestedScrollView.sliverOverlapAbsorberHandleFor(context),
-                  child: SliverSafeArea(
-                    sliver: SliverAppBar(
-                      centerTitle: true,
-                      brightness: Brightness.light,
-                      backgroundColor: kColorOffWhite,
-                      floating: false,
-                      pinned: true,
-                      snap: false,
-                      leading: IconButton(
-                        icon: Icon(FontAwesomeIcons.chevronLeft),
-                        onPressed: () {
-                          Navigator.pop(context);
-                        },
-                        color: kColorBlack71,
-                        splashColor: kColorExtraLightGray,
-                        highlightColor: Colors.transparent,
+    double screenWidth = MediaQuery.of(context).size.width;
+    return Stack(
+      children: <Widget>[
+        Container(
+          decoration: BoxDecoration(
+            image: DecorationImage(
+              image: AssetImage("images/bubbly.png"),
+              fit: BoxFit.cover,
+            ),
+          ),
+        ),
+        Scaffold(
+          key: _scaffoldKey,
+          backgroundColor: Colors.transparent,
+          appBar: AppBar(
+            brightness: Brightness.light,
+            backgroundColor: Colors.white.withOpacity(0.75),
+            title: FlatButton(
+              onPressed: () => Navigator.push(context,
+                  MaterialPageRoute(builder: (context) => CreateDisplayName())),
+              child: Text(displayName ?? username, style: kAppBarTextStyle),
+              splashColor: kColorExtraLightGray,
+              highlightColor: Colors.transparent,
+            ),
+            leading: IconButton(
+              icon: Icon(FontAwesomeIcons.chevronLeft, color: kColorBlack71),
+              onPressed: () {
+                Navigator.pop(context);
+              },
+            ),
+            actions: <Widget>[
+              IconButton(
+                icon: Icon(FontAwesomeIcons.ellipsisV, color: kColorBlack71),
+                onPressed: () {
+                  _isCurrentUser ? _quickSettings() : _reportBlockSettings();
+                },
+                splashColor: kColorExtraLightGray,
+                highlightColor: Colors.transparent,
+              )
+            ],
+          ),
+          body: SafeArea(
+            child: Theme(
+              data: kTheme(context),
+              child: SingleChildScrollView(
+                child: Container(
+                  height: screenHeight,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: <Widget>[
+                      buildHeader(screenHeight, screenWidth),
+                      Padding(
+                        padding: EdgeInsets.only(top: 8.0, bottom: 8.0),
+                        child: buildFeedUpdates(screenHeight, screenWidth),
                       ),
-                      actions: <Widget>[
-                        IconButton(
-                          icon: Icon(FontAwesomeIcons.ellipsisV,
-                              color: kColorBlack71),
-                          onPressed: () {
-                            _isCurrentUser
-                                ? _quickSettings()
-                                : _reportBlockSettings();
+                      Expanded(
+                        child: Padding(
+                          padding: EdgeInsets.only(left: 24.0, right: 24.0, top: 12.0, bottom: 12.0),
+                          child: ListView.builder(
+                              physics: NeverScrollableScrollPhysics(),
+                              itemCount: 1,
+                              itemBuilder: (context, index) {
+                                if (_isCurrentUser) {
+                                  return ExpansionTile(
+                                    backgroundColor: Colors.white,
+                                    initiallyExpanded: true,
+                                    title: ReusableSectionLabel(title: 'Links'),
+                                    children: <Widget>[
+                                      StreamBuilder<QuerySnapshot>(
+                                        stream: socialMediasRef
+                                            .document(currentUserUid)
+                                            .collection('socials')
+                                            .snapshots(),
+                                        builder: (context, snapshot) {
+                                          if (!snapshot.hasData) {
+                                            return circularProgress();
+                                          }
+                                          final accounts =
+                                              snapshot.data.documents;
+                                          List<LinkedAccount> displayedAccounts =
+                                              [];
+                                          for (var account in accounts) {
+                                            account.data.forEach(
+                                              (key, value) {
+                                                if (key.contains('Username')) {
+                                                  final iconString = key;
+                                                  final accountUsername = value;
+                                                  final url = account.data['url'];
+                                                  final linkId =
+                                                      account.data['linkId'];
+
+                                                  _determineUrl(accountUsername,
+                                                      iconString, url);
+
+                                                  final displayedAccount =
+                                                      LinkedAccount(
+                                                    accountUsername:
+                                                        accountUsername,
+                                                    accountUrl: url,
+                                                    iconString: iconString,
+                                                    onTap: () {
+                                                      _linksActionSheet(
+                                                        context,
+                                                        accountUsername,
+                                                        iconString,
+                                                        url,
+                                                        linkId,
+                                                      );
+                                                    },
+                                                  );
+                                                  displayedAccounts
+                                                      .add(displayedAccount);
+                                                }
+                                              },
+                                            );
+                                          }
+                                          if (displayedAccounts.isNotEmpty) {
+                                            return Column(
+                                              children: displayedAccounts,
+                                            );
+                                          } else {
+                                            return Padding(
+                                              padding: EdgeInsets.only(
+                                                  top: 2.0, bottom: 8.0),
+                                              child: Text(
+                                                'No Accounts Linked',
+                                                style: kDefaultTextStyle,
+                                              ),
+                                            );
+                                          }
+                                        },
+                                      ),
+                                    ],
+                                  );
+                                } else {
+                                  return ExpansionTile(
+                                    backgroundColor: Colors.white,
+                                    initiallyExpanded: true,
+                                    title: ReusableSectionLabel(title: 'Links'),
+                                    children: <Widget>[
+                                      StreamBuilder<QuerySnapshot>(
+                                        stream: socialMediasRef
+                                            .document(userUid)
+                                            .collection('socials')
+                                            .snapshots(),
+                                        builder: (context, snapshot) {
+                                          if (!snapshot.hasData) {
+                                            return circularProgress();
+                                          }
+                                          final accounts =
+                                              snapshot.data.documents;
+                                          List<LinkedAccount> displayedAccounts =
+                                              [];
+                                          for (var account in accounts) {
+                                            account.data.forEach(
+                                              (key, value) {
+                                                if (key.contains('Username')) {
+                                                  final iconString = key;
+                                                  final accountUsername = value;
+                                                  final url = account.data['url'];
+                                                  final linkId =
+                                                      account.data['linkId'];
+
+                                                  _determineUrl(accountUsername,
+                                                      iconString, url);
+
+                                                  final displayedAccount =
+                                                      LinkedAccount(
+                                                    accountUsername:
+                                                        accountUsername,
+                                                    accountUrl: url,
+                                                    iconString: iconString,
+                                                    onTap: () {
+                                                      _linksActionSheet(
+                                                        context,
+                                                        accountUsername,
+                                                        iconString,
+                                                        url,
+                                                        linkId,
+                                                      );
+                                                    },
+                                                  );
+                                                  displayedAccounts
+                                                      .add(displayedAccount);
+                                                }
+                                              },
+                                            );
+                                          }
+                                          if (displayedAccounts.isNotEmpty) {
+                                            return ReusableContentContainer(
+                                              content: displayedAccounts,
+                                            );
+                                          } else {
+                                            return Padding(
+                                              padding: const EdgeInsets.only(
+                                                  top: 2.0, bottom: 8.0),
+                                              child: Text(
+                                                'No Accounts Linked',
+                                                style: kDefaultTextStyle,
+                                              ),
+                                            );
+                                          }
+                                        },
+                                      ),
+                                    ],
+                                  );
+                                }
+                              },
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  buildHeader(double screenHeight, double screenWidth) {
+    double topProfileHeight = screenHeight / 4;
+    double topHalf = topProfileHeight * 0.75;
+    double profileImageSize = topHalf * 0.75;
+    double topHalfContainerSize = screenWidth - profileImageSize - 50;
+    return Container(
+      height: topProfileHeight,
+      child: Padding(
+        padding: EdgeInsets.only(left: 24.0, right: 24.0),
+        child: Column(
+          children: <Widget>[
+            Container(
+              height: topHalf,
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: <Widget>[
+                  ReusableProfileCard(
+                    imageUrl: profileImageUrl,
+                    cardSize: profileImageSize,
+                    onTap: _isCurrentUser
+                        ? _changeUserPhoto
+                        : _fullScreenProfileImage,
+                  ),
+                  Container(
+                    height: profileImageSize,
+                    width: topHalfContainerSize,
+                    child: Padding(
+                      padding: EdgeInsets.only(left: 12.0),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: <Widget>[
+                          TopProfileHeaderContainer(
+                            text: username,
+                            fontSize: 18.0,
+                            padding: 8.0,
+                          ),
+                          Container(
+                            padding: EdgeInsets.only(left: 8.0, right: 8.0),
+                            decoration: BoxDecoration(
+                                border: Border.all(color: kColorExtraLightGray),
+                                color: Colors.white),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: <Widget>[
+                                Icon(
+                                  FontAwesomeIcons.mapMarkerAlt,
+                                  color: kColorDarkThistle,
+                                  size: 14.0,
+                                ),
+                                SizedBox(width: 4.0),
+                                Text(
+                                  locationLabel,
+                                  style:
+                                      kAppBarTextStyle.copyWith(fontSize: 16.0),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Row(
+                            children: _isCurrentUser
+                                ? <Widget>[
+                                    TopProfileHeaderContainer(
+                                        text: 'Profile Views:',
+                                        fontSize: 16.0,
+                                        padding: 8.0),
+                                    SizedBox(width: 6.0),
+                                    TopProfileHeaderContainer(
+                                        text: displayedTotalCount,
+                                        fontSize: 16.0,
+                                        padding: 4.0),
+                                  ]
+                                : <Widget>[],
+                          )
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Container(
+              height: topProfileHeight * 0.2,
+              child: _isCurrentUser
+                  ? TopProfileHeaderButton(
+                      text: 'Edit Profile',
+                      onPressed: () => print('edit'),
+                      width: screenWidth,
+                    )
+                  : Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: <Widget>[
+                        TopProfileHeaderButton(
+                          text: _isFollowing ? 'Liked' : 'Like',
+                          onPressed: () =>
+                              _isFollowing ? _unfollowUser() : _followUser(),
+                          width: screenWidth / 2.5,
+                          textColor:
+                              _isFollowing ? kColorBlack71 : Colors.white,
+                          backgroundColor:
+                              _isFollowing ? Colors.white : kColorBlue,
+                          splashColor:
+                              _isFollowing ? Colors.white : kColorDarkBlue,
+                        ),
+                        TopProfileHeaderButton(
+                          text: 'Knock',
+                          onPressed: () => {
+                            kShowAlertMultiButtons(
+                              context: context,
+                              title: 'Knock Knock',
+                              desc: 'Did you mean to Knock $username?',
+                              buttonText1: 'Yes',
+                              color1: kColorGreen,
+                              buttonText2: 'Cancel',
+                              color2: kColorLightGray,
+                              onPressed1: () {
+                                _handleKnock(
+                                  uid: userUid,
+                                  username: username,
+                                  profileImageUrl: profileImageUrl,
+                                );
+                                Navigator.pop(context);
+                              },
+                              onPressed2: () => Navigator.pop(context),
+                            )
                           },
-                          splashColor: kColorExtraLightGray,
-                          highlightColor: Colors.transparent,
-                        )
+                          width: screenWidth / 2.5,
+                        ),
                       ],
-                      elevation: 2.0,
-                      expandedHeight: !_isCurrentUser ? topProfileContainerHeight + 110.0
-                          : topProfileContainerHeight + 75,
-                      title: Text(
-                        username != null ? username : '',
-                        style: kAppBarTextStyle,
-                      ),
-                      flexibleSpace: FlexibleSpaceBar(
-                        background: FlexibleProfileAppBar(
-                          userPhotoUrl: profileImageUrl,
-                          onTap: _isCurrentUser
-                              ? _changeUserPhoto
-                              : _fullScreenProfileImage,
-                          topProfileContainerHeight: topProfileContainerHeight,
-                          weeklyVisitsCount: displayedWeeklyCount,
-                          totalVisitsCount: displayedTotalCount,
-                          locationLabel: locationLabel ?? 'Around',
-                          displayName: displayName,
-                          red: red,
-                          green: green,
-                          blue: blue,
-                          isCurrentUser: _isCurrentUser,
-                          isFollowing: _isFollowing,
-                          followersCount: displayedFollowersCount,
-                          followUser: () {
-                            print('following');
-                            setState(() {
-                              _isFollowing = true;
-                            });
+                    ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
-                            followersRef
-                                .document(user.uid)
-                                .collection('users')
-                                .document(currentUserUid)
-                                .setData({});
+  _followUser() {
+    print('following');
+    setState(() {
+      _isFollowing = true;
+    });
 
-                            followingRef
-                                .document(currentUserUid)
-                                .collection('users')
-                                .document(user.uid)
-                                .setData({}).whenComplete(() {
-                                  getFollowers();
-                            });
-                          },
-                          unfollowUser: () {
-                            print('unfollow');
-                            setState(() {
-                              _isFollowing = false;
-                            });
+    followersRef
+        .document(user.uid)
+        .collection('users')
+        .document(currentUserUid)
+        .setData({});
 
-                            followersRef
-                                .document(user.uid)
-                                .collection('users')
-                                .document(currentUserUid)
-                                .get()
-                                .then((doc) {
-                              if (doc.exists) {
-                                doc.reference.delete();
-                              }
-                            });
+    followingRef
+        .document(currentUserUid)
+        .collection('users')
+        .document(user.uid)
+        .setData({}).whenComplete(() {
+      getFollowers();
+    });
+  }
 
-                            followingRef
-                                .document(currentUserUid)
-                                .collection('users')
-                                .document(user.uid)
-                                .get()
-                                .then((doc) {
-                              if (doc.exists) {
-                                doc.reference.delete();
-                              }
-                            }).whenComplete(() {
-                              getFollowers();
-                            });
-                          },
+  _unfollowUser() {
+    print('unfollow');
+    setState(() {
+      _isFollowing = false;
+    });
+
+    followersRef
+        .document(user.uid)
+        .collection('users')
+        .document(currentUserUid)
+        .get()
+        .then((doc) {
+      if (doc.exists) {
+        doc.reference.delete();
+      }
+    });
+
+    followingRef
+        .document(currentUserUid)
+        .collection('users')
+        .document(user.uid)
+        .get()
+        .then((doc) {
+      if (doc.exists) {
+        doc.reference.delete();
+      }
+    }).whenComplete(() {
+      getFollowers();
+    });
+  }
+
+  buildFeedUpdates(double screenHeight, double screenWidth) {
+    return Padding(
+      padding: EdgeInsets.only(left: 24.0, right: 24.0),
+      child: Container(
+        decoration: BoxDecoration(
+          border: Border.all(color: kColorExtraLightGray),
+          color: Colors.white,
+        ),
+        height: screenHeight / 3.5,
+        child: Padding(
+          padding: EdgeInsets.all(4.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              Text('Adriana: * posted a new link', style: kDefaultTextStyle),
+              Text('Adriana: dont wanna work', style: kDefaultTextStyle),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: <Widget>[
+                  Expanded(
+                    child: TextField(
+                      style: kDefaultTextStyle,
+                      cursorColor: kColorLightGray,
+                      controller: updateTextController,
+                      onChanged: (value) {
+                        status = value;
+                        startedTyping();
+                      },
+                      onSubmitted: (_) {
+                        _hasStartedTyping
+                            ? addMessage()
+                            : kShowSnackbar(
+                                key: _scaffoldKey,
+                                text:
+                                    'Message cannot be empty or larger than 200 characters',
+                                backgroundColor: kColorRed);
+                      },
+                      decoration: InputDecoration(
+                        contentPadding: EdgeInsets.symmetric(
+                            vertical: 10.0, horizontal: 8.0),
+                        hintText: 'Type here...',
+                        hintStyle:
+                            kDefaultTextStyle.copyWith(color: kColorLightGray),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.all(Radius.circular(0.0)),
+                          borderSide: BorderSide(color: kColorExtraLightGray),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.all(Radius.circular(0.0)),
+                          borderSide: BorderSide(color: kColorLightGray),
                         ),
                       ),
                     ),
                   ),
-                ),
-              ];
-            },
-            body: Theme(
-              data: kTheme(context),
-              child: Padding(
-                padding: EdgeInsets.only(left: 16.0, right: 16.0),
-                child: ListView.builder(
-                  padding: EdgeInsets.only(bottom: 60),
-                  itemCount: _isCurrentUser ? 4 : 3,
-                  itemBuilder: (context, index) {
-                    if (_isCurrentUser) {
-                      if (index == 0) {
-                        //Current User Activity Feed
-                        return ExpansionTile(
-                          initiallyExpanded: true,
-                          title: ReusableSectionLabel(title: 'Activity'),
-                          children: <Widget>[
-                            StreamBuilder(
-                              stream: activityRef
-                                  .document(currentUserUid)
-                                  .collection('feedItems')
-                                  .orderBy('creationDate', descending: true)
-                                  .snapshots(),
-                              builder: (context, snapshot) {
-                                if (!snapshot.hasData) {
-                                  return circularProgress();
-                                }
-                                final activityItems = snapshot.data.documents;
-                                List<ActivityFeedItem> displayedItems = [];
-                                for (var item in activityItems) {
-                                  final type = item.data['type'];
-                                  final username = item.data['username'] ?? '';
-                                  final uid = item.data['uid'];
-                                  final city = item.data['city'] ?? 'Around';
-                                  final profileImageUrl =
-                                      item.data['profileImageUrl'] ?? '';
-                                  final creationDate =
-                                      item.data['creationDate'];
-
-                                  final title = item.data['title'] ?? '';
-                                  final chatId = item.data['chatId'] ?? '';
-                                  final chatHostDisplayName =
-                                      item.data['hostDisplayName'] ?? '';
-                                  final hostRed = item.data['hostRed'] ?? 0;
-                                  final hostGreen = item.data['hostGreen'] ?? 0;
-                                  final hostBlue = item.data['hostBlue'] ?? 0;
-                                  final lastMessage =
-                                      item.data['message'] ?? '';
-
-                                  final endDate = item.data['endDate'] ?? 0;
-                                  int timeLeft = endDate -
-                                      DateTime.now().millisecondsSinceEpoch;
-
-                                  final displayedItem = ActivityFeedItem(
-                                    type: type,
-                                    uid: uid,
-                                    username: username,
-                                    city: city,
-                                    imageUrl: profileImageUrl,
-                                    onTap: () => _pendingKnocksActionSheet(
-                                      context: context,
-                                      uid: uid,
-                                    ),
-                                    creationDate: creationDate,
-                                    title: title,
-                                    chatId: chatId,
-                                    chatHostDisplayName: chatHostDisplayName,
-                                    hostRed: hostRed,
-                                    hostGreen: hostGreen,
-                                    hostBlue: hostBlue,
-                                    duration: kTimeRemaining(timeLeft),
-                                    lastMessage: lastMessage,
-                                  );
-                                  if (!currentUser.blockedUids.contains(uid)) {
-                                    displayedItems.add(displayedItem);
-                                  }
-                                }
-                                if (displayedItems.isNotEmpty) {
-                                  return ReusableContentContainer(
-                                    content: displayedItems,
-                                  );
-                                } else {
-                                  return Padding(
-                                    padding:
-                                        EdgeInsets.only(top: 2.0, bottom: 8.0),
-                                    child: Text(
-                                      'No Activity Yet',
-                                      style: kDefaultTextStyle,
-                                    ),
-                                  );
-                                }
-                              },
-                            )
-                          ],
-                        );
-                      } else if (index == 1) {
-                        //Current User Knocks
-                        return ExpansionTile(
-                          initiallyExpanded: false,
-                          title: ReusableSectionLabel(title: 'Knocks'),
-                          children: <Widget>[
-                            StreamBuilder<QuerySnapshot>(
-                              stream: knocksRef
-                                  .document(currentUserUid)
-                                  .collection('receivedKnockFrom')
-                                  .orderBy('creationDate', descending: true)
-                                  .snapshots(),
-                              builder: (context, snapshot) {
-                                if (!snapshot.hasData) {
-                                  return circularProgress();
-                                }
-                                final knocks = snapshot.data.documents;
-                                List<Knock> displayedKnocks = [];
-                                for (var knock in knocks) {
-                                  final knockUsername = knock.data['username'];
-                                  final knockProfileImageUrl =
-                                      knock.data['profileImageUrl'];
-                                  final creationDate =
-                                      knock.data['creationDate'];
-                                  final uid = knock.data['uid'];
-
-                                  final displayedKnock = Knock(
-                                    username: knockUsername,
-                                    imageUrl: knockProfileImageUrl,
-                                    creationDate: creationDate,
-                                    onTap: () {
-                                      _knocksActionSheet(
-                                          context: context,
-                                          uid: uid,
-                                          username: knockUsername,
-                                          profileImageUrl:
-                                              knockProfileImageUrl);
-                                    },
-                                  );
-                                  displayedKnocks.add(displayedKnock);
-                                }
-                                if (displayedKnocks.isNotEmpty) {
-                                  return ReusableContentContainer(
-                                    content: displayedKnocks,
-                                  );
-                                } else {
-                                  return Padding(
-                                    padding:
-                                        EdgeInsets.only(top: 2.0, bottom: 8.0),
-                                    child: Text(
-                                      'No Knocks Yet',
-                                      style: kDefaultTextStyle,
-                                    ),
-                                  );
-                                }
-                              },
+                  FlatButton(
+                    onPressed: () {
+                      _hasStartedTyping
+                          ? addMessage()
+                          : kShowSnackbar(
+                              key: _scaffoldKey,
+                              text:
+                                  'Message cannot be empty or larger than 200 characters',
+                              backgroundColor: kColorRed);
+                    },
+                    child: _hasStartedTyping
+                        ? Animator(
+                            duration: Duration(milliseconds: 200),
+                            tween: Tween(begin: 0.8, end: 1.4),
+                            curve: Curves.easeInOutQuad,
+                            cycles: 1,
+                            builder: (anim) => Transform.scale(
+                              scale: anim.value,
+                              child: IconButton(
+                                onPressed: () => addMessage(),
+                                icon: Icon(FontAwesomeIcons.chevronCircleRight,
+                                    color: kColorBlue),
+                                splashColor: kColorExtraLightGray,
+                                highlightColor: Colors.transparent,
+                                iconSize: 16.0,
+                              ),
                             ),
-                          ],
-                        );
-                      } else if (index == 2) {
-                        //Current User Links
-                        return ExpansionTile(
-                          initiallyExpanded: false,
-                          title: ReusableSectionLabel(title: 'Links'),
-                          children: <Widget>[
-                            StreamBuilder<QuerySnapshot>(
-                              stream: socialMediasRef
-                                  .document(currentUserUid)
-                                  .collection('socials')
-                                  .orderBy('creationDate', descending: true)
-                                  .snapshots(),
-                              builder: (context, snapshot) {
-                                if (!snapshot.hasData) {
-                                  return circularProgress();
-                                }
-                                final accounts = snapshot.data.documents;
-                                List<LinkedAccount> displayedAccounts = [];
-                                for (var account in accounts) {
-                                  account.data.forEach(
-                                    (key, value) {
-                                      if (key.contains('Username')) {
-                                        final iconString = key;
-                                        final accountUsername = value;
-                                        final url = account.data['url'];
-                                        final linkId = account.data['linkId'];
-
-                                        _determineUrl(
-                                            accountUsername, iconString, url);
-
-                                        final displayedAccount = LinkedAccount(
-                                          accountUsername: accountUsername,
-                                          accountUrl: url,
-                                          iconString: iconString,
-                                          onTap: () {
-                                            _linksActionSheet(
-                                                context,
-                                                accountUsername,
-                                                iconString,
-                                                url,
-                                                linkId);
-                                          },
-                                        );
-                                        displayedAccounts.add(displayedAccount);
-                                      }
-                                    },
-                                  );
-                                }
-                                if (displayedAccounts.isNotEmpty) {
-                                  return ReusableContentContainer(
-                                    content: displayedAccounts,
-                                  );
-                                } else {
-                                  _updateFirestoreHasAccountLinked();
-                                  return ReusableBottomActionSheetListTile(
-                                    iconData: FontAwesomeIcons.link,
-                                    title: 'Link Account',
-                                    onTap: () {
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                            builder: (BuildContext context) =>
-                                                ChooseAccount()),
-                                      );
-                                    },
-                                  );
-                                }
-                              },
-                            ),
-                          ],
-                        );
-                      } else {
-                        //Current User Created Live Chats
-                        return ExpansionTile(
-                          title: ReusableSectionLabel(title: 'Live Chats'),
-                          children: <Widget>[
-                            StreamBuilder(
-                              stream: liveChatsRef
-                                  .document(currentUserUid)
-                                  .collection('chats')
-                                  .orderBy('creationDate', descending: true)
-                                  .snapshots(),
-                              builder: (context, snapshot) {
-                                if (!snapshot.hasData) {
-                                  return circularProgress();
-                                }
-                                final chats = snapshot.data.documents;
-                                List<LiveChat> displayedChats = [];
-                                for (var chat in chats) {
-                                  final title = chat.data['title'];
-                                  final creationDate =
-                                      chat.data['creationDate'];
-                                  final chatId = chat.data['chatId'];
-                                  final hostDisplayName =
-                                      chat.data['hostDisplayName'] ?? '';
-                                  final lastMessage = chat.data['lastMessage'];
-                                  final lastMessageDisplayName =
-                                      chat.data['lastMessageDisplayName'];
-                                  final lastRed = chat.data['lastRed'];
-                                  final lastGreen = chat.data['lastGreen'];
-                                  final lastBlue = chat.data['lastBlue'];
-                                  final endDate = chat.data['endDate'];
-
-                                  int timeLeft = endDate -
-                                      DateTime.now().millisecondsSinceEpoch;
-                                  String duration = kTimeRemaining(timeLeft);
-
-                                  bool hasChatEnded = timeLeft <= 0;
-
-                                  if (hasChatEnded) {
-                                    kHandleRemoveAllLiveChatData(
-                                        chatId, currentUserUid);
-                                  }
-
-                                  final displayedChat = LiveChat(
-                                    title: title,
-                                    creationDate: creationDate,
-                                    duration: duration,
-                                    chatId: chatId,
-                                    chatHostDisplayName: hostDisplayName,
-                                    chatHostUid: currentUserUid,
-                                    hostRed: red,
-                                    hostGreen: green,
-                                    hostBlue: blue,
-                                    lastMessage: lastMessage,
-                                    lastMessageDisplayName:
-                                        lastMessageDisplayName,
-                                    lastRed: lastRed,
-                                    lastGreen: lastGreen,
-                                    lastBlue: lastBlue,
-                                    onTap: () {
-                                      _liveChatsActionSheet(
-                                          context,
-                                          title,
-                                          chatId,
-                                          hostDisplayName,
-                                          red,
-                                          green,
-                                          blue,
-                                          currentUserUid,
-                                          duration);
-                                    },
-                                  );
-                                  displayedChats.add(displayedChat);
-                                }
-                                if (displayedChats.isNotEmpty) {
-                                  return ReusableContentContainer(
-                                    content: displayedChats,
-                                  );
-                                } else {
-                                  return ReusableBottomActionSheetListTile(
-                                    iconData: FontAwesomeIcons.comments,
-                                    title: 'Create Live Chat',
-                                    onTap: () {
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                            builder: (context) =>
-                                                currentUser.displayName != null
-                                                    ? AddLiveChat()
-                                                    : CreateDisplayName()),
-                                      );
-                                    },
-                                  );
-                                }
-                              },
-                            )
-                          ],
-                        );
-                      }
-                    } else {
-                      if (index == 0) {
-                        //User Links
-                        return ExpansionTile(
-                          initiallyExpanded: true,
-                          title: ReusableSectionLabel(title: 'Links'),
-                          children: <Widget>[
-                            StreamBuilder<QuerySnapshot>(
-                              stream: socialMediasRef
-                                  .document(userUid)
-                                  .collection('socials')
-                                  .snapshots(),
-                              builder: (context, snapshot) {
-                                if (!snapshot.hasData) {
-                                  return circularProgress();
-                                }
-                                final accounts = snapshot.data.documents;
-                                List<LinkedAccount> displayedAccounts = [];
-                                for (var account in accounts) {
-                                  account.data.forEach(
-                                    (key, value) {
-                                      if (key.contains('Username')) {
-                                        final iconString = key;
-                                        final accountUsername = value;
-                                        final url = account.data['url'];
-                                        final linkId = account.data['linkId'];
-
-                                        _determineUrl(
-                                            accountUsername, iconString, url);
-
-                                        final displayedAccount = LinkedAccount(
-                                          accountUsername: accountUsername,
-                                          accountUrl: url,
-                                          iconString: iconString,
-                                          onTap: () {
-                                            _linksActionSheet(
-                                              context,
-                                              accountUsername,
-                                              iconString,
-                                              url,
-                                              linkId,
-                                            );
-                                          },
-                                        );
-                                        displayedAccounts.add(displayedAccount);
-                                      }
-                                    },
-                                  );
-                                }
-                                if (displayedAccounts.isNotEmpty) {
-                                  return ReusableContentContainer(
-                                    content: displayedAccounts,
-                                  );
-                                } else {
-                                  return Padding(
-                                    padding: const EdgeInsets.only(
-                                        top: 2.0, bottom: 8.0),
-                                    child: Text(
-                                      'No Accounts Linked',
-                                      style: kDefaultTextStyle,
-                                    ),
-                                  );
-                                }
-                              },
-                            ),
-                          ],
-                        );
-                      } else if (index == 1) {
-                        //User Created Live Chats
-                        return ExpansionTile(
-                          title: ReusableSectionLabel(title: 'Live Chats'),
-                          children: <Widget>[
-                            StreamBuilder(
-                              stream: liveChatsRef
-                                  .document(userUid)
-                                  .collection('chats')
-                                  .orderBy('creationDate', descending: true)
-                                  .snapshots(),
-                              builder: (context, snapshot) {
-                                if (!snapshot.hasData) {
-                                  return circularProgress();
-                                }
-                                final chats = snapshot.data.documents;
-                                List<LiveChat> displayedChats = [];
-                                for (var chat in chats) {
-                                  final title = chat.data['title'];
-                                  final creationDate =
-                                      chat.data['creationDate'];
-                                  final chatId = chat.data['chatId'];
-                                  final hostDisplayName =
-                                      chat.data['hostDisplayName'] ?? '';
-                                  final lastMessage = chat.data['lastMessage'];
-                                  final lastMessageDisplayName =
-                                      chat.data['lastMessageDisplayName'];
-                                  final lastRed = chat.data['lastRed'];
-                                  final lastGreen = chat.data['lastGreen'];
-                                  final lastBlue = chat.data['lastBlue'];
-                                  final endDate = chat.data['endDate'];
-
-                                  int timeLeft = endDate -
-                                      DateTime.now().millisecondsSinceEpoch;
-                                  String duration = kTimeRemaining(timeLeft);
-
-                                  bool hasChatEnded = timeLeft <= 0;
-
-                                  if (hasChatEnded) {
-                                    kHandleRemoveAllLiveChatData(
-                                        chatId, userUid);
-                                  }
-
-                                  final displayedChat = LiveChat(
-                                    title: title,
-                                    creationDate: creationDate,
-                                    duration: duration,
-                                    chatId: chatId,
-                                    chatHostDisplayName: hostDisplayName,
-                                    chatHostUid: userUid,
-                                    hostRed: red,
-                                    hostGreen: green,
-                                    hostBlue: blue,
-                                    lastMessage: lastMessage,
-                                    lastMessageDisplayName:
-                                        lastMessageDisplayName,
-                                    lastRed: lastRed,
-                                    lastGreen: lastGreen,
-                                    lastBlue: lastBlue,
-                                    onTap: () {
-                                      Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                              builder: (context) =>
-                                                  currentUser.displayName !=
-                                                          null
-                                                      ? LiveChatScreen(
-                                                          title: title ?? '',
-                                                          chatId: chatId,
-                                                          chatHostDisplayName:
-                                                              hostDisplayName,
-                                                          chatHostUid: userUid,
-                                                          hostRed: red,
-                                                          hostGreen: green,
-                                                          hostBlue: blue,
-                                                          duration: duration,
-                                                        )
-                                                      : CreateDisplayName()));
-                                    },
-                                  );
-                                  displayedChats.add(displayedChat);
-                                }
-                                if (displayedChats.isNotEmpty) {
-                                  return ReusableContentContainer(
-                                    content: displayedChats,
-                                  );
-                                } else {
-                                  return Padding(
-                                    padding:
-                                        EdgeInsets.only(top: 2.0, bottom: 8.0),
-                                    child: Text(
-                                      'No Live Chats',
-                                      style: kDefaultTextStyle,
-                                    ),
-                                  );
-                                }
-                              },
-                            )
-                          ],
-                        );
-                      } else {
-                        //User Knock
-                        return ExpansionTile(
-                          trailing: Icon(
-                            Icons.chevron_right,
-                            size: 24,
-                          ),
-                          title: ReusableSectionLabel(title: 'Knock'),
-                          onExpansionChanged: (expanded) {
-                            kShowAlertMultiButtons(
-                                context: context,
-                                title: 'Knock Knock',
-                                desc: 'Did you mean to Knock $username?',
-                                buttonText1: 'Yes',
-                                color1: kColorGreen,
-                                buttonText2: 'Cancel',
-                                color2: kColorLightGray,
-                                onPressed1: () {
-                                  _handleKnock(
-                                      uid: userUid,
-                                      username: username,
-                                      profileImageUrl: profileImageUrl);
-                                  Navigator.pop(context);
-                                },
-                                onPressed2: () {
-                                  Navigator.pop(context);
-                                });
-                          },
-                        );
-                      }
-                    }
-                  },
-                ),
+                          )
+                        : SizedBox(),
+                  ),
+                ],
               ),
-            ),
+            ],
           ),
         ),
       ),
     );
   }
 
+  startedTyping() {
+    if (status.isNotEmpty) {
+      if (this.mounted)
+        setState(() {
+          _hasStartedTyping = true;
+        });
+      if (status.length > 200) {
+        if (this.mounted)
+          setState(() {
+            _hasStartedTyping = false;
+          });
+      }
+    } else {
+      if (this.mounted)
+        setState(() {
+          _hasStartedTyping = false;
+        });
+    }
+  }
+
+  addMessage() {
+//    final messageId = Uuid().v4();
+//    liveChatMessagesRef
+//        .document(chatId)
+//        .collection('messages')
+//        .document(messageId)
+//        .setData({
+//      'uid': currentUser.uid,
+//      'displayName': currentUser.displayName,
+//      'message': message,
+//      'creationDate': DateTime.now().millisecondsSinceEpoch,
+//      'red': currentUser.red,
+//      'green': currentUser.green,
+//      'blue': currentUser.blue,
+//      'messageId': messageId,
+//    }).whenComplete(() {
+//      liveChatController.clear();
+//      if (this.mounted) setState(() {
+//        _hasStartedTyping = false;
+//      });
+//    });
+//    liveChatsRef
+//        .document(chatHostUid)
+//        .collection('chats')
+//        .document(chatId)
+//        .updateData({
+//      'lastMessage': message,
+//      'lastMessageDisplayName': currentUser.displayName,
+//      'lastRed': currentUser.red,
+//      'lastGreen': currentUser.green,
+//      'lastBlue': currentUser.blue,
+//    });
+//    bool isNotChatHost = chatHostUid != currentUser.uid;
+//    if (isNotChatHost) {
+//      activityRef
+//          .document(currentUser.uid)
+//          .collection('feedItems')
+//          .document(chatId)
+//          .setData({
+//        'type': 'liveChatMessage',
+//        'title': title,
+//        'chatId': chatId,
+//        'message': message,
+//        'messageId': messageId,
+//        'creationDate': DateTime.now().millisecondsSinceEpoch,
+//        'uid': chatHostUid,
+//        'hostDisplayName': chatHostDisplayName,
+//        'hostRed': hostRed,
+//        'hostGreen': hostGreen,
+//        'hostBlue': hostBlue
+//      });
+//    }
+  }
+
+//  Widget build(BuildContext context) {
+//    double screenHeight = MediaQuery.of(context).size.height;
+//    double topProfileContainerHeight = screenHeight / 4 + 32;
+//
+//    return Scaffold(
+//      key: _scaffoldKey,
+//      backgroundColor: kColorOffWhite,
+//      body: ModalProgressHUD(
+//        inAsyncCall: showSpinner,
+//        progressIndicator: circularProgress(),
+//        child: SafeArea(
+//          child: NestedScrollView(
+//            headerSliverBuilder: (context, value) {
+//              return [
+//                SliverOverlapAbsorber(
+//                  handle:
+//                      NestedScrollView.sliverOverlapAbsorberHandleFor(context),
+//                  child: SliverSafeArea(
+//                    sliver: SliverAppBar(
+//                      centerTitle: true,
+//                      brightness: Brightness.light,
+//                      backgroundColor: Colors.transparent,
+//                      floating: false,
+//                      pinned: true,
+//                      snap: false,
+//                      leading: IconButton(
+//                        icon: Icon(FontAwesomeIcons.chevronLeft),
+//                        onPressed: () {
+//                          Navigator.pop(context);
+//                        },
+//                        color: kColorBlack71,
+//                        splashColor: kColorExtraLightGray,
+//                        highlightColor: Colors.transparent,
+//                      ),
+//                      actions: <Widget>[
+//                        IconButton(
+//                          icon: Icon(FontAwesomeIcons.ellipsisV,
+//                              color: kColorBlack71),
+//                          onPressed: () {
+//                            _isCurrentUser
+//                                ? _quickSettings()
+//                                : _reportBlockSettings();
+//                          },
+//                          splashColor: kColorExtraLightGray,
+//                          highlightColor: Colors.transparent,
+//                        )
+//                      ],
+//                      elevation: 2.0,
+//                      expandedHeight: !_isCurrentUser ? topProfileContainerHeight + 110.0
+//                          : topProfileContainerHeight + 75,
+//                      title: Text(
+//                        username != null ? username : '',
+//                        style: kAppBarTextStyle,
+//                      ),
+//                      flexibleSpace: FlexibleSpaceBar(
+//                        background: FlexibleProfileAppBar(
+//                          userPhotoUrl: profileImageUrl,
+//                          onTap: _isCurrentUser
+//                              ? _changeUserPhoto
+//                              : _fullScreenProfileImage,
+//                          topProfileContainerHeight: topProfileContainerHeight,
+//                          weeklyVisitsCount: displayedWeeklyCount,
+//                          totalVisitsCount: displayedTotalCount,
+//                          locationLabel: locationLabel ?? 'Around',
+//                          displayName: displayName,
+//                          red: red,
+//                          green: green,
+//                          blue: blue,
+//                          isCurrentUser: _isCurrentUser,
+//                          isFollowing: _isFollowing,
+//                          followersCount: displayedFollowersCount,
+//                          followUser: () {
+//                            print('following');
+//                            setState(() {
+//                              _isFollowing = true;
+//                            });
+//
+//                            followersRef
+//                                .document(user.uid)
+//                                .collection('users')
+//                                .document(currentUserUid)
+//                                .setData({});
+//
+//                            followingRef
+//                                .document(currentUserUid)
+//                                .collection('users')
+//                                .document(user.uid)
+//                                .setData({}).whenComplete(() {
+//                                  getFollowers();
+//                            });
+//                          },
+//                          unfollowUser: () {
+//                            print('unfollow');
+//                            setState(() {
+//                              _isFollowing = false;
+//                            });
+//
+//                            followersRef
+//                                .document(user.uid)
+//                                .collection('users')
+//                                .document(currentUserUid)
+//                                .get()
+//                                .then((doc) {
+//                              if (doc.exists) {
+//                                doc.reference.delete();
+//                              }
+//                            });
+//
+//                            followingRef
+//                                .document(currentUserUid)
+//                                .collection('users')
+//                                .document(user.uid)
+//                                .get()
+//                                .then((doc) {
+//                              if (doc.exists) {
+//                                doc.reference.delete();
+//                              }
+//                            }).whenComplete(() {
+//                              getFollowers();
+//                            });
+//                          },
+//                        ),
+//                      ),
+//                    ),
+//                  ),
+//                ),
+//              ];
+//            },
+//            body: Theme(
+//              data: kTheme(context),
+//              child: Padding(
+//                padding: EdgeInsets.only(left: 16.0, right: 16.0),
+//                child: ListView.builder(
+//                  padding: EdgeInsets.only(bottom: 60),
+//                  itemCount: _isCurrentUser ? 4 : 3,
+//                  itemBuilder: (context, index) {
+//                    if (_isCurrentUser) {
+//                      if (index == 0) {
+//                        //Current User Activity Feed
+//                        return ExpansionTile(
+//                          initiallyExpanded: true,
+//                          title: ReusableSectionLabel(title: 'Activity'),
+//                          children: <Widget>[
+//                            StreamBuilder(
+//                              stream: activityRef
+//                                  .document(currentUserUid)
+//                                  .collection('feedItems')
+//                                  .orderBy('creationDate', descending: true)
+//                                  .snapshots(),
+//                              builder: (context, snapshot) {
+//                                if (!snapshot.hasData) {
+//                                  return circularProgress();
+//                                }
+//                                final activityItems = snapshot.data.documents;
+//                                List<ActivityFeedItem> displayedItems = [];
+//                                for (var item in activityItems) {
+//                                  final type = item.data['type'];
+//                                  final username = item.data['username'] ?? '';
+//                                  final uid = item.data['uid'];
+//                                  final city = item.data['city'] ?? 'Around';
+//                                  final profileImageUrl =
+//                                      item.data['profileImageUrl'] ?? '';
+//                                  final creationDate =
+//                                      item.data['creationDate'];
+//
+//                                  final title = item.data['title'] ?? '';
+//                                  final chatId = item.data['chatId'] ?? '';
+//                                  final chatHostDisplayName =
+//                                      item.data['hostDisplayName'] ?? '';
+//                                  final hostRed = item.data['hostRed'] ?? 0;
+//                                  final hostGreen = item.data['hostGreen'] ?? 0;
+//                                  final hostBlue = item.data['hostBlue'] ?? 0;
+//                                  final lastMessage =
+//                                      item.data['message'] ?? '';
+//
+//                                  final endDate = item.data['endDate'] ?? 0;
+//                                  int timeLeft = endDate -
+//                                      DateTime.now().millisecondsSinceEpoch;
+//
+//                                  final displayedItem = ActivityFeedItem(
+//                                    type: type,
+//                                    uid: uid,
+//                                    username: username,
+//                                    city: city,
+//                                    imageUrl: profileImageUrl,
+//                                    onTap: () => _pendingKnocksActionSheet(
+//                                      context: context,
+//                                      uid: uid,
+//                                    ),
+//                                    creationDate: creationDate,
+//                                    title: title,
+//                                    chatId: chatId,
+//                                    chatHostDisplayName: chatHostDisplayName,
+//                                    hostRed: hostRed,
+//                                    hostGreen: hostGreen,
+//                                    hostBlue: hostBlue,
+//                                    duration: kTimeRemaining(timeLeft),
+//                                    lastMessage: lastMessage,
+//                                  );
+//                                  if (!currentUser.blockedUids.contains(uid)) {
+//                                    displayedItems.add(displayedItem);
+//                                  }
+//                                }
+//                                if (displayedItems.isNotEmpty) {
+//                                  return ReusableContentContainer(
+//                                    content: displayedItems,
+//                                  );
+//                                } else {
+//                                  return Padding(
+//                                    padding:
+//                                        EdgeInsets.only(top: 2.0, bottom: 8.0),
+//                                    child: Text(
+//                                      'No Activity Yet',
+//                                      style: kDefaultTextStyle,
+//                                    ),
+//                                  );
+//                                }
+//                              },
+//                            )
+//                          ],
+//                        );
+//                      } else if (index == 1) {
+//                        //Current User Knocks
+//                        return ExpansionTile(
+//                          initiallyExpanded: false,
+//                          title: ReusableSectionLabel(title: 'Knocks'),
+//                          children: <Widget>[
+//                            StreamBuilder<QuerySnapshot>(
+//                              stream: knocksRef
+//                                  .document(currentUserUid)
+//                                  .collection('receivedKnockFrom')
+//                                  .orderBy('creationDate', descending: true)
+//                                  .snapshots(),
+//                              builder: (context, snapshot) {
+//                                if (!snapshot.hasData) {
+//                                  return circularProgress();
+//                                }
+//                                final knocks = snapshot.data.documents;
+//                                List<Knock> displayedKnocks = [];
+//                                for (var knock in knocks) {
+//                                  final knockUsername = knock.data['username'];
+//                                  final knockProfileImageUrl =
+//                                      knock.data['profileImageUrl'];
+//                                  final creationDate =
+//                                      knock.data['creationDate'];
+//                                  final uid = knock.data['uid'];
+//
+//                                  final displayedKnock = Knock(
+//                                    username: knockUsername,
+//                                    imageUrl: knockProfileImageUrl,
+//                                    creationDate: creationDate,
+//                                    onTap: () {
+//                                      _knocksActionSheet(
+//                                          context: context,
+//                                          uid: uid,
+//                                          username: knockUsername,
+//                                          profileImageUrl:
+//                                              knockProfileImageUrl);
+//                                    },
+//                                  );
+//                                  displayedKnocks.add(displayedKnock);
+//                                }
+//                                if (displayedKnocks.isNotEmpty) {
+//                                  return ReusableContentContainer(
+//                                    content: displayedKnocks,
+//                                  );
+//                                } else {
+//                                  return Padding(
+//                                    padding:
+//                                        EdgeInsets.only(top: 2.0, bottom: 8.0),
+//                                    child: Text(
+//                                      'No Knocks Yet',
+//                                      style: kDefaultTextStyle,
+//                                    ),
+//                                  );
+//                                }
+//                              },
+//                            ),
+//                          ],
+//                        );
+//                      } else if (index == 2) {
+//                        //Current User Links
+//                        return ExpansionTile(
+//                          initiallyExpanded: false,
+//                          title: ReusableSectionLabel(title: 'Links'),
+//                          children: <Widget>[
+//                            StreamBuilder<QuerySnapshot>(
+//                              stream: socialMediasRef
+//                                  .document(currentUserUid)
+//                                  .collection('socials')
+//                                  .orderBy('creationDate', descending: true)
+//                                  .snapshots(),
+//                              builder: (context, snapshot) {
+//                                if (!snapshot.hasData) {
+//                                  return circularProgress();
+//                                }
+//                                final accounts = snapshot.data.documents;
+//                                List<LinkedAccount> displayedAccounts = [];
+//                                for (var account in accounts) {
+//                                  account.data.forEach(
+//                                    (key, value) {
+//                                      if (key.contains('Username')) {
+//                                        final iconString = key;
+//                                        final accountUsername = value;
+//                                        final url = account.data['url'];
+//                                        final linkId = account.data['linkId'];
+//
+//                                        _determineUrl(
+//                                            accountUsername, iconString, url);
+//
+//                                        final displayedAccount = LinkedAccount(
+//                                          accountUsername: accountUsername,
+//                                          accountUrl: url,
+//                                          iconString: iconString,
+//                                          onTap: () {
+//                                            _linksActionSheet(
+//                                                context,
+//                                                accountUsername,
+//                                                iconString,
+//                                                url,
+//                                                linkId);
+//                                          },
+//                                        );
+//                                        displayedAccounts.add(displayedAccount);
+//                                      }
+//                                    },
+//                                  );
+//                                }
+//                                if (displayedAccounts.isNotEmpty) {
+//                                  return ReusableContentContainer(
+//                                    content: displayedAccounts,
+//                                  );
+//                                } else {
+//                                  _updateFirestoreHasAccountLinked();
+//                                  return ReusableBottomActionSheetListTile(
+//                                    iconData: FontAwesomeIcons.link,
+//                                    title: 'Link Account',
+//                                    onTap: () {
+//                                      Navigator.push(
+//                                        context,
+//                                        MaterialPageRoute(
+//                                            builder: (BuildContext context) =>
+//                                                ChooseAccount()),
+//                                      );
+//                                    },
+//                                  );
+//                                }
+//                              },
+//                            ),
+//                          ],
+//                        );
+//                      } else {
+//                        //Current User Created Live Chats
+//                        return ExpansionTile(
+//                          title: ReusableSectionLabel(title: 'Live Chats'),
+//                          children: <Widget>[
+//                            StreamBuilder(
+//                              stream: liveChatsRef
+//                                  .document(currentUserUid)
+//                                  .collection('chats')
+//                                  .orderBy('creationDate', descending: true)
+//                                  .snapshots(),
+//                              builder: (context, snapshot) {
+//                                if (!snapshot.hasData) {
+//                                  return circularProgress();
+//                                }
+//                                final chats = snapshot.data.documents;
+//                                List<LiveChat> displayedChats = [];
+//                                for (var chat in chats) {
+//                                  final title = chat.data['title'];
+//                                  final creationDate =
+//                                      chat.data['creationDate'];
+//                                  final chatId = chat.data['chatId'];
+//                                  final hostDisplayName =
+//                                      chat.data['hostDisplayName'] ?? '';
+//                                  final lastMessage = chat.data['lastMessage'];
+//                                  final lastMessageDisplayName =
+//                                      chat.data['lastMessageDisplayName'];
+//                                  final lastRed = chat.data['lastRed'];
+//                                  final lastGreen = chat.data['lastGreen'];
+//                                  final lastBlue = chat.data['lastBlue'];
+//                                  final endDate = chat.data['endDate'];
+//
+//                                  int timeLeft = endDate -
+//                                      DateTime.now().millisecondsSinceEpoch;
+//                                  String duration = kTimeRemaining(timeLeft);
+//
+//                                  bool hasChatEnded = timeLeft <= 0;
+//
+//                                  if (hasChatEnded) {
+//                                    kHandleRemoveAllLiveChatData(
+//                                        chatId, currentUserUid);
+//                                  }
+//
+//                                  final displayedChat = LiveChat(
+//                                    title: title,
+//                                    creationDate: creationDate,
+//                                    duration: duration,
+//                                    chatId: chatId,
+//                                    chatHostDisplayName: hostDisplayName,
+//                                    chatHostUid: currentUserUid,
+//                                    hostRed: red,
+//                                    hostGreen: green,
+//                                    hostBlue: blue,
+//                                    lastMessage: lastMessage,
+//                                    lastMessageDisplayName:
+//                                        lastMessageDisplayName,
+//                                    lastRed: lastRed,
+//                                    lastGreen: lastGreen,
+//                                    lastBlue: lastBlue,
+//                                    onTap: () {
+//                                      _liveChatsActionSheet(
+//                                          context,
+//                                          title,
+//                                          chatId,
+//                                          hostDisplayName,
+//                                          red,
+//                                          green,
+//                                          blue,
+//                                          currentUserUid,
+//                                          duration);
+//                                    },
+//                                  );
+//                                  displayedChats.add(displayedChat);
+//                                }
+//                                if (displayedChats.isNotEmpty) {
+//                                  return ReusableContentContainer(
+//                                    content: displayedChats,
+//                                  );
+//                                } else {
+//                                  return ReusableBottomActionSheetListTile(
+//                                    iconData: FontAwesomeIcons.comments,
+//                                    title: 'Create Live Chat',
+//                                    onTap: () {
+//                                      Navigator.push(
+//                                        context,
+//                                        MaterialPageRoute(
+//                                            builder: (context) =>
+//                                                currentUser.displayName != null
+//                                                    ? AddLiveChat()
+//                                                    : CreateDisplayName()),
+//                                      );
+//                                    },
+//                                  );
+//                                }
+//                              },
+//                            )
+//                          ],
+//                        );
+//                      }
+//                    } else {
+//                      if (index == 0) {
+//                        //User Links
+//                        return ExpansionTile(
+//                          initiallyExpanded: true,
+//                          title: ReusableSectionLabel(title: 'Links'),
+//                          children: <Widget>[
+//                            StreamBuilder<QuerySnapshot>(
+//                              stream: socialMediasRef
+//                                  .document(userUid)
+//                                  .collection('socials')
+//                                  .snapshots(),
+//                              builder: (context, snapshot) {
+//                                if (!snapshot.hasData) {
+//                                  return circularProgress();
+//                                }
+//                                final accounts = snapshot.data.documents;
+//                                List<LinkedAccount> displayedAccounts = [];
+//                                for (var account in accounts) {
+//                                  account.data.forEach(
+//                                    (key, value) {
+//                                      if (key.contains('Username')) {
+//                                        final iconString = key;
+//                                        final accountUsername = value;
+//                                        final url = account.data['url'];
+//                                        final linkId = account.data['linkId'];
+//
+//                                        _determineUrl(
+//                                            accountUsername, iconString, url);
+//
+//                                        final displayedAccount = LinkedAccount(
+//                                          accountUsername: accountUsername,
+//                                          accountUrl: url,
+//                                          iconString: iconString,
+//                                          onTap: () {
+//                                            _linksActionSheet(
+//                                              context,
+//                                              accountUsername,
+//                                              iconString,
+//                                              url,
+//                                              linkId,
+//                                            );
+//                                          },
+//                                        );
+//                                        displayedAccounts.add(displayedAccount);
+//                                      }
+//                                    },
+//                                  );
+//                                }
+//                                if (displayedAccounts.isNotEmpty) {
+//                                  return ReusableContentContainer(
+//                                    content: displayedAccounts,
+//                                  );
+//                                } else {
+//                                  return Padding(
+//                                    padding: const EdgeInsets.only(
+//                                        top: 2.0, bottom: 8.0),
+//                                    child: Text(
+//                                      'No Accounts Linked',
+//                                      style: kDefaultTextStyle,
+//                                    ),
+//                                  );
+//                                }
+//                              },
+//                            ),
+//                          ],
+//                        );
+//                      } else if (index == 1) {
+//                        //User Created Live Chats
+//                        return ExpansionTile(
+//                          title: ReusableSectionLabel(title: 'Live Chats'),
+//                          children: <Widget>[
+//                            StreamBuilder(
+//                              stream: liveChatsRef
+//                                  .document(userUid)
+//                                  .collection('chats')
+//                                  .orderBy('creationDate', descending: true)
+//                                  .snapshots(),
+//                              builder: (context, snapshot) {
+//                                if (!snapshot.hasData) {
+//                                  return circularProgress();
+//                                }
+//                                final chats = snapshot.data.documents;
+//                                List<LiveChat> displayedChats = [];
+//                                for (var chat in chats) {
+//                                  final title = chat.data['title'];
+//                                  final creationDate =
+//                                      chat.data['creationDate'];
+//                                  final chatId = chat.data['chatId'];
+//                                  final hostDisplayName =
+//                                      chat.data['hostDisplayName'] ?? '';
+//                                  final lastMessage = chat.data['lastMessage'];
+//                                  final lastMessageDisplayName =
+//                                      chat.data['lastMessageDisplayName'];
+//                                  final lastRed = chat.data['lastRed'];
+//                                  final lastGreen = chat.data['lastGreen'];
+//                                  final lastBlue = chat.data['lastBlue'];
+//                                  final endDate = chat.data['endDate'];
+//
+//                                  int timeLeft = endDate -
+//                                      DateTime.now().millisecondsSinceEpoch;
+//                                  String duration = kTimeRemaining(timeLeft);
+//
+//                                  bool hasChatEnded = timeLeft <= 0;
+//
+//                                  if (hasChatEnded) {
+//                                    kHandleRemoveAllLiveChatData(
+//                                        chatId, userUid);
+//                                  }
+//
+//                                  final displayedChat = LiveChat(
+//                                    title: title,
+//                                    creationDate: creationDate,
+//                                    duration: duration,
+//                                    chatId: chatId,
+//                                    chatHostDisplayName: hostDisplayName,
+//                                    chatHostUid: userUid,
+//                                    hostRed: red,
+//                                    hostGreen: green,
+//                                    hostBlue: blue,
+//                                    lastMessage: lastMessage,
+//                                    lastMessageDisplayName:
+//                                        lastMessageDisplayName,
+//                                    lastRed: lastRed,
+//                                    lastGreen: lastGreen,
+//                                    lastBlue: lastBlue,
+//                                    onTap: () {
+//                                      Navigator.push(
+//                                          context,
+//                                          MaterialPageRoute(
+//                                              builder: (context) =>
+//                                                  currentUser.displayName !=
+//                                                          null
+//                                                      ? LiveChatScreen(
+//                                                          title: title ?? '',
+//                                                          chatId: chatId,
+//                                                          chatHostDisplayName:
+//                                                              hostDisplayName,
+//                                                          chatHostUid: userUid,
+//                                                          hostRed: red,
+//                                                          hostGreen: green,
+//                                                          hostBlue: blue,
+//                                                          duration: duration,
+//                                                        )
+//                                                      : CreateDisplayName()));
+//                                    },
+//                                  );
+//                                  displayedChats.add(displayedChat);
+//                                }
+//                                if (displayedChats.isNotEmpty) {
+//                                  return ReusableContentContainer(
+//                                    content: displayedChats,
+//                                  );
+//                                } else {
+//                                  return Padding(
+//                                    padding:
+//                                        EdgeInsets.only(top: 2.0, bottom: 8.0),
+//                                    child: Text(
+//                                      'No Live Chats',
+//                                      style: kDefaultTextStyle,
+//                                    ),
+//                                  );
+//                                }
+//                              },
+//                            )
+//                          ],
+//                        );
+//                      } else {
+//                        //User Knock
+//                        return ExpansionTile(
+//                          trailing: Icon(
+//                            Icons.chevron_right,
+//                            size: 24,
+//                          ),
+//                          title: ReusableSectionLabel(title: 'Knock'),
+//                          onExpansionChanged: (expanded) {
+//                            kShowAlertMultiButtons(
+//                                context: context,
+//                                title: 'Knock Knock',
+//                                desc: 'Did you mean to Knock $username?',
+//                                buttonText1: 'Yes',
+//                                color1: kColorGreen,
+//                                buttonText2: 'Cancel',
+//                                color2: kColorLightGray,
+//                                onPressed1: () {
+//                                  _handleKnock(
+//                                      uid: userUid,
+//                                      username: username,
+//                                      profileImageUrl: profileImageUrl);
+//                                  Navigator.pop(context);
+//                                },
+//                                onPressed2: () {
+//                                  Navigator.pop(context);
+//                                });
+//                          },
+//                        );
+//                      }
+//                    }
+//                  },
+//                ),
+//              ),
+//            ),
+//          ),
+//        ),
+//      ),
+//    );
+//  }
+
   _fullScreenProfileImage() {
-//    Navigator.push(context, SizeRoute(page: ProfileImageFullScreen(profileImageUrl)));
+    Navigator.push(
+        context, SizeRoute(page: ProfileImageFullScreen(profileImageUrl)));
   }
 
   _updateFirestoreHasAccountLinked() {
@@ -767,7 +1358,11 @@ class _ProfileState extends State<Profile> {
     });
   }
 
-  _knocksActionSheet({BuildContext context, String uid, String username, String profileImageUrl}) {
+  _knocksActionSheet(
+      {BuildContext context,
+      String uid,
+      String username,
+      String profileImageUrl}) {
     List<ReusableBottomActionSheetListTile> sheets = [];
     sheets.add(
       ReusableBottomActionSheetListTile(
@@ -1584,6 +2179,74 @@ class _ProfileState extends State<Profile> {
   }
 }
 
+class TopProfileHeaderButton extends StatelessWidget {
+  const TopProfileHeaderButton({
+    @required this.text,
+    @required this.onPressed,
+    @required this.width,
+    this.backgroundColor,
+    this.textColor,
+    this.splashColor,
+  });
+
+  final String text;
+  final Function onPressed;
+  final double width;
+  final Color backgroundColor;
+  final Color textColor;
+  final Color splashColor;
+
+  @override
+  Widget build(BuildContext context) {
+    return ButtonTheme(
+      minWidth: width,
+      child: FlatButton(
+        child: Text(
+          text,
+          style: kDefaultTextStyle.copyWith(
+              fontSize: 16.0, color: textColor ?? kColorBlack71),
+        ),
+        color: backgroundColor ?? Colors.white,
+        onPressed: onPressed,
+        shape: RoundedRectangleBorder(
+          side: BorderSide(color: kColorExtraLightGray),
+        ),
+        splashColor: splashColor ?? kColorExtraLightGray,
+        highlightColor: Colors.transparent,
+      ),
+    );
+  }
+}
+
+class TopProfileHeaderContainer extends StatelessWidget {
+  const TopProfileHeaderContainer({
+    @required this.text,
+    @required this.fontSize,
+    @required this.padding,
+  });
+
+  final String text;
+  final double fontSize;
+  final double padding;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: EdgeInsets.only(left: padding, right: padding),
+      decoration: BoxDecoration(
+        border: Border.all(color: kColorExtraLightGray),
+        color: Colors.white,
+      ),
+      child: Text(
+        text,
+        style: kAppBarTextStyle.copyWith(fontSize: fontSize),
+        overflow: TextOverflow.fade,
+        softWrap: false,
+      ),
+    );
+  }
+}
+
 class ReusableContentContainer extends StatelessWidget {
   ReusableContentContainer({@required this.content});
 
@@ -1594,7 +2257,7 @@ class ReusableContentContainer extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.all(const Radius.circular(10.0)),
+        borderRadius: BorderRadius.all(Radius.circular(10.0)),
       ),
       child: Column(children: content),
     );
@@ -1609,7 +2272,7 @@ class ReusableSectionLabel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(top: 24.0, bottom: 12.0),
+      padding: EdgeInsets.only(left: 4.0),
       child: Text(title, style: kAppBarTextStyle.copyWith(fontSize: 16.0)),
     );
   }
@@ -1664,25 +2327,31 @@ class FlexibleProfileAppBar extends StatelessWidget {
               cardSize: topProfileContainerHeight,
               onTap: onTap,
             ),
-            !isCurrentUser ? FlatButton(
-              child: !isFollowing ? Text(
-                'Follow',
-                style: kAppBarTextStyle.copyWith(
-                    fontSize: 16.0, color: Colors.white),
-              ) : Text(
-                'Unfollow',
-                style: kAppBarTextStyle.copyWith(
-                    fontSize: 16.0),
-              ),
-              color: !isFollowing ? kColorBlue : Colors.transparent,
-              onPressed: !isFollowing ? followUser : unfollowUser,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(5.0),
-                  side: BorderSide(color: !isFollowing ? Colors.transparent : kColorBlack71),
-              ),
-              splashColor: !isFollowing ? kColorDarkBlue : kColorRed,
-              highlightColor: Colors.transparent,
-            ) : SizedBox(),
+            !isCurrentUser
+                ? FlatButton(
+                    child: !isFollowing
+                        ? Text(
+                            'Follow',
+                            style: kAppBarTextStyle.copyWith(
+                                fontSize: 16.0, color: Colors.white),
+                          )
+                        : Text(
+                            'Unfollow',
+                            style: kAppBarTextStyle.copyWith(fontSize: 16.0),
+                          ),
+                    color: !isFollowing ? kColorBlue : Colors.transparent,
+                    onPressed: !isFollowing ? followUser : unfollowUser,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(5.0),
+                      side: BorderSide(
+                          color: !isFollowing
+                              ? Colors.transparent
+                              : kColorBlack71),
+                    ),
+                    splashColor: !isFollowing ? kColorDarkBlue : kColorRed,
+                    highlightColor: Colors.transparent,
+                  )
+                : SizedBox(),
             displayName != null
                 ? GestureDetector(
                     onTap: () => isCurrentUser
@@ -1691,14 +2360,14 @@ class FlexibleProfileAppBar extends StatelessWidget {
                     child: Text(
                       displayName ?? '',
                       style: kAppBarTextStyle.copyWith(
-                          color: Color.fromRGBO(
-                            red ?? 95,
-                            green ?? 71,
-                            blue ?? 188,
-                            1.0,
-                          ),
-                          fontWeight: FontWeight.w500,
-                          fontSize: 18.0,
+                        color: Color.fromRGBO(
+                          red ?? 95,
+                          green ?? 71,
+                          blue ?? 188,
+                          1.0,
+                        ),
+                        fontWeight: FontWeight.w500,
+                        fontSize: 18.0,
                       ),
                     ),
                   )

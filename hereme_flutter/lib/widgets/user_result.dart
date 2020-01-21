@@ -25,32 +25,33 @@ class UserResult extends StatelessWidget {
     double screenHeight = MediaQuery.of(context).size.height;
     return GestureDetector(
       onTap: () => toProfile(context),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.end,
-        children: <Widget>[
-          Text(user.username ?? '', style: kAppBarTextStyle.copyWith(fontSize: 20)),
-          Padding(
-            padding: EdgeInsets.all(8.0),
-            child: Stack(
-              alignment: Alignment.bottomCenter,
-              children: <Widget>[
-                Container(
-                  height: screenHeight / 1.85,
-                  child: cachedUserResultImage(user.profileImageUrl, 15),
-                ),
-                Padding(
-                  padding: EdgeInsets.all(12.0),
-                  child: Image.asset(
-                    'images/live.png',
-                    color: Colors.white,
-                    scale: 6.0,
-                  )
-                )
-              ],
-            ),
-          ),
-        ],
-      ),
+      child: cachedUserResultImage(user.profileImageUrl, 15),
+//      child: Column(
+//        mainAxisAlignment: MainAxisAlignment.end,
+//        children: <Widget>[
+//          Text(user.username ?? '', style: kAppBarTextStyle.copyWith(fontSize: 20)),
+//          Padding(
+//            padding: EdgeInsets.all(8.0),
+//            child: Stack(
+//              alignment: Alignment.bottomCenter,
+//              children: <Widget>[
+//                Container(
+//                  height: screenHeight / 1.85,
+//                  child: cachedUserResultImage(user.profileImageUrl, 15),
+//                ),
+//                Padding(
+//                  padding: EdgeInsets.all(12.0),
+//                  child: Image.asset(
+//                    'images/live.png',
+//                    color: Colors.white,
+//                    scale: 6.0,
+//                  )
+//                )
+//              ],
+//            ),
+//          ),
+//        ],
+//      ),
     );
   }
 }

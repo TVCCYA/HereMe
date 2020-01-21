@@ -93,7 +93,6 @@ class _InitialPageState extends State<InitialPage> {
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(5.0),
                               side: BorderSide(color: Colors.white),
-
                             ),
                             splashColor: kColorDarkRed,
                             highlightColor: Colors.transparent,

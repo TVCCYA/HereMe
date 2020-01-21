@@ -14,28 +14,24 @@ class ReusableProfileCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      elevation: 4.0,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15.0)),
-      child: InkResponse(
-        onTap: onTap,
-        child: ClipRRect(
-            borderRadius: BorderRadius.circular(15.0),
-            child: imageUrl != null
-                ? CachedNetworkImage(
-                    imageUrl: imageUrl,
-                    height: (cardSize / 2) - 12,
-                    width: (cardSize / 2) - 12,
-                    fit: BoxFit.cover,
-                  )
-                : ClipRRect(
-                    borderRadius: BorderRadius.circular(15.0),
-                    child: Container(
-                      height: (cardSize / 2) - 12,
-                      width: (cardSize / 2) - 12,
-                      color: kColorExtraLightGray,
-                    ),
-                  )),
+    return InkResponse(
+      onTap: onTap,
+      child: Container(
+        decoration: BoxDecoration(
+          border: Border.all(color: kColorExtraLightGray),
+        ),
+        child: imageUrl != null
+            ? CachedNetworkImage(
+                imageUrl: imageUrl,
+                height: cardSize,
+                width: cardSize,
+                fit: BoxFit.fill,
+              )
+            : Container(
+                height: cardSize,
+                width: cardSize,
+                color: kColorExtraLightGray,
+              ),
       ),
     );
   }

@@ -10,19 +10,16 @@ class ReusableButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.symmetric(vertical: 4.0),
-      child: Material(
-        color: Colors.white,
-        child: MaterialButton(
-          splashColor: kColorExtraLightGray,
-          highlightColor: Colors.transparent,
-          onPressed: onPressed,
-          child: Text(
-            title,
-            style: kAppBarTextStyle.copyWith(
-              color: textColor,
-            ),
+    return Material(
+      color: Colors.white,
+      child: MaterialButton(
+        splashColor: kColorExtraLightGray,
+        highlightColor: Colors.transparent,
+        onPressed: onPressed,
+        child: Text(
+          title,
+          style: kAppBarTextStyle.copyWith(
+            color: textColor,
           ),
         ),
       ),

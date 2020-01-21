@@ -666,7 +666,7 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
             GridTile(
               child: UserResult(
                 user: user,
-                locationLabel: user.city,
+                locationLabel: user.city ?? 'Around',
               ),
             ),
           );
@@ -681,11 +681,30 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
                 child: Text('Most Viewed This Week',
                     style: kAppBarTextStyle.copyWith(fontSize: 16.0)),
               ),
+//              Container(
+//                height: 150,
+//                child: GridView.count(
+//                  padding: EdgeInsets.only(left: 8, right: 8),
+//                  crossAxisCount: 1,
+//                  childAspectRatio: 1.33,
+//                  mainAxisSpacing: 2.5,
+//                  crossAxisSpacing: 1.0,
+//                  physics: AlwaysScrollableScrollPhysics(),
+//                  scrollDirection: Axis.horizontal,
+//                  children: gridTiles,
+//                ),
+//              ),
               CarouselSlider(
                 height: screenHeight / 1.3,
                 items: gridTiles,
                 viewportFraction: 0.9,
               ),
+//              Center(
+//                child: CircleList(
+//                  origin: Offset(0, 0),
+//                  children: gridTiles,
+//                ),
+//              ),
             ],
           );
         } else {
@@ -793,7 +812,7 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
         automaticallyImplyLeading: false,
         actions: <Widget>[
           Padding(
-            padding: const EdgeInsets.all(10.0),
+            padding: EdgeInsets.all(10.0),
             child: GestureDetector(
               child: _isAuth
                   ? cachedUserResultImage(currentUser.profileImageUrl, 5)

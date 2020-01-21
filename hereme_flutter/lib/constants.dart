@@ -62,11 +62,11 @@ const kDefaultTextStyle = TextStyle(
 const kRegistrationInputDecoration = InputDecoration(
   enabledBorder: UnderlineInputBorder(
     borderSide: BorderSide(
-      color: kColorLightGray,
+      color: kColorExtraLightGray,
     ),
   ),
   focusedBorder: UnderlineInputBorder(
-    borderSide: BorderSide(color: kColorLightGray),
+    borderSide: BorderSide(color: kColorExtraLightGray),
   ),
 );
 
