@@ -48,24 +48,18 @@ class ReusableCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       elevation: 4.0,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15.0)),
       child: InkResponse(
         onTap: onTap,
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(15.0),
-          child: Container(
-            height: (cardSize / 2) - 12,
-            width: (cardSize / 2) - 12,
-            child: imageFile != null
-                ? Image.file(
-                    imageFile,
-                    fit: BoxFit.cover,
-                  )
-                : Icon(
-                    FontAwesomeIcons.exclamationTriangle,
-                    color: kColorRed,
-                  ),
-          ),
+        child: Container(
+          child: imageFile != null
+              ? Image.file(
+                  imageFile,
+                  fit: BoxFit.contain,
+                )
+              : Icon(
+                  FontAwesomeIcons.exclamationTriangle,
+                  color: kColorRed,
+                ),
         ),
       ),
     );

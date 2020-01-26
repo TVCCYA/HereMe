@@ -16,6 +16,7 @@ class User {
   int blue;
   Map<dynamic, dynamic> blockedUserUids;
   List<String> blockedUids;
+  String backgroundImageUrl;
 
   User({
     this.username,
@@ -33,6 +34,7 @@ class User {
     this.blue,
     this.blockedUserUids,
     this.blockedUids,
+    this.backgroundImageUrl,
   });
 
   factory User.fromDocument(DocumentSnapshot doc) {
@@ -51,6 +53,7 @@ class User {
       green: doc['green'],
       blue: doc['blue'],
       blockedUserUids: doc['blockedUsers'],
+      backgroundImageUrl: doc['backgroundImageUrl'],
     );
   }
 }

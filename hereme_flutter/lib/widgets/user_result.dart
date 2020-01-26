@@ -25,7 +25,7 @@ class UserResult extends StatelessWidget {
     double screenHeight = MediaQuery.of(context).size.height;
     return GestureDetector(
       onTap: () => toProfile(context),
-      child: cachedUserResultImage(user.profileImageUrl, 15),
+      child: cachedUserResultImage(user.profileImageUrl, 15, 40),
 //      child: Column(
 //        mainAxisAlignment: MainAxisAlignment.end,
 //        children: <Widget>[
@@ -65,7 +65,7 @@ class BlockedUserResult extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
-      child: cachedUserResultImage(user.profileImageUrl, 5),
+      child: cachedUserResultImage(user.profileImageUrl, 5, 40),
     );
   }
 }

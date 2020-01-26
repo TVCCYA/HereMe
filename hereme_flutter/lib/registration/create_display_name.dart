@@ -148,108 +148,108 @@ class _CreateDisplayNameState extends State<CreateDisplayName> {
       body: SafeArea(
         child: ModalProgressHUD(
           inAsyncCall: showSpinner,
-          progressIndicator: CircularProgressIndicator(
-            valueColor: AlwaysStoppedAnimation<Color>(kColorRed),
-          ),
-          child: SafeArea(
-            child: GestureDetector(
-              behavior: HitTestBehavior.translucent,
-              onPanDown: (_) {
-                FocusScope.of(context).requestFocus(FocusNode());
-              },
-              child: Padding(
-                padding: EdgeInsets.all(12.0),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: <Widget>[
-                    TextField(
-                      maxLength: 16,
-                      cursorColor: kColorLightGray,
-                      onChanged: (value) {
-                        displayName = value;
-                        _isNameAvailable();
-                        _isValid();
-                      },
-                      focusNode: null,
-                      onSubmitted: (v) {
+          progressIndicator: circularProgress(),
+          child: GestureDetector(
+            behavior: HitTestBehavior.translucent,
+            onPanDown: (_) {
+              FocusScope.of(context).requestFocus(FocusNode());
+            },
+            child: Padding(
+              padding: EdgeInsets.all(12.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: <Widget>[
+                  TextField(
+                    maxLength: 16,
+                    cursorColor: kColorLightGray,
+                    onChanged: (value) {
+                      displayName = value;
+                      _isNameAvailable();
+                      _isValid();
+                    },
+                    focusNode: null,
+                    onSubmitted: (v) {
+                      _onSubmitErrors();
+                      _isButtonDisabled
+                          ? print('disabled')
+                          : handleAddDisplayName();
+                    },
+                    autocorrect: false,
+                    keyboardType: TextInputType.text,
+                    textInputAction: TextInputAction.done,
+                    autofocus: true,
+                    style: kDefaultTextStyle.copyWith(
+                        color: Color.fromRGBO(red, green, blue, 1.0)),
+                    decoration: kRegistrationInputDecoration.copyWith(
+                      labelText: 'Username',
+                      hintText: currentUser.displayName == null
+                          ? 'Your username'
+                          : currentUser.displayName,
+                      hintStyle: kDefaultTextStyle.copyWith(
+                        color: kColorLightGray,
+                      ),
+                      labelStyle: kAppBarTextStyle.copyWith(
+                        fontSize: 16.0,
+                      ),
+                      icon: Icon(
+                        FontAwesomeIcons.at,
+                        color: kColorBlack71,
+                        size: 20.0,
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 8.0),
+                  RaisedButton(
+                    color: Color.fromRGBO(red, green, blue, 1.0),
+                    onPressed: () => createRandomColor(),
+                    child: Text(
+                      'Randomize Display Color',
+                      style: kDefaultTextStyle.copyWith(color: Colors.white),
+                    ),
+                    splashColor: kColorExtraLightGray,
+                    highlightColor: Colors.transparent,
+                  ),
+                  Align(
+                    alignment: Alignment.topRight,
+                    child: FlatButton.icon(
+                      onPressed: () {
                         _onSubmitErrors();
                         _isButtonDisabled
                             ? print('disabled')
                             : handleAddDisplayName();
                       },
-                      autocorrect: false,
-                      keyboardType: TextInputType.text,
-                      textInputAction: TextInputAction.done,
-                      autofocus: true,
-                      style: kDefaultTextStyle.copyWith(
-                          color: Color.fromRGBO(red, green, blue, 1.0)),
-                      decoration: kRegistrationInputDecoration.copyWith(
-                        labelText: 'Username',
-                        hintText: currentUser.displayName == null
-                            ? 'Your username'
-                            : currentUser.displayName,
-                        hintStyle: kDefaultTextStyle.copyWith(
-                          color: kColorLightGray,
-                        ),
-                        labelStyle: kAppBarTextStyle.copyWith(
-                          fontSize: 16.0,
-                        ),
-                        icon: Icon(
-                          FontAwesomeIcons.at,
-                          color: kColorBlack71,
-                          size: 20.0,
-                        ),
-                      ),
-                    ),
-                    SizedBox(height: 8.0),
-                    RaisedButton(
-                      color: Color.fromRGBO(red, green, blue, 1.0),
-                      onPressed: () => createRandomColor(),
-                      child: Text(
-                        'Randomize Display Color',
-                        style: kDefaultTextStyle.copyWith(color: Colors.white),
-                      ),
-                      splashColor: kColorExtraLightGray,
+                      splashColor: _isButtonDisabled
+                          ? Colors.transparent
+                          : kColorOffWhite,
                       highlightColor: Colors.transparent,
-                    ),
-                    Align(
-                      alignment: Alignment.topRight,
-                      child: FlatButton.icon(
-                        onPressed: () {
-                          _onSubmitErrors();
-                          _isButtonDisabled
-                              ? print('disabled')
-                              : handleAddDisplayName();
-                        },
-                        splashColor: _isButtonDisabled
-                            ? Colors.transparent
-                            : kColorOffWhite,
-                        highlightColor: Colors.transparent,
-                        icon: Icon(
-                          _isButtonDisabled
-                              ? FontAwesomeIcons.arrowAltCircleUp
-                              : FontAwesomeIcons.arrowAltCircleRight,
-                          size: 30.0,
-                          color: _isButtonDisabled
-                              ? kColorLightGray
-                              : kColorBlue,
-                        ),
-                        label: Text(
-                          _isButtonDisabled ? 'Not Done' : 'Done',
-                          style: kDefaultTextStyle.copyWith(
-                              color: _isButtonDisabled
-                                  ? kColorLightGray
-                                  : kColorBlue),
-                        ),
+                      icon: Icon(
+                        _isButtonDisabled
+                            ? FontAwesomeIcons.arrowAltCircleUp
+                            : FontAwesomeIcons.arrowAltCircleRight,
+                        size: 30.0,
+                        color: _isButtonDisabled
+                            ? kColorLightGray
+                            : kColorBlue,
+                      ),
+                      label: Text(
+                        _isButtonDisabled ? 'Not Done' : 'Done',
+                        style: kDefaultTextStyle.copyWith(
+                            color: _isButtonDisabled
+                                ? kColorLightGray
+                                : kColorBlue),
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
           ),
         ),
+      ),
+      bottomSheet: Container(
+        height: 40,
+        color: Colors.black,
       ),
     );
   }

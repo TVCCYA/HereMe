@@ -44,6 +44,7 @@ final activityRef = Firestore.instance.collection('activity');
 final usersInChatRef = Firestore.instance.collection('usersInChat');
 final followersRef = Firestore.instance.collection('followers');
 final followingRef = Firestore.instance.collection('following');
+final updateRef = Firestore.instance.collection('update');
 User currentUser;
 double currentLatitude;
 double currentLongitude;
@@ -181,6 +182,7 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
     await prefs.setString('username', currentUser.username);
     await prefs.setString('profileImageUrl', currentUser.profileImageUrl);
     await prefs.setString('uid', currentUser.uid);
+    await prefs.setString('backgroundImageUrl', currentUser.backgroundImageUrl);
     if (this.mounted)
       setState(() {
         hideMe = prefs.getBool('hideMe') ?? false;
@@ -815,7 +817,7 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
             padding: EdgeInsets.all(10.0),
             child: GestureDetector(
               child: _isAuth
-                  ? cachedUserResultImage(currentUser.profileImageUrl, 5)
+                  ? cachedUserResultImage(currentUser.profileImageUrl, 5, 35)
                   : Icon(FontAwesomeIcons.user, color: kColorLightGray),
               onTap: () => Navigator.push(
                   context,
@@ -858,6 +860,18 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
                     child: buildWeeklyTopViewed()
                   ),
                 ),
+        ),
+      ),
+      bottomNavigationBar: SafeArea(
+        child: Container(
+          height: 50,
+          color: Colors.transparent,
+          child: Center(
+            child: FlatButton(
+              onPressed: () => print('add'),
+              child: Icon(FontAwesomeIcons.plusSquare, size: 24),
+            ),
+          ),
         ),
       ),
     );

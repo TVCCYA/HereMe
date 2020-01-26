@@ -39,7 +39,7 @@ ThemeData kTheme(BuildContext context) {
   return Theme.of(context).copyWith(
     accentColor: kColorBlack71,
     unselectedWidgetColor: kColorLightGray,
-    dividerColor: kColorExtraLightGray,
+    dividerColor: Colors.transparent,
     highlightColor: Colors.transparent,
     splashColor: kColorExtraLightGray,
   );
@@ -211,8 +211,8 @@ void kActionSheet(context, sheets) {
     builder: (BuildContext context) {
       return Container(
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(0.0, 0.0, 0.0, 30.0),
-          child: new Column(
+          padding: EdgeInsets.fromLTRB(0.0, 0.0, 0.0, 30.0),
+          child: Column(
             mainAxisSize: MainAxisSize.min,
             children: sheets,
           ),

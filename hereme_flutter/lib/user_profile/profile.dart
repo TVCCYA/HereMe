@@ -1,4 +1,4 @@
-import 'package:animator/animator.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'dart:io';
 import 'dart:async';
@@ -12,11 +12,13 @@ import 'package:hereme_flutter/models/knock.dart';
 import 'package:hereme_flutter/models/linked_account.dart';
 import 'package:hereme_flutter/models/user.dart';
 import 'package:hereme_flutter/registration/create_display_name.dart';
+import 'package:hereme_flutter/settings/add_update.dart';
 import 'package:hereme_flutter/settings/choose_account.dart';
 import 'package:hereme_flutter/user_profile/profile_image_full_screen.dart';
 import 'package:hereme_flutter/utils/reusable_button.dart';
 import 'package:hereme_flutter/utils/reusable_profile_card.dart';
 import 'package:hereme_flutter/widgets/activity_feed_item.dart';
+import 'package:hereme_flutter/widgets/update_post.dart';
 import 'package:hereme_flutter/widgets/user_result.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
@@ -67,15 +69,12 @@ class _ProfileState extends State<Profile> {
   int followersCount;
   String displayedFollowersCount;
   String profileImageUrl;
+  String backgroundImageUrl;
   int weeklyVisitsCount;
   String displayedWeeklyCount;
   int totalVisitsCount;
   String displayedTotalCount;
   final String currentUserUid = currentUser?.uid;
-
-  bool _hasStartedTyping = false;
-  TextEditingController updateTextController = TextEditingController();
-  String status;
 
   final User user;
   final String locationLabel;
@@ -91,6 +90,7 @@ class _ProfileState extends State<Profile> {
     } else {
       checkIfFollowing();
     }
+    print(backgroundImageUrl);
   }
 
   updateCurrentUserCounts() async {
@@ -113,26 +113,30 @@ class _ProfileState extends State<Profile> {
     return Stack(
       children: <Widget>[
         Container(
-          decoration: BoxDecoration(
+          decoration: backgroundImageUrl != null ? BoxDecoration(
             image: DecorationImage(
-              image: AssetImage("images/bubbly.png"),
+              image: CachedNetworkImageProvider(backgroundImageUrl),
               fit: BoxFit.cover,
+              colorFilter: ColorFilter.mode(kColorBlack71.withOpacity(0.35), BlendMode.multiply)
             ),
-          ),
+            color: Colors.white
+          ) : BoxDecoration(
+            color: Colors.white,
+          )
         ),
         Scaffold(
           key: _scaffoldKey,
           backgroundColor: Colors.transparent,
           appBar: AppBar(
             brightness: Brightness.light,
-            backgroundColor: Colors.white.withOpacity(0.75),
-            title: FlatButton(
+            backgroundColor: backgroundImageUrl != null ? Colors.white.withOpacity(0.75) : Colors.white,
+            title: _isCurrentUser ? FlatButton(
               onPressed: () => Navigator.push(context,
                   MaterialPageRoute(builder: (context) => CreateDisplayName())),
-              child: Text(displayName ?? username, style: kAppBarTextStyle),
+              child: appBarTitle(),
               splashColor: kColorExtraLightGray,
               highlightColor: Colors.transparent,
-            ),
+            ) : appBarTitle(),
             leading: IconButton(
               icon: Icon(FontAwesomeIcons.chevronLeft, color: kColorBlack71),
               onPressed: () {
@@ -150,34 +154,37 @@ class _ProfileState extends State<Profile> {
               )
             ],
           ),
-          body: SafeArea(
-            child: Theme(
-              data: kTheme(context),
-              child: SingleChildScrollView(
-                child: Container(
-                  height: screenHeight,
+          body: ModalProgressHUD(
+            inAsyncCall: showSpinner,
+            progressIndicator: circularProgress(),
+            child: SafeArea(
+              child: Theme(
+                data: kTheme(context),
+                child: SingleChildScrollView(
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
                       buildHeader(screenHeight, screenWidth),
                       Padding(
-                        padding: EdgeInsets.only(top: 8.0, bottom: 8.0),
+                        padding: EdgeInsets.only(
+                            left: 24.0, right: 24.0, top: 12.0, bottom: 12.0),
                         child: buildFeedUpdates(screenHeight, screenWidth),
                       ),
-                      Expanded(
-                        child: Padding(
-                          padding: EdgeInsets.only(left: 24.0, right: 24.0, top: 12.0, bottom: 12.0),
-                          child: ListView.builder(
-                              physics: NeverScrollableScrollPhysics(),
-                              itemCount: 1,
-                              itemBuilder: (context, index) {
-                                if (_isCurrentUser) {
-                                  return ExpansionTile(
-                                    backgroundColor: Colors.white,
-                                    initiallyExpanded: true,
-                                    title: ReusableSectionLabel(title: 'Links'),
-                                    children: <Widget>[
-                                      StreamBuilder<QuerySnapshot>(
+                      Padding(
+                          padding: EdgeInsets.only(
+                              left: 24.0, right: 24.0, top: 12.0, bottom: 12.0),
+                          child: Container(
+                            decoration: BoxDecoration(
+                              border: Border.all(color: kColorExtraLightGray),
+                              color: Colors.white,
+                            ),
+                            child: ExpansionTile(
+                              backgroundColor: Colors.white,
+                              initiallyExpanded: true,
+                              title: ReusableSectionLabel(title: 'Links'),
+                              children: <Widget>[
+                                _isCurrentUser
+                                    ? StreamBuilder<QuerySnapshot>(
                                         stream: socialMediasRef
                                             .document(currentUserUid)
                                             .collection('socials')
@@ -240,16 +247,8 @@ class _ProfileState extends State<Profile> {
                                             );
                                           }
                                         },
-                                      ),
-                                    ],
-                                  );
-                                } else {
-                                  return ExpansionTile(
-                                    backgroundColor: Colors.white,
-                                    initiallyExpanded: true,
-                                    title: ReusableSectionLabel(title: 'Links'),
-                                    children: <Widget>[
-                                      StreamBuilder<QuerySnapshot>(
+                                      )
+                                    : StreamBuilder<QuerySnapshot>(
                                         stream: socialMediasRef
                                             .document(userUid)
                                             .collection('socials')
@@ -313,10 +312,29 @@ class _ProfileState extends State<Profile> {
                                           }
                                         },
                                       ),
-                                    ],
-                                  );
-                                }
-                              },
+                              ],
+                            ),
+                          )),
+                      Padding(
+                        padding: EdgeInsets.only(
+                            left: 24.0, right: 24.0, top: 12.0, bottom: 12.0),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          children: <Widget>[
+                            buildTopPeople(screenWidth),
+                            SizedBox(width: 12.0),
+                            buildFavorite(screenWidth),
+                          ],
+                        ),
+                      ),
+                      Padding(
+                        padding: EdgeInsets.only(top: 12.0, bottom: 12.0),
+                        child: Center(
+                          child: TopProfileHeaderContainer(
+                            text: 'Profile Likes: $displayedFollowersCount',
+                            fontSize: 18.0,
+                            padding: 8.0,
                           ),
                         ),
                       ),
@@ -328,6 +346,65 @@ class _ProfileState extends State<Profile> {
           ),
         ),
       ],
+    );
+  }
+
+  Text appBarTitle() {
+    return Text(
+            displayName ?? username ?? '',
+            style: kAppBarTextStyle.copyWith(
+              color:
+              Color.fromRGBO(red ?? 71, green ?? 71, blue ?? 71, 1.0),
+            ),
+          );
+  }
+
+  buildFavorite(double screenWidth) {
+    final double width = (screenWidth / 2) - 24 - 6;
+    final double height = width + (width / 2) + 12;
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: <Widget>[
+        Container(
+          height: height,
+          width: width,
+          color: Colors.yellowAccent,
+        ),
+        SizedBox(height: 12),
+        Container(
+          height: width - (width / 4),
+          width: width,
+          color: Colors.orangeAccent,
+        ),
+      ],
+    );
+  }
+
+  buildTopPeople(double screenWidth) {
+    final double width = (screenWidth / 2) - 24 - 6;
+    final double height = width - (width / 4);
+    return Container(
+      height: height * 3 + 24,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: <Widget>[
+          Container(
+            height: height,
+            width: width,
+            color: Colors.greenAccent,
+          ),
+          Container(
+            height: height,
+            width: width,
+            color: Colors.redAccent,
+          ),
+          Container(
+            height: height,
+            width: width,
+            color: Colors.blueAccent,
+          ),
+        ],
+      ),
     );
   }
 
@@ -351,9 +428,9 @@ class _ProfileState extends State<Profile> {
                   ReusableProfileCard(
                     imageUrl: profileImageUrl,
                     cardSize: profileImageSize,
-                    onTap: _isCurrentUser
-                        ? _changeUserPhoto
-                        : _fullScreenProfileImage,
+                    onTap: () => _isCurrentUser
+                        ? _changeUserPhoto(true)
+                        : _fullScreenProfileImage(),
                   ),
                   Container(
                     height: profileImageSize,
@@ -361,11 +438,11 @@ class _ProfileState extends State<Profile> {
                     child: Padding(
                       padding: EdgeInsets.only(left: 12.0),
                       child: Column(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        mainAxisAlignment: MainAxisAlignment.spaceAround,
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: <Widget>[
                           TopProfileHeaderContainer(
-                            text: username,
+                            text: username ?? '',
                             fontSize: 18.0,
                             padding: 8.0,
                           ),
@@ -384,7 +461,7 @@ class _ProfileState extends State<Profile> {
                                 ),
                                 SizedBox(width: 4.0),
                                 Text(
-                                  locationLabel,
+                                  locationLabel ?? 'Around',
                                   style:
                                       kAppBarTextStyle.copyWith(fontSize: 16.0),
                                 ),
@@ -400,7 +477,7 @@ class _ProfileState extends State<Profile> {
                                         padding: 8.0),
                                     SizedBox(width: 6.0),
                                     TopProfileHeaderContainer(
-                                        text: displayedTotalCount,
+                                        text: displayedTotalCount ?? '0',
                                         fontSize: 16.0,
                                         padding: 4.0),
                                   ]
@@ -417,8 +494,8 @@ class _ProfileState extends State<Profile> {
               height: topProfileHeight * 0.2,
               child: _isCurrentUser
                   ? TopProfileHeaderButton(
-                      text: 'Edit Profile',
-                      onPressed: () => print('edit'),
+                      text: 'Change Background',
+                      onPressed: () => _changeUserPhoto(false),
                       width: screenWidth,
                     )
                   : Row(
@@ -522,830 +599,93 @@ class _ProfileState extends State<Profile> {
   }
 
   buildFeedUpdates(double screenHeight, double screenWidth) {
-    return Padding(
-      padding: EdgeInsets.only(left: 24.0, right: 24.0),
-      child: Container(
-        decoration: BoxDecoration(
-          border: Border.all(color: kColorExtraLightGray),
-          color: Colors.white,
-        ),
-        height: screenHeight / 3.5,
-        child: Padding(
-          padding: EdgeInsets.all(4.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: <Widget>[
-              Text('Adriana: * posted a new link', style: kDefaultTextStyle),
-              Text('Adriana: dont wanna work', style: kDefaultTextStyle),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: <Widget>[
-                  Expanded(
-                    child: TextField(
-                      style: kDefaultTextStyle,
-                      cursorColor: kColorLightGray,
-                      controller: updateTextController,
-                      onChanged: (value) {
-                        status = value;
-                        startedTyping();
-                      },
-                      onSubmitted: (_) {
-                        _hasStartedTyping
-                            ? addMessage()
-                            : kShowSnackbar(
-                                key: _scaffoldKey,
-                                text:
-                                    'Message cannot be empty or larger than 200 characters',
-                                backgroundColor: kColorRed);
-                      },
-                      decoration: InputDecoration(
-                        contentPadding: EdgeInsets.symmetric(
-                            vertical: 10.0, horizontal: 8.0),
-                        hintText: 'Type here...',
-                        hintStyle:
-                            kDefaultTextStyle.copyWith(color: kColorLightGray),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.all(Radius.circular(0.0)),
-                          borderSide: BorderSide(color: kColorExtraLightGray),
+    return Container(
+      decoration: BoxDecoration(
+        border: Border.all(color: kColorExtraLightGray),
+        color: Colors.white,
+      ),
+      child: Padding(
+        padding: EdgeInsets.only(left: 12.0, right: 12.0, top: 12.0),
+        child: Stack(
+          children: <Widget>[
+            Align(
+              alignment: Alignment.topRight,
+              child: GestureDetector(
+                child: Icon(FontAwesomeIcons.expand, size: 24, color: kColorBlack71),
+                onTap: () => print('expand'),
+              ),
+            ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                StreamBuilder<QuerySnapshot>(
+                  stream: updateRef
+                      .document(currentUserUid)
+                      .collection('posts')
+                      .limit(5)
+                      .snapshots(),
+                  builder: (context, snapshot) {
+                    if (!snapshot.hasData) {
+                      return circularProgress();
+                    }
+                    final updates = snapshot.data.documents;
+                    List<UpdatePost> displayedUpdates = [];
+                    for (var post in updates) {
+
+                      final String photoUrl = post.data['photoUrl'];
+                      final String title = post.data['title'];
+                      final int creationDate = post.data['creationDate'];
+
+                      final displayedPost = UpdatePost(
+                        photoUrl: photoUrl,
+                        title: title,
+                        creationDate: creationDate,
+                      );
+                      displayedUpdates
+                          .add(displayedPost);
+                    }
+                    if (displayedUpdates.isNotEmpty) {
+                      return Column(
+                        children: displayedUpdates,
+                      );
+                    } else {
+                      return Padding(
+                        padding: EdgeInsets.only(
+                            top: 2.0, bottom: 8.0),
+                        child: Text(
+                          'No Accounts Linked',
+                          style: kDefaultTextStyle,
                         ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.all(Radius.circular(0.0)),
-                          borderSide: BorderSide(color: kColorLightGray),
-                        ),
+                      );
+                    }
+                  },
+                ),
+                SizedBox(height: 4.0),
+                ButtonTheme(
+                  height: 35,
+                  child: FlatButton(
+                    shape: RoundedRectangleBorder(
+                        side: BorderSide(color: Colors.transparent)),
+                    color: kColorBlue,
+                    child: Center(
+                      child: Text(
+                          'Add Update',
+                        style: kDefaultTextStyle.copyWith(color: Colors.white),
                       ),
                     ),
+                    onPressed: () =>
+                      Navigator.push(context, MaterialPageRoute(builder: (context) => AddUpdate())),
+                    splashColor: kColorDarkBlue,
+                    highlightColor: Colors.transparent,
                   ),
-                  FlatButton(
-                    onPressed: () {
-                      _hasStartedTyping
-                          ? addMessage()
-                          : kShowSnackbar(
-                              key: _scaffoldKey,
-                              text:
-                                  'Message cannot be empty or larger than 200 characters',
-                              backgroundColor: kColorRed);
-                    },
-                    child: _hasStartedTyping
-                        ? Animator(
-                            duration: Duration(milliseconds: 200),
-                            tween: Tween(begin: 0.8, end: 1.4),
-                            curve: Curves.easeInOutQuad,
-                            cycles: 1,
-                            builder: (anim) => Transform.scale(
-                              scale: anim.value,
-                              child: IconButton(
-                                onPressed: () => addMessage(),
-                                icon: Icon(FontAwesomeIcons.chevronCircleRight,
-                                    color: kColorBlue),
-                                splashColor: kColorExtraLightGray,
-                                highlightColor: Colors.transparent,
-                                iconSize: 16.0,
-                              ),
-                            ),
-                          )
-                        : SizedBox(),
-                  ),
-                ],
-              ),
-            ],
-          ),
+                )
+              ],
+            ),
+          ],
         ),
       ),
     );
   }
-
-  startedTyping() {
-    if (status.isNotEmpty) {
-      if (this.mounted)
-        setState(() {
-          _hasStartedTyping = true;
-        });
-      if (status.length > 200) {
-        if (this.mounted)
-          setState(() {
-            _hasStartedTyping = false;
-          });
-      }
-    } else {
-      if (this.mounted)
-        setState(() {
-          _hasStartedTyping = false;
-        });
-    }
-  }
-
-  addMessage() {
-//    final messageId = Uuid().v4();
-//    liveChatMessagesRef
-//        .document(chatId)
-//        .collection('messages')
-//        .document(messageId)
-//        .setData({
-//      'uid': currentUser.uid,
-//      'displayName': currentUser.displayName,
-//      'message': message,
-//      'creationDate': DateTime.now().millisecondsSinceEpoch,
-//      'red': currentUser.red,
-//      'green': currentUser.green,
-//      'blue': currentUser.blue,
-//      'messageId': messageId,
-//    }).whenComplete(() {
-//      liveChatController.clear();
-//      if (this.mounted) setState(() {
-//        _hasStartedTyping = false;
-//      });
-//    });
-//    liveChatsRef
-//        .document(chatHostUid)
-//        .collection('chats')
-//        .document(chatId)
-//        .updateData({
-//      'lastMessage': message,
-//      'lastMessageDisplayName': currentUser.displayName,
-//      'lastRed': currentUser.red,
-//      'lastGreen': currentUser.green,
-//      'lastBlue': currentUser.blue,
-//    });
-//    bool isNotChatHost = chatHostUid != currentUser.uid;
-//    if (isNotChatHost) {
-//      activityRef
-//          .document(currentUser.uid)
-//          .collection('feedItems')
-//          .document(chatId)
-//          .setData({
-//        'type': 'liveChatMessage',
-//        'title': title,
-//        'chatId': chatId,
-//        'message': message,
-//        'messageId': messageId,
-//        'creationDate': DateTime.now().millisecondsSinceEpoch,
-//        'uid': chatHostUid,
-//        'hostDisplayName': chatHostDisplayName,
-//        'hostRed': hostRed,
-//        'hostGreen': hostGreen,
-//        'hostBlue': hostBlue
-//      });
-//    }
-  }
-
-//  Widget build(BuildContext context) {
-//    double screenHeight = MediaQuery.of(context).size.height;
-//    double topProfileContainerHeight = screenHeight / 4 + 32;
-//
-//    return Scaffold(
-//      key: _scaffoldKey,
-//      backgroundColor: kColorOffWhite,
-//      body: ModalProgressHUD(
-//        inAsyncCall: showSpinner,
-//        progressIndicator: circularProgress(),
-//        child: SafeArea(
-//          child: NestedScrollView(
-//            headerSliverBuilder: (context, value) {
-//              return [
-//                SliverOverlapAbsorber(
-//                  handle:
-//                      NestedScrollView.sliverOverlapAbsorberHandleFor(context),
-//                  child: SliverSafeArea(
-//                    sliver: SliverAppBar(
-//                      centerTitle: true,
-//                      brightness: Brightness.light,
-//                      backgroundColor: Colors.transparent,
-//                      floating: false,
-//                      pinned: true,
-//                      snap: false,
-//                      leading: IconButton(
-//                        icon: Icon(FontAwesomeIcons.chevronLeft),
-//                        onPressed: () {
-//                          Navigator.pop(context);
-//                        },
-//                        color: kColorBlack71,
-//                        splashColor: kColorExtraLightGray,
-//                        highlightColor: Colors.transparent,
-//                      ),
-//                      actions: <Widget>[
-//                        IconButton(
-//                          icon: Icon(FontAwesomeIcons.ellipsisV,
-//                              color: kColorBlack71),
-//                          onPressed: () {
-//                            _isCurrentUser
-//                                ? _quickSettings()
-//                                : _reportBlockSettings();
-//                          },
-//                          splashColor: kColorExtraLightGray,
-//                          highlightColor: Colors.transparent,
-//                        )
-//                      ],
-//                      elevation: 2.0,
-//                      expandedHeight: !_isCurrentUser ? topProfileContainerHeight + 110.0
-//                          : topProfileContainerHeight + 75,
-//                      title: Text(
-//                        username != null ? username : '',
-//                        style: kAppBarTextStyle,
-//                      ),
-//                      flexibleSpace: FlexibleSpaceBar(
-//                        background: FlexibleProfileAppBar(
-//                          userPhotoUrl: profileImageUrl,
-//                          onTap: _isCurrentUser
-//                              ? _changeUserPhoto
-//                              : _fullScreenProfileImage,
-//                          topProfileContainerHeight: topProfileContainerHeight,
-//                          weeklyVisitsCount: displayedWeeklyCount,
-//                          totalVisitsCount: displayedTotalCount,
-//                          locationLabel: locationLabel ?? 'Around',
-//                          displayName: displayName,
-//                          red: red,
-//                          green: green,
-//                          blue: blue,
-//                          isCurrentUser: _isCurrentUser,
-//                          isFollowing: _isFollowing,
-//                          followersCount: displayedFollowersCount,
-//                          followUser: () {
-//                            print('following');
-//                            setState(() {
-//                              _isFollowing = true;
-//                            });
-//
-//                            followersRef
-//                                .document(user.uid)
-//                                .collection('users')
-//                                .document(currentUserUid)
-//                                .setData({});
-//
-//                            followingRef
-//                                .document(currentUserUid)
-//                                .collection('users')
-//                                .document(user.uid)
-//                                .setData({}).whenComplete(() {
-//                                  getFollowers();
-//                            });
-//                          },
-//                          unfollowUser: () {
-//                            print('unfollow');
-//                            setState(() {
-//                              _isFollowing = false;
-//                            });
-//
-//                            followersRef
-//                                .document(user.uid)
-//                                .collection('users')
-//                                .document(currentUserUid)
-//                                .get()
-//                                .then((doc) {
-//                              if (doc.exists) {
-//                                doc.reference.delete();
-//                              }
-//                            });
-//
-//                            followingRef
-//                                .document(currentUserUid)
-//                                .collection('users')
-//                                .document(user.uid)
-//                                .get()
-//                                .then((doc) {
-//                              if (doc.exists) {
-//                                doc.reference.delete();
-//                              }
-//                            }).whenComplete(() {
-//                              getFollowers();
-//                            });
-//                          },
-//                        ),
-//                      ),
-//                    ),
-//                  ),
-//                ),
-//              ];
-//            },
-//            body: Theme(
-//              data: kTheme(context),
-//              child: Padding(
-//                padding: EdgeInsets.only(left: 16.0, right: 16.0),
-//                child: ListView.builder(
-//                  padding: EdgeInsets.only(bottom: 60),
-//                  itemCount: _isCurrentUser ? 4 : 3,
-//                  itemBuilder: (context, index) {
-//                    if (_isCurrentUser) {
-//                      if (index == 0) {
-//                        //Current User Activity Feed
-//                        return ExpansionTile(
-//                          initiallyExpanded: true,
-//                          title: ReusableSectionLabel(title: 'Activity'),
-//                          children: <Widget>[
-//                            StreamBuilder(
-//                              stream: activityRef
-//                                  .document(currentUserUid)
-//                                  .collection('feedItems')
-//                                  .orderBy('creationDate', descending: true)
-//                                  .snapshots(),
-//                              builder: (context, snapshot) {
-//                                if (!snapshot.hasData) {
-//                                  return circularProgress();
-//                                }
-//                                final activityItems = snapshot.data.documents;
-//                                List<ActivityFeedItem> displayedItems = [];
-//                                for (var item in activityItems) {
-//                                  final type = item.data['type'];
-//                                  final username = item.data['username'] ?? '';
-//                                  final uid = item.data['uid'];
-//                                  final city = item.data['city'] ?? 'Around';
-//                                  final profileImageUrl =
-//                                      item.data['profileImageUrl'] ?? '';
-//                                  final creationDate =
-//                                      item.data['creationDate'];
-//
-//                                  final title = item.data['title'] ?? '';
-//                                  final chatId = item.data['chatId'] ?? '';
-//                                  final chatHostDisplayName =
-//                                      item.data['hostDisplayName'] ?? '';
-//                                  final hostRed = item.data['hostRed'] ?? 0;
-//                                  final hostGreen = item.data['hostGreen'] ?? 0;
-//                                  final hostBlue = item.data['hostBlue'] ?? 0;
-//                                  final lastMessage =
-//                                      item.data['message'] ?? '';
-//
-//                                  final endDate = item.data['endDate'] ?? 0;
-//                                  int timeLeft = endDate -
-//                                      DateTime.now().millisecondsSinceEpoch;
-//
-//                                  final displayedItem = ActivityFeedItem(
-//                                    type: type,
-//                                    uid: uid,
-//                                    username: username,
-//                                    city: city,
-//                                    imageUrl: profileImageUrl,
-//                                    onTap: () => _pendingKnocksActionSheet(
-//                                      context: context,
-//                                      uid: uid,
-//                                    ),
-//                                    creationDate: creationDate,
-//                                    title: title,
-//                                    chatId: chatId,
-//                                    chatHostDisplayName: chatHostDisplayName,
-//                                    hostRed: hostRed,
-//                                    hostGreen: hostGreen,
-//                                    hostBlue: hostBlue,
-//                                    duration: kTimeRemaining(timeLeft),
-//                                    lastMessage: lastMessage,
-//                                  );
-//                                  if (!currentUser.blockedUids.contains(uid)) {
-//                                    displayedItems.add(displayedItem);
-//                                  }
-//                                }
-//                                if (displayedItems.isNotEmpty) {
-//                                  return ReusableContentContainer(
-//                                    content: displayedItems,
-//                                  );
-//                                } else {
-//                                  return Padding(
-//                                    padding:
-//                                        EdgeInsets.only(top: 2.0, bottom: 8.0),
-//                                    child: Text(
-//                                      'No Activity Yet',
-//                                      style: kDefaultTextStyle,
-//                                    ),
-//                                  );
-//                                }
-//                              },
-//                            )
-//                          ],
-//                        );
-//                      } else if (index == 1) {
-//                        //Current User Knocks
-//                        return ExpansionTile(
-//                          initiallyExpanded: false,
-//                          title: ReusableSectionLabel(title: 'Knocks'),
-//                          children: <Widget>[
-//                            StreamBuilder<QuerySnapshot>(
-//                              stream: knocksRef
-//                                  .document(currentUserUid)
-//                                  .collection('receivedKnockFrom')
-//                                  .orderBy('creationDate', descending: true)
-//                                  .snapshots(),
-//                              builder: (context, snapshot) {
-//                                if (!snapshot.hasData) {
-//                                  return circularProgress();
-//                                }
-//                                final knocks = snapshot.data.documents;
-//                                List<Knock> displayedKnocks = [];
-//                                for (var knock in knocks) {
-//                                  final knockUsername = knock.data['username'];
-//                                  final knockProfileImageUrl =
-//                                      knock.data['profileImageUrl'];
-//                                  final creationDate =
-//                                      knock.data['creationDate'];
-//                                  final uid = knock.data['uid'];
-//
-//                                  final displayedKnock = Knock(
-//                                    username: knockUsername,
-//                                    imageUrl: knockProfileImageUrl,
-//                                    creationDate: creationDate,
-//                                    onTap: () {
-//                                      _knocksActionSheet(
-//                                          context: context,
-//                                          uid: uid,
-//                                          username: knockUsername,
-//                                          profileImageUrl:
-//                                              knockProfileImageUrl);
-//                                    },
-//                                  );
-//                                  displayedKnocks.add(displayedKnock);
-//                                }
-//                                if (displayedKnocks.isNotEmpty) {
-//                                  return ReusableContentContainer(
-//                                    content: displayedKnocks,
-//                                  );
-//                                } else {
-//                                  return Padding(
-//                                    padding:
-//                                        EdgeInsets.only(top: 2.0, bottom: 8.0),
-//                                    child: Text(
-//                                      'No Knocks Yet',
-//                                      style: kDefaultTextStyle,
-//                                    ),
-//                                  );
-//                                }
-//                              },
-//                            ),
-//                          ],
-//                        );
-//                      } else if (index == 2) {
-//                        //Current User Links
-//                        return ExpansionTile(
-//                          initiallyExpanded: false,
-//                          title: ReusableSectionLabel(title: 'Links'),
-//                          children: <Widget>[
-//                            StreamBuilder<QuerySnapshot>(
-//                              stream: socialMediasRef
-//                                  .document(currentUserUid)
-//                                  .collection('socials')
-//                                  .orderBy('creationDate', descending: true)
-//                                  .snapshots(),
-//                              builder: (context, snapshot) {
-//                                if (!snapshot.hasData) {
-//                                  return circularProgress();
-//                                }
-//                                final accounts = snapshot.data.documents;
-//                                List<LinkedAccount> displayedAccounts = [];
-//                                for (var account in accounts) {
-//                                  account.data.forEach(
-//                                    (key, value) {
-//                                      if (key.contains('Username')) {
-//                                        final iconString = key;
-//                                        final accountUsername = value;
-//                                        final url = account.data['url'];
-//                                        final linkId = account.data['linkId'];
-//
-//                                        _determineUrl(
-//                                            accountUsername, iconString, url);
-//
-//                                        final displayedAccount = LinkedAccount(
-//                                          accountUsername: accountUsername,
-//                                          accountUrl: url,
-//                                          iconString: iconString,
-//                                          onTap: () {
-//                                            _linksActionSheet(
-//                                                context,
-//                                                accountUsername,
-//                                                iconString,
-//                                                url,
-//                                                linkId);
-//                                          },
-//                                        );
-//                                        displayedAccounts.add(displayedAccount);
-//                                      }
-//                                    },
-//                                  );
-//                                }
-//                                if (displayedAccounts.isNotEmpty) {
-//                                  return ReusableContentContainer(
-//                                    content: displayedAccounts,
-//                                  );
-//                                } else {
-//                                  _updateFirestoreHasAccountLinked();
-//                                  return ReusableBottomActionSheetListTile(
-//                                    iconData: FontAwesomeIcons.link,
-//                                    title: 'Link Account',
-//                                    onTap: () {
-//                                      Navigator.push(
-//                                        context,
-//                                        MaterialPageRoute(
-//                                            builder: (BuildContext context) =>
-//                                                ChooseAccount()),
-//                                      );
-//                                    },
-//                                  );
-//                                }
-//                              },
-//                            ),
-//                          ],
-//                        );
-//                      } else {
-//                        //Current User Created Live Chats
-//                        return ExpansionTile(
-//                          title: ReusableSectionLabel(title: 'Live Chats'),
-//                          children: <Widget>[
-//                            StreamBuilder(
-//                              stream: liveChatsRef
-//                                  .document(currentUserUid)
-//                                  .collection('chats')
-//                                  .orderBy('creationDate', descending: true)
-//                                  .snapshots(),
-//                              builder: (context, snapshot) {
-//                                if (!snapshot.hasData) {
-//                                  return circularProgress();
-//                                }
-//                                final chats = snapshot.data.documents;
-//                                List<LiveChat> displayedChats = [];
-//                                for (var chat in chats) {
-//                                  final title = chat.data['title'];
-//                                  final creationDate =
-//                                      chat.data['creationDate'];
-//                                  final chatId = chat.data['chatId'];
-//                                  final hostDisplayName =
-//                                      chat.data['hostDisplayName'] ?? '';
-//                                  final lastMessage = chat.data['lastMessage'];
-//                                  final lastMessageDisplayName =
-//                                      chat.data['lastMessageDisplayName'];
-//                                  final lastRed = chat.data['lastRed'];
-//                                  final lastGreen = chat.data['lastGreen'];
-//                                  final lastBlue = chat.data['lastBlue'];
-//                                  final endDate = chat.data['endDate'];
-//
-//                                  int timeLeft = endDate -
-//                                      DateTime.now().millisecondsSinceEpoch;
-//                                  String duration = kTimeRemaining(timeLeft);
-//
-//                                  bool hasChatEnded = timeLeft <= 0;
-//
-//                                  if (hasChatEnded) {
-//                                    kHandleRemoveAllLiveChatData(
-//                                        chatId, currentUserUid);
-//                                  }
-//
-//                                  final displayedChat = LiveChat(
-//                                    title: title,
-//                                    creationDate: creationDate,
-//                                    duration: duration,
-//                                    chatId: chatId,
-//                                    chatHostDisplayName: hostDisplayName,
-//                                    chatHostUid: currentUserUid,
-//                                    hostRed: red,
-//                                    hostGreen: green,
-//                                    hostBlue: blue,
-//                                    lastMessage: lastMessage,
-//                                    lastMessageDisplayName:
-//                                        lastMessageDisplayName,
-//                                    lastRed: lastRed,
-//                                    lastGreen: lastGreen,
-//                                    lastBlue: lastBlue,
-//                                    onTap: () {
-//                                      _liveChatsActionSheet(
-//                                          context,
-//                                          title,
-//                                          chatId,
-//                                          hostDisplayName,
-//                                          red,
-//                                          green,
-//                                          blue,
-//                                          currentUserUid,
-//                                          duration);
-//                                    },
-//                                  );
-//                                  displayedChats.add(displayedChat);
-//                                }
-//                                if (displayedChats.isNotEmpty) {
-//                                  return ReusableContentContainer(
-//                                    content: displayedChats,
-//                                  );
-//                                } else {
-//                                  return ReusableBottomActionSheetListTile(
-//                                    iconData: FontAwesomeIcons.comments,
-//                                    title: 'Create Live Chat',
-//                                    onTap: () {
-//                                      Navigator.push(
-//                                        context,
-//                                        MaterialPageRoute(
-//                                            builder: (context) =>
-//                                                currentUser.displayName != null
-//                                                    ? AddLiveChat()
-//                                                    : CreateDisplayName()),
-//                                      );
-//                                    },
-//                                  );
-//                                }
-//                              },
-//                            )
-//                          ],
-//                        );
-//                      }
-//                    } else {
-//                      if (index == 0) {
-//                        //User Links
-//                        return ExpansionTile(
-//                          initiallyExpanded: true,
-//                          title: ReusableSectionLabel(title: 'Links'),
-//                          children: <Widget>[
-//                            StreamBuilder<QuerySnapshot>(
-//                              stream: socialMediasRef
-//                                  .document(userUid)
-//                                  .collection('socials')
-//                                  .snapshots(),
-//                              builder: (context, snapshot) {
-//                                if (!snapshot.hasData) {
-//                                  return circularProgress();
-//                                }
-//                                final accounts = snapshot.data.documents;
-//                                List<LinkedAccount> displayedAccounts = [];
-//                                for (var account in accounts) {
-//                                  account.data.forEach(
-//                                    (key, value) {
-//                                      if (key.contains('Username')) {
-//                                        final iconString = key;
-//                                        final accountUsername = value;
-//                                        final url = account.data['url'];
-//                                        final linkId = account.data['linkId'];
-//
-//                                        _determineUrl(
-//                                            accountUsername, iconString, url);
-//
-//                                        final displayedAccount = LinkedAccount(
-//                                          accountUsername: accountUsername,
-//                                          accountUrl: url,
-//                                          iconString: iconString,
-//                                          onTap: () {
-//                                            _linksActionSheet(
-//                                              context,
-//                                              accountUsername,
-//                                              iconString,
-//                                              url,
-//                                              linkId,
-//                                            );
-//                                          },
-//                                        );
-//                                        displayedAccounts.add(displayedAccount);
-//                                      }
-//                                    },
-//                                  );
-//                                }
-//                                if (displayedAccounts.isNotEmpty) {
-//                                  return ReusableContentContainer(
-//                                    content: displayedAccounts,
-//                                  );
-//                                } else {
-//                                  return Padding(
-//                                    padding: const EdgeInsets.only(
-//                                        top: 2.0, bottom: 8.0),
-//                                    child: Text(
-//                                      'No Accounts Linked',
-//                                      style: kDefaultTextStyle,
-//                                    ),
-//                                  );
-//                                }
-//                              },
-//                            ),
-//                          ],
-//                        );
-//                      } else if (index == 1) {
-//                        //User Created Live Chats
-//                        return ExpansionTile(
-//                          title: ReusableSectionLabel(title: 'Live Chats'),
-//                          children: <Widget>[
-//                            StreamBuilder(
-//                              stream: liveChatsRef
-//                                  .document(userUid)
-//                                  .collection('chats')
-//                                  .orderBy('creationDate', descending: true)
-//                                  .snapshots(),
-//                              builder: (context, snapshot) {
-//                                if (!snapshot.hasData) {
-//                                  return circularProgress();
-//                                }
-//                                final chats = snapshot.data.documents;
-//                                List<LiveChat> displayedChats = [];
-//                                for (var chat in chats) {
-//                                  final title = chat.data['title'];
-//                                  final creationDate =
-//                                      chat.data['creationDate'];
-//                                  final chatId = chat.data['chatId'];
-//                                  final hostDisplayName =
-//                                      chat.data['hostDisplayName'] ?? '';
-//                                  final lastMessage = chat.data['lastMessage'];
-//                                  final lastMessageDisplayName =
-//                                      chat.data['lastMessageDisplayName'];
-//                                  final lastRed = chat.data['lastRed'];
-//                                  final lastGreen = chat.data['lastGreen'];
-//                                  final lastBlue = chat.data['lastBlue'];
-//                                  final endDate = chat.data['endDate'];
-//
-//                                  int timeLeft = endDate -
-//                                      DateTime.now().millisecondsSinceEpoch;
-//                                  String duration = kTimeRemaining(timeLeft);
-//
-//                                  bool hasChatEnded = timeLeft <= 0;
-//
-//                                  if (hasChatEnded) {
-//                                    kHandleRemoveAllLiveChatData(
-//                                        chatId, userUid);
-//                                  }
-//
-//                                  final displayedChat = LiveChat(
-//                                    title: title,
-//                                    creationDate: creationDate,
-//                                    duration: duration,
-//                                    chatId: chatId,
-//                                    chatHostDisplayName: hostDisplayName,
-//                                    chatHostUid: userUid,
-//                                    hostRed: red,
-//                                    hostGreen: green,
-//                                    hostBlue: blue,
-//                                    lastMessage: lastMessage,
-//                                    lastMessageDisplayName:
-//                                        lastMessageDisplayName,
-//                                    lastRed: lastRed,
-//                                    lastGreen: lastGreen,
-//                                    lastBlue: lastBlue,
-//                                    onTap: () {
-//                                      Navigator.push(
-//                                          context,
-//                                          MaterialPageRoute(
-//                                              builder: (context) =>
-//                                                  currentUser.displayName !=
-//                                                          null
-//                                                      ? LiveChatScreen(
-//                                                          title: title ?? '',
-//                                                          chatId: chatId,
-//                                                          chatHostDisplayName:
-//                                                              hostDisplayName,
-//                                                          chatHostUid: userUid,
-//                                                          hostRed: red,
-//                                                          hostGreen: green,
-//                                                          hostBlue: blue,
-//                                                          duration: duration,
-//                                                        )
-//                                                      : CreateDisplayName()));
-//                                    },
-//                                  );
-//                                  displayedChats.add(displayedChat);
-//                                }
-//                                if (displayedChats.isNotEmpty) {
-//                                  return ReusableContentContainer(
-//                                    content: displayedChats,
-//                                  );
-//                                } else {
-//                                  return Padding(
-//                                    padding:
-//                                        EdgeInsets.only(top: 2.0, bottom: 8.0),
-//                                    child: Text(
-//                                      'No Live Chats',
-//                                      style: kDefaultTextStyle,
-//                                    ),
-//                                  );
-//                                }
-//                              },
-//                            )
-//                          ],
-//                        );
-//                      } else {
-//                        //User Knock
-//                        return ExpansionTile(
-//                          trailing: Icon(
-//                            Icons.chevron_right,
-//                            size: 24,
-//                          ),
-//                          title: ReusableSectionLabel(title: 'Knock'),
-//                          onExpansionChanged: (expanded) {
-//                            kShowAlertMultiButtons(
-//                                context: context,
-//                                title: 'Knock Knock',
-//                                desc: 'Did you mean to Knock $username?',
-//                                buttonText1: 'Yes',
-//                                color1: kColorGreen,
-//                                buttonText2: 'Cancel',
-//                                color2: kColorLightGray,
-//                                onPressed1: () {
-//                                  _handleKnock(
-//                                      uid: userUid,
-//                                      username: username,
-//                                      profileImageUrl: profileImageUrl);
-//                                  Navigator.pop(context);
-//                                },
-//                                onPressed2: () {
-//                                  Navigator.pop(context);
-//                                });
-//                          },
-//                        );
-//                      }
-//                    }
-//                  },
-//                ),
-//              ),
-//            ),
-//          ),
-//        ),
-//      ),
-//    );
-//  }
 
   _fullScreenProfileImage() {
     Navigator.push(
@@ -1714,15 +1054,28 @@ class _ProfileState extends State<Profile> {
     kActionSheet(context, sheets);
   }
 
-  _changeUserPhoto() {
+  _changeUserPhoto(bool isChangingProfileImage) {
     if (_isCurrentUser) {
       List<ReusableBottomActionSheetListTile> sheets = [];
+      if (!isChangingProfileImage && backgroundImageUrl != null) {
+        sheets.add(
+            ReusableBottomActionSheetListTile(
+              title: 'Remove Background',
+              iconData: FontAwesomeIcons.trash,
+              onTap: () {
+                _removeBackgroundImage();
+                Navigator.pop(context);
+              },
+              color: kColorRed,
+            )
+        );
+      }
       sheets.add(
         ReusableBottomActionSheetListTile(
           title: 'Photo Library',
           iconData: FontAwesomeIcons.images,
           onTap: () async {
-            _openPhotoLibrary();
+            _openPhotoLibrary(isChangingProfileImage);
             Navigator.pop(context);
           },
         ),
@@ -1732,7 +1085,7 @@ class _ProfileState extends State<Profile> {
           title: 'Camera',
           iconData: FontAwesomeIcons.cameraRetro,
           onTap: () async {
-            _openCamera();
+            _openCamera(isChangingProfileImage);
             Navigator.pop(context);
           },
         ),
@@ -1746,6 +1099,169 @@ class _ProfileState extends State<Profile> {
       );
       kActionSheet(context, sheets);
     }
+  }
+
+  _removeBackgroundImage() {
+    final FirebaseStorage _storage = FirebaseStorage.instance;
+    usersRef.document(currentUserUid).updateData({
+      'backgroundImageUrl': FieldValue.delete(),
+    }).whenComplete(() {
+      _storage.ref().child('profile_background_image/$currentUserUid').delete();
+      setState(() {
+        backgroundImageUrl = null;
+      });
+    });
+  }
+
+  _openPhotoLibrary(bool isChangingProfileImage) async {
+    await ImagePicker.pickImage(source: ImageSource.gallery).then(
+          (profilePic) {
+        _cropImage(profilePic, isChangingProfileImage);
+        if (this.mounted)
+          setState(() {
+            showSpinner = false;
+          });
+      },
+    );
+  }
+
+  _openCamera(bool isChangingProfileImage) async {
+    await ImagePicker.pickImage(source: ImageSource.camera).then(
+          (profilePic) {
+        if (profilePic != null) {
+          _cropImage(profilePic, isChangingProfileImage);
+          if (this.mounted)
+            setState(() {
+              showSpinner = false;
+            });
+        } else {
+          if (this.mounted)
+            setState(() {
+              showSpinner = false;
+            });
+        }
+      },
+    );
+  }
+
+  Future<Null> _cropImage(File imageFile, bool isChangingProfileImage) async {
+    int screenHeight = MediaQuery.of(context).size.height.round();
+    int screenWidth = MediaQuery.of(context).size.width.round();
+    File croppedFile = await ImageCropper.cropImage(
+      sourcePath: imageFile.path,
+      maxHeight: screenHeight,
+      maxWidth: screenWidth,
+    );
+    isChangingProfileImage ? _uploadProfileImageToFirebase(croppedFile) : _uploadBackgroundImageToFirebase(croppedFile);
+  }
+
+  Future _uploadProfileImageToFirebase(File profileImage) async {
+    final FirebaseStorage _storage = FirebaseStorage.instance;
+    var succeed = true;
+
+    if (this.mounted)
+      setState(() {
+        showSpinner = true;
+      });
+    StorageUploadTask uploadFile =
+    _storage.ref().child('profile_images_flutter/$currentUserUid').putFile(profileImage);
+
+    uploadFile.onComplete.catchError((error) {
+      print(error);
+      succeed = false;
+    }).then((uploaded) async {
+      if (succeed == true) {
+        final downloadUrl = await _storage
+            .ref()
+            .child('profile_images_flutter')
+            .child(currentUserUid)
+            .getDownloadURL();
+
+        _saveProfileImageSharedPref(downloadUrl);
+
+        Map<String, String> photoUrl = <String, String>{
+          'profileImageUrl': '$downloadUrl'
+        };
+
+        usersRef.document(currentUserUid).updateData(photoUrl).whenComplete(() {
+          print('User Photo Added');
+          if (this.mounted)
+            setState(() {
+              profileImageUrl = downloadUrl;
+              showSpinner = false;
+            });
+        }).catchError(
+              (e) => kShowAlert(
+            context: context,
+            title: 'Upload Failed',
+            desc: 'Unable to upload your profile image, please try again later',
+            buttonText: 'Try Again',
+            onPressed: () => Navigator.pop(context),
+            color: kColorRed,
+          ),
+        );
+      }
+    });
+  }
+
+  _saveProfileImageSharedPref(String downloadUrl) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setString('profileImageUrl', downloadUrl);
+  }
+
+  Future _uploadBackgroundImageToFirebase(File backgroundImage) async {
+    final FirebaseStorage _storage = FirebaseStorage.instance;
+    var succeed = true;
+
+    if (this.mounted)
+      setState(() {
+        showSpinner = true;
+      });
+
+    StorageUploadTask uploadFile =
+    _storage.ref().child('profile_background_image/$currentUserUid').putFile(backgroundImage);
+
+    uploadFile.onComplete.catchError((error) {
+      print(error);
+      succeed = false;
+    }).then((uploaded) async {
+      if (succeed == true) {
+        final downloadUrl = await _storage
+            .ref()
+            .child('profile_background_image')
+            .child(currentUserUid)
+            .getDownloadURL();
+
+        _saveBackgroundSharedPref(downloadUrl);
+
+        Map<String, String> photoUrl = <String, String>{
+          'backgroundImageUrl': '$downloadUrl'
+        };
+
+        usersRef.document(currentUserUid).updateData(photoUrl).whenComplete(() {
+          print('Background Image Added');
+          if (this.mounted)
+            setState(() {
+              backgroundImageUrl = downloadUrl;
+              showSpinner = false;
+            });
+        }).catchError(
+              (e) => kShowAlert(
+            context: context,
+            title: 'Upload Failed',
+            desc: 'Unable to upload your background image, please try again later',
+            buttonText: 'Try Again',
+            onPressed: () => Navigator.pop(context),
+            color: kColorRed,
+          ),
+        );
+      }
+    });
+  }
+
+  _saveBackgroundSharedPref(String downloadUrl) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setString('backgroundImageUrl', downloadUrl);
   }
 
   _reasonToReport() {
@@ -1899,37 +1415,6 @@ class _ProfileState extends State<Profile> {
     kActionSheet(context, sheets);
   }
 
-  _openPhotoLibrary() async {
-    await ImagePicker.pickImage(source: ImageSource.gallery).then(
-      (profilePic) {
-        _cropImage(profilePic);
-        if (this.mounted)
-          setState(() {
-            showSpinner = false;
-          });
-      },
-    );
-  }
-
-  _openCamera() async {
-    await ImagePicker.pickImage(source: ImageSource.camera).then(
-      (profilePic) {
-        if (profilePic != null) {
-          _cropImage(profilePic);
-          if (this.mounted)
-            setState(() {
-              showSpinner = false;
-            });
-        } else {
-          if (this.mounted)
-            setState(() {
-              showSpinner = false;
-            });
-        }
-      },
-    );
-  }
-
   _determinePage() async {
     if (currentUserUid == user.uid) {
       if (this.mounted)
@@ -1983,6 +1468,7 @@ class _ProfileState extends State<Profile> {
           profileImageUrl = user.profileImageUrl;
           weeklyVisitsCount = user.weeklyVisitsCount + 1;
           totalVisitsCount = user.totalVisitsCount + 1;
+          backgroundImageUrl = user.backgroundImageUrl;
 
           displayedWeeklyCount =
               NumberFormat.compact().format(weeklyVisitsCount);
@@ -2009,6 +1495,7 @@ class _ProfileState extends State<Profile> {
         profileImageUrl = user.profileImageUrl;
         weeklyVisitsCount = user.weeklyVisitsCount + 1;
         totalVisitsCount = user.totalVisitsCount + 1;
+        backgroundImageUrl = user.backgroundImageUrl;
 
         displayedWeeklyCount = NumberFormat.compact().format(weeklyVisitsCount);
         displayedTotalCount = NumberFormat.compact().format(totalVisitsCount);
@@ -2033,6 +1520,7 @@ class _ProfileState extends State<Profile> {
         'city': locationLabel,
         'profileImageUrl': profileImageUrl,
         'creationDate': DateTime.now().millisecondsSinceEpoch,
+        'backgroundImageUrl': backgroundImageUrl,
       });
     }
   }
@@ -2041,6 +1529,7 @@ class _ProfileState extends State<Profile> {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String url = prefs.getString('profileImageUrl');
     String name = prefs.getString('username');
+    String background = prefs.getString('backgroundImageUrl');
     if (this.mounted)
       setState(() {
         profileImageUrl = url;
@@ -2049,77 +1538,8 @@ class _ProfileState extends State<Profile> {
         red = currentUser.red;
         green = currentUser.green;
         blue = currentUser.blue;
+        backgroundImageUrl = background;
       });
-  }
-
-  _savePhotoSharedPref(String downloadUrl) async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.setString('profileImageUrl', downloadUrl);
-  }
-
-  Future<Null> _cropImage(File imageFile) async {
-    File croppedFile = await ImageCropper.cropImage(
-      sourcePath: imageFile.path,
-      aspectRatio: CropAspectRatio(
-        ratioX: 1.0,
-        ratioY: 1.0,
-      ),
-      maxWidth: 512,
-      maxHeight: 512,
-    );
-    _uploadImageToFirebase(croppedFile);
-  }
-
-  Future _uploadImageToFirebase(File profilePic) async {
-    final userReference = _firestore.collection('users');
-    final FirebaseStorage _storage = FirebaseStorage.instance;
-    var succeed = true;
-
-    if (this.mounted)
-      setState(() {
-        showSpinner = true;
-      });
-    FirebaseUser user = await FirebaseAuth.instance.currentUser();
-    final uid = user.uid;
-    StorageUploadTask uploadFile =
-        _storage.ref().child('profile_images_flutter/$uid').putFile(profilePic);
-
-    uploadFile.onComplete.catchError((error) {
-      print(error);
-      succeed = false;
-    }).then((uploaded) async {
-      if (succeed == true) {
-        final downloadUrl = await _storage
-            .ref()
-            .child('profile_images_flutter')
-            .child(uid)
-            .getDownloadURL();
-
-        _savePhotoSharedPref(downloadUrl);
-
-        Map<String, String> photoUrl = <String, String>{
-          'profileImageUrl': '$downloadUrl'
-        };
-
-        userReference.document(uid).updateData(photoUrl).whenComplete(() {
-          print('User Photo Added');
-          if (this.mounted)
-            setState(() {
-              profileImageUrl = downloadUrl;
-              showSpinner = false;
-            });
-        }).catchError(
-          (e) => kShowAlert(
-            context: context,
-            title: 'Upload Failed',
-            desc: 'Unable to upload your profile image, please try again later',
-            buttonText: 'Try Again',
-            onPressed: () => Navigator.pop(context),
-            color: kColorRed,
-          ),
-        );
-      }
-    });
   }
 
   _launchUrl(String accountUsername, String iconString, String url) async {
@@ -2265,9 +1685,13 @@ class ReusableContentContainer extends StatelessWidget {
 }
 
 class ReusableSectionLabel extends StatelessWidget {
-  ReusableSectionLabel({@required this.title});
+  ReusableSectionLabel(
+      {@required this.title, this.screenWidth, this.icon, this.iconColor});
 
   final String title;
+  final double screenWidth;
+  final IconData icon;
+  final Color iconColor;
 
   @override
   Widget build(BuildContext context) {
