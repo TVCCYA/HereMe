@@ -188,6 +188,7 @@ class _ProfileState extends State<Profile> {
                                         stream: socialMediasRef
                                             .document(currentUserUid)
                                             .collection('socials')
+                                            .orderBy('creationDate', descending: true)
                                             .snapshots(),
                                         builder: (context, snapshot) {
                                           if (!snapshot.hasData) {
@@ -252,6 +253,7 @@ class _ProfileState extends State<Profile> {
                                         stream: socialMediasRef
                                             .document(userUid)
                                             .collection('socials')
+                                            .orderBy('creationDate', descending: true)
                                             .snapshots(),
                                         builder: (context, snapshot) {
                                           if (!snapshot.hasData) {
@@ -622,6 +624,7 @@ class _ProfileState extends State<Profile> {
                   stream: updateRef
                       .document(currentUserUid)
                       .collection('posts')
+                      .orderBy('creationDate', descending: true)
                       .limit(5)
                       .snapshots(),
                   builder: (context, snapshot) {
@@ -635,11 +638,13 @@ class _ProfileState extends State<Profile> {
                       final String photoUrl = post.data['photoUrl'];
                       final String title = post.data['title'];
                       final int creationDate = post.data['creationDate'];
+                      final String type = post.data['type'];
 
                       final displayedPost = UpdatePost(
                         photoUrl: photoUrl,
                         title: title,
                         creationDate: creationDate,
+                        type: type,
                       );
                       displayedUpdates
                           .add(displayedPost);
