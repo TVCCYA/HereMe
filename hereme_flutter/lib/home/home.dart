@@ -818,7 +818,7 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
             child: GestureDetector(
               child: _isAuth
                   ? cachedUserResultImage(currentUser.profileImageUrl, 5, 35)
-                  : Icon(FontAwesomeIcons.user, color: kColorLightGray),
+                  : Icon(FontAwesomeIcons.userAlt, color: kColorLightGray),
               onTap: () => Navigator.push(
                   context,
                   MaterialPageRoute(
@@ -860,18 +860,6 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
                     child: buildWeeklyTopViewed()
                   ),
                 ),
-        ),
-      ),
-      bottomNavigationBar: SafeArea(
-        child: Container(
-          height: 50,
-          color: Colors.transparent,
-          child: Center(
-            child: FlatButton(
-              onPressed: () => print('add'),
-              child: Icon(FontAwesomeIcons.plusSquare, size: 24),
-            ),
-          ),
         ),
       ),
     );

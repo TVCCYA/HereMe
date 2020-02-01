@@ -247,10 +247,6 @@ class _CreateDisplayNameState extends State<CreateDisplayName> {
           ),
         ),
       ),
-      bottomSheet: Container(
-        height: 40,
-        color: Colors.black,
-      ),
     );
   }
 

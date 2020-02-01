@@ -14,6 +14,7 @@ import 'package:hereme_flutter/models/user.dart';
 import 'package:hereme_flutter/registration/create_display_name.dart';
 import 'package:hereme_flutter/settings/add_update.dart';
 import 'package:hereme_flutter/settings/choose_account.dart';
+import 'package:hereme_flutter/updates/all_updates.dart';
 import 'package:hereme_flutter/user_profile/profile_image_full_screen.dart';
 import 'package:hereme_flutter/utils/reusable_button.dart';
 import 'package:hereme_flutter/utils/reusable_profile_card.dart';
@@ -70,6 +71,7 @@ class _ProfileState extends State<Profile> {
   String displayedFollowersCount;
   String profileImageUrl;
   String backgroundImageUrl;
+  String videoUrl;
   int weeklyVisitsCount;
   String displayedWeeklyCount;
   int totalVisitsCount;
@@ -90,7 +92,6 @@ class _ProfileState extends State<Profile> {
     } else {
       checkIfFollowing();
     }
-    print(backgroundImageUrl);
   }
 
   updateCurrentUserCounts() async {
@@ -165,181 +166,10 @@ class _ProfileState extends State<Profile> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
                       buildHeader(screenHeight, screenWidth),
-                      Padding(
-                        padding: EdgeInsets.only(
-                            left: 24.0, right: 24.0, top: 12.0, bottom: 12.0),
-                        child: buildFeedUpdates(screenHeight, screenWidth),
-                      ),
-                      Padding(
-                          padding: EdgeInsets.only(
-                              left: 24.0, right: 24.0, top: 12.0, bottom: 12.0),
-                          child: Container(
-                            decoration: BoxDecoration(
-                              border: Border.all(color: kColorExtraLightGray),
-                              color: Colors.white,
-                            ),
-                            child: ExpansionTile(
-                              backgroundColor: Colors.white,
-                              initiallyExpanded: true,
-                              title: ReusableSectionLabel(title: 'Links'),
-                              children: <Widget>[
-                                _isCurrentUser
-                                    ? StreamBuilder<QuerySnapshot>(
-                                        stream: socialMediasRef
-                                            .document(currentUserUid)
-                                            .collection('socials')
-                                            .orderBy('creationDate', descending: true)
-                                            .snapshots(),
-                                        builder: (context, snapshot) {
-                                          if (!snapshot.hasData) {
-                                            return circularProgress();
-                                          }
-                                          final accounts =
-                                              snapshot.data.documents;
-                                          List<LinkedAccount> displayedAccounts =
-                                              [];
-                                          for (var account in accounts) {
-                                            account.data.forEach(
-                                              (key, value) {
-                                                if (key.contains('Username')) {
-                                                  final iconString = key;
-                                                  final accountUsername = value;
-                                                  final url = account.data['url'];
-                                                  final linkId =
-                                                      account.data['linkId'];
-
-                                                  _determineUrl(accountUsername,
-                                                      iconString, url);
-
-                                                  final displayedAccount =
-                                                      LinkedAccount(
-                                                    accountUsername:
-                                                        accountUsername,
-                                                    accountUrl: url,
-                                                    iconString: iconString,
-                                                    onTap: () {
-                                                      _linksActionSheet(
-                                                        context,
-                                                        accountUsername,
-                                                        iconString,
-                                                        url,
-                                                        linkId,
-                                                      );
-                                                    },
-                                                  );
-                                                  displayedAccounts
-                                                      .add(displayedAccount);
-                                                }
-                                              },
-                                            );
-                                          }
-                                          if (displayedAccounts.isNotEmpty) {
-                                            return Column(
-                                              children: displayedAccounts,
-                                            );
-                                          } else {
-                                            return Padding(
-                                              padding: EdgeInsets.only(
-                                                  top: 2.0, bottom: 8.0),
-                                              child: Text(
-                                                'No Accounts Linked',
-                                                style: kDefaultTextStyle,
-                                              ),
-                                            );
-                                          }
-                                        },
-                                      )
-                                    : StreamBuilder<QuerySnapshot>(
-                                        stream: socialMediasRef
-                                            .document(userUid)
-                                            .collection('socials')
-                                            .orderBy('creationDate', descending: true)
-                                            .snapshots(),
-                                        builder: (context, snapshot) {
-                                          if (!snapshot.hasData) {
-                                            return circularProgress();
-                                          }
-                                          final accounts =
-                                              snapshot.data.documents;
-                                          List<LinkedAccount> displayedAccounts =
-                                              [];
-                                          for (var account in accounts) {
-                                            account.data.forEach(
-                                              (key, value) {
-                                                if (key.contains('Username')) {
-                                                  final iconString = key;
-                                                  final accountUsername = value;
-                                                  final url = account.data['url'];
-                                                  final linkId =
-                                                      account.data['linkId'];
-
-                                                  _determineUrl(accountUsername,
-                                                      iconString, url);
-
-                                                  final displayedAccount =
-                                                      LinkedAccount(
-                                                    accountUsername:
-                                                        accountUsername,
-                                                    accountUrl: url,
-                                                    iconString: iconString,
-                                                    onTap: () {
-                                                      _linksActionSheet(
-                                                        context,
-                                                        accountUsername,
-                                                        iconString,
-                                                        url,
-                                                        linkId,
-                                                      );
-                                                    },
-                                                  );
-                                                  displayedAccounts
-                                                      .add(displayedAccount);
-                                                }
-                                              },
-                                            );
-                                          }
-                                          if (displayedAccounts.isNotEmpty) {
-                                            return ReusableContentContainer(
-                                              content: displayedAccounts,
-                                            );
-                                          } else {
-                                            return Padding(
-                                              padding: const EdgeInsets.only(
-                                                  top: 2.0, bottom: 8.0),
-                                              child: Text(
-                                                'No Accounts Linked',
-                                                style: kDefaultTextStyle,
-                                              ),
-                                            );
-                                          }
-                                        },
-                                      ),
-                              ],
-                            ),
-                          )),
-                      Padding(
-                        padding: EdgeInsets.only(
-                            left: 24.0, right: 24.0, top: 12.0, bottom: 12.0),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          children: <Widget>[
-                            buildTopPeople(screenWidth),
-                            SizedBox(width: 12.0),
-                            buildFavorite(screenWidth),
-                          ],
-                        ),
-                      ),
-                      Padding(
-                        padding: EdgeInsets.only(top: 12.0, bottom: 12.0),
-                        child: Center(
-                          child: TopProfileHeaderContainer(
-                            text: 'Profile Likes: $displayedFollowersCount',
-                            fontSize: 18.0,
-                            padding: 8.0,
-                          ),
-                        ),
-                      ),
+                      buildFeedUpdates(screenHeight, screenWidth),
+                      buildLinkedAccounts(),
+                      buildBottomFavorites(screenWidth),
+                      buildFooterProfileLikes(),
                     ],
                   ),
                 ),
@@ -361,189 +191,138 @@ class _ProfileState extends State<Profile> {
           );
   }
 
-  buildFavorite(double screenWidth) {
-    final double width = (screenWidth / 2) - 24 - 6;
-    final double height = width + (width / 2) + 12;
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: <Widget>[
-        Container(
-          height: height,
-          width: width,
-          color: Colors.yellowAccent,
-        ),
-        SizedBox(height: 12),
-        Container(
-          height: width - (width / 4),
-          width: width,
-          color: Colors.orangeAccent,
-        ),
-      ],
-    );
-  }
-
-  buildTopPeople(double screenWidth) {
-    final double width = (screenWidth / 2) - 24 - 6;
-    final double height = width - (width / 4);
-    return Container(
-      height: height * 3 + 24,
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: <Widget>[
-          Container(
-            height: height,
-            width: width,
-            color: Colors.greenAccent,
-          ),
-          Container(
-            height: height,
-            width: width,
-            color: Colors.redAccent,
-          ),
-          Container(
-            height: height,
-            width: width,
-            color: Colors.blueAccent,
-          ),
-        ],
-      ),
-    );
-  }
-
   buildHeader(double screenHeight, double screenWidth) {
     double topProfileHeight = screenHeight / 4;
     double topHalf = topProfileHeight * 0.75;
     double profileImageSize = topHalf * 0.75;
     double topHalfContainerSize = screenWidth - profileImageSize - 50;
-    return Container(
-      height: topProfileHeight,
-      child: Padding(
-        padding: EdgeInsets.only(left: 24.0, right: 24.0),
-        child: Column(
-          children: <Widget>[
-            Container(
-              height: topHalf,
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                mainAxisAlignment: MainAxisAlignment.start,
-                children: <Widget>[
-                  ReusableProfileCard(
-                    imageUrl: profileImageUrl,
-                    cardSize: profileImageSize,
-                    onTap: () => _isCurrentUser
-                        ? _changeUserPhoto(true)
-                        : _fullScreenProfileImage(),
-                  ),
-                  Container(
-                    height: profileImageSize,
-                    width: topHalfContainerSize,
-                    child: Padding(
-                      padding: EdgeInsets.only(left: 12.0),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.spaceAround,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: <Widget>[
-                          TopProfileHeaderContainer(
-                            text: username ?? '',
-                            fontSize: 18.0,
-                            padding: 8.0,
-                          ),
-                          Container(
-                            padding: EdgeInsets.only(left: 8.0, right: 8.0),
-                            decoration: BoxDecoration(
-                                border: Border.all(color: kColorExtraLightGray),
-                                color: Colors.white),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: <Widget>[
-                                Icon(
-                                  FontAwesomeIcons.mapMarkerAlt,
-                                  color: kColorDarkThistle,
-                                  size: 14.0,
-                                ),
-                                SizedBox(width: 4.0),
-                                Text(
-                                  locationLabel ?? 'Around',
-                                  style:
-                                      kAppBarTextStyle.copyWith(fontSize: 16.0),
-                                ),
-                              ],
-                            ),
-                          ),
-                          Row(
-                            children: _isCurrentUser
-                                ? <Widget>[
-                                    TopProfileHeaderContainer(
-                                        text: 'Profile Views:',
-                                        fontSize: 16.0,
-                                        padding: 8.0),
-                                    SizedBox(width: 6.0),
-                                    TopProfileHeaderContainer(
-                                        text: displayedTotalCount ?? '0',
-                                        fontSize: 16.0,
-                                        padding: 4.0),
-                                  ]
-                                : <Widget>[],
-                          )
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Container(
-              height: topProfileHeight * 0.2,
-              child: _isCurrentUser
-                  ? TopProfileHeaderButton(
-                      text: 'Change Background',
-                      onPressed: () => _changeUserPhoto(false),
-                      width: screenWidth,
-                    )
-                  : Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    return Padding(
+      padding: EdgeInsets.only(
+          left: 24.0, right: 24.0, bottom: 12.0),
+      child: Column(
+        children: <Widget>[
+          Container(
+            height: topHalf,
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: <Widget>[
+                ReusableProfileCard(
+                  imageUrl: profileImageUrl,
+                  cardSize: profileImageSize,
+                  onTap: () => _isCurrentUser
+                      ? _changeUserPhoto(true)
+                      : _fullScreenProfileImage(),
+                ),
+                Container(
+                  height: profileImageSize,
+                  width: topHalfContainerSize,
+                  child: Padding(
+                    padding: EdgeInsets.only(left: 12.0),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: <Widget>[
-                        TopProfileHeaderButton(
-                          text: _isFollowing ? 'Liked' : 'Like',
-                          onPressed: () =>
-                              _isFollowing ? _unfollowUser() : _followUser(),
-                          width: screenWidth / 2.5,
-                          textColor:
-                              _isFollowing ? kColorBlack71 : Colors.white,
-                          backgroundColor:
-                              _isFollowing ? Colors.white : kColorBlue,
-                          splashColor:
-                              _isFollowing ? Colors.white : kColorDarkBlue,
+                        TopProfileHeaderContainer(
+                          text: username ?? '',
+                          fontSize: 18.0,
+                          padding: 8.0,
                         ),
-                        TopProfileHeaderButton(
-                          text: 'Knock',
-                          onPressed: () => {
-                            kShowAlertMultiButtons(
-                              context: context,
-                              title: 'Knock Knock',
-                              desc: 'Did you mean to Knock $username?',
-                              buttonText1: 'Yes',
-                              color1: kColorGreen,
-                              buttonText2: 'Cancel',
-                              color2: kColorLightGray,
-                              onPressed1: () {
-                                _handleKnock(
-                                  uid: userUid,
-                                  username: username,
-                                  profileImageUrl: profileImageUrl,
-                                );
-                                Navigator.pop(context);
-                              },
-                              onPressed2: () => Navigator.pop(context),
-                            )
-                          },
-                          width: screenWidth / 2.5,
+                        Container(
+                          padding: EdgeInsets.only(left: 8.0, right: 8.0),
+                          decoration: BoxDecoration(
+                              border: Border.all(color: kColorExtraLightGray),
+                              color: Colors.white),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: <Widget>[
+                              Icon(
+                                FontAwesomeIcons.mapMarkerAlt,
+                                color: kColorDarkThistle,
+                                size: 14.0,
+                              ),
+                              SizedBox(width: 4.0),
+                              Text(
+                                locationLabel ?? 'Around',
+                                style:
+                                    kAppBarTextStyle.copyWith(fontSize: 16.0),
+                              ),
+                            ],
+                          ),
                         ),
+                        Row(
+                          children: _isCurrentUser
+                              ? <Widget>[
+                                  TopProfileHeaderContainer(
+                                      text: 'Profile Views:',
+                                      fontSize: 16.0,
+                                      padding: 8.0),
+                                  SizedBox(width: 6.0),
+                                  TopProfileHeaderContainer(
+                                      text: displayedTotalCount ?? '0',
+                                      fontSize: 16.0,
+                                      padding: 4.0),
+                                ]
+                              : <Widget>[],
+                        )
                       ],
                     ),
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+          Container(
+            height: 40,
+            child: _isCurrentUser
+                ? TopProfileHeaderButton(
+                    text: 'Change Background',
+                    onPressed: () => _changeUserPhoto(false),
+                    width: screenWidth,
+                  )
+                : Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: <Widget>[
+                      TopProfileHeaderButton(
+                        text: _isFollowing ? 'Liked' : 'Like',
+                        onPressed: () =>
+                            _isFollowing ? _unfollowUser() : _followUser(),
+                        width: screenWidth / 2.5,
+                        textColor:
+                            _isFollowing ? kColorBlack71 : Colors.white,
+                        backgroundColor:
+                            _isFollowing ? Colors.white : kColorBlue,
+                        splashColor:
+                            _isFollowing ? Colors.white : kColorDarkBlue,
+                      ),
+                      TopProfileHeaderButton(
+                        text: 'Knock',
+                        onPressed: () => {
+                          kShowAlertMultiButtons(
+                            context: context,
+                            title: 'Knock Knock',
+                            desc: 'Did you mean to Knock $username?',
+                            buttonText1: 'Yes',
+                            color1: kColorGreen,
+                            buttonText2: 'Cancel',
+                            color2: kColorLightGray,
+                            onPressed1: () {
+                              _handleKnock(
+                                uid: userUid,
+                                username: username,
+                                profileImageUrl: profileImageUrl,
+                              );
+                              Navigator.pop(context);
+                            },
+                            onPressed2: () => Navigator.pop(context),
+                          )
+                        },
+                        width: screenWidth / 2.5,
+                      ),
+                    ],
+                  ),
+          ),
+        ],
       ),
     );
   }
@@ -601,95 +380,463 @@ class _ProfileState extends State<Profile> {
   }
 
   buildFeedUpdates(double screenHeight, double screenWidth) {
-    return Container(
-      decoration: BoxDecoration(
-        border: Border.all(color: kColorExtraLightGray),
-        color: Colors.white,
+    return Padding(
+      padding: EdgeInsets.only(
+          left: 24.0, right: 24.0, top: 12.0, bottom: 12.0),
+      child: Container(
+        decoration: BoxDecoration(
+          border: Border.all(color: kColorExtraLightGray),
+          color: Colors.white,
+        ),
+        child: Padding(
+          padding: EdgeInsets.only(left: 4.0, right: 4.0, top: 12.0, bottom: 4.0),
+          child: buildUpdatePosts(),
+        ),
       ),
-      child: Padding(
-        padding: EdgeInsets.only(left: 12.0, right: 12.0, top: 12.0),
-        child: Stack(
-          children: <Widget>[
-            Align(
-              alignment: Alignment.topRight,
-              child: GestureDetector(
-                child: Icon(FontAwesomeIcons.expand, size: 24, color: kColorBlack71),
-                onTap: () => print('expand'),
-              ),
-            ),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                StreamBuilder<QuerySnapshot>(
-                  stream: updateRef
-                      .document(currentUserUid)
-                      .collection('posts')
-                      .orderBy('creationDate', descending: true)
-                      .limit(5)
-                      .snapshots(),
-                  builder: (context, snapshot) {
-                    if (!snapshot.hasData) {
-                      return circularProgress();
-                    }
-                    final updates = snapshot.data.documents;
-                    List<UpdatePost> displayedUpdates = [];
-                    for (var post in updates) {
+    );
+  }
 
-                      final String photoUrl = post.data['photoUrl'];
-                      final String title = post.data['title'];
-                      final int creationDate = post.data['creationDate'];
-                      final String type = post.data['type'];
+  buildUpdatePosts() {
+    if (_isCurrentUser) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          StreamBuilder<QuerySnapshot>(
+            stream: updateRef
+                .document(currentUserUid)
+                .collection('posts')
+                .orderBy('creationDate', descending: true)
+                .limit(5)
+                .snapshots(),
+            builder: (context, snapshot) {
+              if (!snapshot.hasData) {
+                return circularProgress();
+              }
+              final updates = snapshot.data.documents;
+              List<UpdatePost> displayedUpdates = [];
+              for (var post in updates) {
 
-                      final displayedPost = UpdatePost(
-                        photoUrl: photoUrl,
-                        title: title,
-                        creationDate: creationDate,
-                        type: type,
-                      );
-                      displayedUpdates
-                          .add(displayedPost);
-                    }
-                    if (displayedUpdates.isNotEmpty) {
-                      return Column(
-                        children: displayedUpdates,
-                      );
-                    } else {
-                      return Padding(
-                        padding: EdgeInsets.only(
-                            top: 2.0, bottom: 8.0),
-                        child: Text(
-                          'No Accounts Linked',
-                          style: kDefaultTextStyle,
+                final String photoUrl = post.data['photoUrl'];
+                final String title = post.data['title'];
+                final int creationDate = post.data['creationDate'];
+                final String type = post.data['type'];
+                final String id = post.data['id'];
+                final dynamic likes = post.data['likes'];
+
+                final displayedPost = UpdatePost(
+                  photoUrl: photoUrl,
+                  title: title,
+                  creationDate: creationDate,
+                  type: type,
+                  uid: currentUserUid,
+                  id: id,
+                  displayName: displayName ?? username,
+                  likes: likes ?? {},
+                );
+                displayedUpdates
+                    .add(displayedPost);
+              }
+              if (displayedUpdates.isNotEmpty) {
+                return Column(
+                  children: <Widget>[
+                    Align(
+                      alignment: Alignment.topRight,
+                      child: GestureDetector(
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: <Widget>[
+                            Text('See All', style: kAppBarTextStyle.copyWith(fontSize: 16)),
+                            SizedBox(width: 4.0),
+                            Icon(FontAwesomeIcons.chevronRight, size: 14),
+                          ],
                         ),
-                      );
-                    }
-                  },
-                ),
-                SizedBox(height: 4.0),
-                ButtonTheme(
-                  height: 35,
-                  child: FlatButton(
-                    shape: RoundedRectangleBorder(
-                        side: BorderSide(color: Colors.transparent)),
-                    color: kColorBlue,
-                    child: Center(
-                      child: Text(
-                          'Add Update',
-                        style: kDefaultTextStyle.copyWith(color: Colors.white),
+                        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => AllUpdates(uid: currentUserUid, displayName: displayName ?? username))),
                       ),
                     ),
-                    onPressed: () =>
-                      Navigator.push(context, MaterialPageRoute(builder: (context) => AddUpdate())),
-                    splashColor: kColorDarkBlue,
-                    highlightColor: Colors.transparent,
+                    SizedBox(height: 8.0),
+                    Column(children: displayedUpdates),
+                  ],
+                );
+              } else {
+                return Padding(
+                  padding: EdgeInsets.only(
+                      top: 2.0, bottom: 8.0),
+                  child: Text(
+                    'No Posts Yet',
+                    style: kDefaultTextStyle,
                   ),
-                )
+                );
+              }
+            },
+          ),
+          SizedBox(height: 4.0),
+          ButtonTheme(
+            height: 40,
+            child: FlatButton(
+              shape: RoundedRectangleBorder(
+                  side: BorderSide(color: Colors.transparent)),
+              color: kColorBlue,
+              child: Center(
+                child: Text(
+                  'Add Update',
+                  style: kDefaultTextStyle.copyWith(color: Colors.white),
+                ),
+              ),
+              onPressed: () =>
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => AddUpdate())),
+              splashColor: kColorDarkBlue,
+              highlightColor: Colors.transparent,
+            ),
+          )
+        ],
+      );
+    } else {
+      return StreamBuilder<QuerySnapshot>(
+        stream: updateRef
+            .document(userUid)
+            .collection('posts')
+            .orderBy('creationDate', descending: true)
+            .limit(5)
+            .snapshots(),
+        builder: (context, snapshot) {
+          if (!snapshot.hasData) {
+            return circularProgress();
+          }
+          final updates = snapshot.data.documents;
+          List<UpdatePost> displayedUpdates = [];
+          for (var post in updates) {
+
+            final String photoUrl = post.data['photoUrl'];
+            final String title = post.data['title'];
+            final int creationDate = post.data['creationDate'];
+            final String type = post.data['type'];
+            final String id = post.data['id'];
+
+            final displayedPost = UpdatePost(
+              photoUrl: photoUrl,
+              title: title,
+              creationDate: creationDate,
+              type: type,
+              uid: userUid,
+              id: id,
+              displayName: displayName ?? username,
+            );
+            displayedUpdates
+                .add(displayedPost);
+          }
+          if (displayedUpdates.isNotEmpty) {
+            return Stack(
+              children: <Widget>[
+                Align(
+                  alignment: Alignment.topRight,
+                  child: GestureDetector(
+                    child: Icon(FontAwesomeIcons.expand, size: 24, color: kColorBlack71),
+                    onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => AllUpdates(uid: userUid, displayName: displayName ?? username))),
+                  ),
+                ),
+                Column(children: displayedUpdates),
               ],
+            );
+          } else {
+            return Center(
+              child: Text(
+                'No Posts Yet',
+                style: kDefaultTextStyle,
+              ),
+            );
+          }
+        },
+      );
+    }
+  }
+
+  buildLinkedAccounts() {
+    return Padding(padding: EdgeInsets.only(
+        left: 24.0, right: 24.0, top: 12.0, bottom: 12.0),
+      child: Container(
+        decoration: BoxDecoration(
+          border: Border.all(color: kColorExtraLightGray),
+          color: Colors.white,
+        ),
+        child: ExpansionTile(
+          backgroundColor: Colors.white,
+          initiallyExpanded: true,
+          title: ReusableSectionLabel(title: 'Links'),
+          children: <Widget>[
+            _isCurrentUser
+                ? StreamBuilder<QuerySnapshot>(
+              stream: socialMediasRef
+                  .document(currentUserUid)
+                  .collection('socials')
+                  .orderBy('creationDate', descending: true)
+                  .snapshots(),
+              builder: (context, snapshot) {
+                if (!snapshot.hasData) {
+                  return circularProgress();
+                }
+                final accounts =
+                    snapshot.data.documents;
+                List<LinkedAccount> displayedAccounts =
+                [];
+                for (var account in accounts) {
+                  account.data.forEach(
+                        (key, value) {
+                      if (key.contains('Username')) {
+                        final iconString = key;
+                        final accountUsername = value;
+                        final url = account.data['url'];
+                        final linkId =
+                        account.data['linkId'];
+
+                        _determineUrl(accountUsername,
+                            iconString, url);
+
+                        final displayedAccount =
+                        LinkedAccount(
+                          accountUsername:
+                          accountUsername,
+                          accountUrl: url,
+                          iconString: iconString,
+                          onTap: () {
+                            _linksActionSheet(
+                              context,
+                              accountUsername,
+                              iconString,
+                              url,
+                              linkId,
+                            );
+                          },
+                        );
+                        displayedAccounts
+                            .add(displayedAccount);
+                      }
+                    },
+                  );
+                }
+                if (displayedAccounts.isNotEmpty) {
+                  return Column(
+                    children: displayedAccounts,
+                  );
+                } else {
+                  return Padding(
+                    padding: EdgeInsets.only(
+                        top: 2.0, bottom: 8.0),
+                    child: Text(
+                      'No Accounts Linked',
+                      style: kDefaultTextStyle,
+                    ),
+                  );
+                }
+              },
+            )
+                : StreamBuilder<QuerySnapshot>(
+              stream: socialMediasRef
+                  .document(userUid)
+                  .collection('socials')
+                  .orderBy('creationDate', descending: true)
+                  .snapshots(),
+              builder: (context, snapshot) {
+                if (!snapshot.hasData) {
+                  return circularProgress();
+                }
+                final accounts =
+                    snapshot.data.documents;
+                List<LinkedAccount> displayedAccounts =
+                [];
+                for (var account in accounts) {
+                  account.data.forEach(
+                        (key, value) {
+                      if (key.contains('Username')) {
+                        final iconString = key;
+                        final accountUsername = value;
+                        final url = account.data['url'];
+                        final linkId =
+                        account.data['linkId'];
+
+                        _determineUrl(accountUsername,
+                            iconString, url);
+
+                        final displayedAccount =
+                        LinkedAccount(
+                          accountUsername:
+                          accountUsername,
+                          accountUrl: url,
+                          iconString: iconString,
+                          onTap: () {
+                            _linksActionSheet(
+                              context,
+                              accountUsername,
+                              iconString,
+                              url,
+                              linkId,
+                            );
+                          },
+                        );
+                        displayedAccounts
+                            .add(displayedAccount);
+                      }
+                    },
+                  );
+                }
+                if (displayedAccounts.isNotEmpty) {
+                  return ReusableContentContainer(
+                    content: displayedAccounts,
+                  );
+                } else {
+                  return Padding(
+                    padding: const EdgeInsets.only(
+                        top: 2.0, bottom: 8.0),
+                    child: Text(
+                      'No Accounts Linked',
+                      style: kDefaultTextStyle,
+                    ),
+                  );
+                }
+              },
             ),
           ],
         ),
       ),
     );
+  }
+
+  buildBottomFavorites(double screenWidth) {
+    return
+      Padding(
+        padding: EdgeInsets.only(
+            left: 24.0, right: 24.0, top: 12.0, bottom: 12.0),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: <Widget>[
+            buildLeftFavorites(screenWidth),
+            buildRightFavorites(screenWidth),
+          ],
+        ),
+      );
+  }
+
+  buildRightFavorites(double screenWidth) {
+    final double width = (screenWidth / 3.5);
+    final double squareWidth = (screenWidth / 2.75);
+    final double height = (screenWidth / 3.5) * 2 + 12;
+    return Column(
+      children: <Widget>[
+        Container(
+          height: height,
+          width: squareWidth,
+          color: kColorExtraLightGray,
+          child: FlatButton(
+            child: Icon(FontAwesomeIcons.photoVideo, size: 25, color: kColorLightGray),
+            splashColor: Colors.white,
+            highlightColor: Colors.transparent,
+            onPressed: () => _photoVideoActionSheet(context),
+          ),
+        ),
+        SizedBox(height: 12),
+        Container(
+          height: width,
+          width: squareWidth,
+          color: kColorExtraLightGray,
+          child: FlatButton(
+            child: Icon(FontAwesomeIcons.music, size: 25, color: kColorLightGray),
+            onPressed: () => print('music add'),
+            splashColor: Colors.white,
+            highlightColor: Colors.transparent,
+          ),
+        ),
+      ],
+    );
+  }
+
+  buildLeftFavorites(double screenWidth) {
+    final double width = (screenWidth / 3.5);
+    return Container(
+      height: width * 3 + 24,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: <Widget>[
+          Container(
+            height: width,
+            width: width,
+            color: kColorExtraLightGray,
+            child: FlatButton(
+              child: Icon(FontAwesomeIcons.userAlt, size: 25, color: kColorLightGray),
+              onPressed: () => print('user add'),
+              splashColor: Colors.white,
+              highlightColor: Colors.transparent,
+            ),
+          ),
+          Container(
+            height: width,
+            width: width,
+            color: kColorExtraLightGray,
+            child: FlatButton(
+              child: Icon(FontAwesomeIcons.userAlt, size: 25, color: kColorLightGray),
+              onPressed: () => print('user add'),
+              splashColor: Colors.white,
+              highlightColor: Colors.transparent,
+            ),
+          ),
+          Container(
+            height: width,
+            width: width,
+            color: kColorExtraLightGray,
+            child: FlatButton(
+              child: Icon(FontAwesomeIcons.userAlt, size: 25, color: kColorLightGray),
+              onPressed: () => print('user add'),
+              splashColor: Colors.white,
+              highlightColor: Colors.transparent,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  buildFooterProfileLikes() {
+    return Padding(
+      padding: EdgeInsets.only(top: 12.0, bottom: 12.0),
+      child: Center(
+        child: TopProfileHeaderContainer(
+          text: 'Profile Likes: $displayedFollowersCount',
+          fontSize: 18.0,
+          padding: 8.0,
+        ),
+      ),
+    );
+  }
+
+  _photoVideoActionSheet(BuildContext context) {
+    List<ReusableBottomActionSheetListTile> sheets = [];
+    sheets.add(
+      ReusableBottomActionSheetListTile(
+        title: 'Add Photo',
+        iconData: FontAwesomeIcons.solidImage,
+        onTap: () async {
+          Navigator.pop(context);
+        },
+      ),
+    );
+    sheets.add(
+      ReusableBottomActionSheetListTile(
+        title: 'Add Video',
+        iconData: FontAwesomeIcons.video,
+        onTap: () {
+          _openVideoLibrary();
+          Navigator.pop(context);
+        },
+      ),
+    );
+    sheets.add(
+      ReusableBottomActionSheetListTile(
+        title: 'Cancel',
+        iconData: FontAwesomeIcons.times,
+        onTap: () => Navigator.pop(context),
+      ),
+    );
+    kActionSheet(context, sheets);
   }
 
   _fullScreenProfileImage() {
@@ -950,6 +1097,7 @@ class _ProfileState extends State<Profile> {
                     Navigator.pop(context);
                     kHandleRemoveDataAtId(
                         linkId, currentUserUid, 'socialMedias', 'socials');
+                    kHandleRemoveDataAtId(linkId, currentUserUid, 'update', 'posts');
                     Navigator.pop(context);
                   },
                   color: kColorRed,
@@ -1115,6 +1263,64 @@ class _ProfileState extends State<Profile> {
       setState(() {
         backgroundImageUrl = null;
       });
+    });
+  }
+
+  _openVideoLibrary() async {
+    await ImagePicker.pickVideo(source: ImageSource.gallery).then(
+          (video) {
+            _uploadFavVideoToFirebase(video);
+      },
+    );
+  }
+
+  Future _uploadFavVideoToFirebase(File videoFile) async {
+    final FirebaseStorage _storage = FirebaseStorage.instance;
+    var succeed = true;
+
+    if (this.mounted)
+      setState(() {
+        showSpinner = true;
+      });
+
+    StorageUploadTask uploadFile =
+    _storage.ref().child('profile_video/$currentUserUid').putFile(videoFile, StorageMetadata(contentType: 'video/mp4'));
+
+    uploadFile.onComplete.catchError((error) {
+      print(error);
+      succeed = false;
+    }).then((uploaded) async {
+      if (succeed == true) {
+        final downloadUrl = await _storage
+            .ref()
+            .child('profile_video')
+            .child(currentUserUid)
+            .getDownloadURL();
+
+        _saveBackgroundSharedPref(downloadUrl);
+
+        Map<String, String> data = <String, String>{
+          'videoUrl': downloadUrl
+        };
+
+        usersRef.document(currentUserUid).updateData(data).whenComplete(() {
+          print('Background Image Added');
+          if (this.mounted)
+            setState(() {
+              videoUrl = downloadUrl;
+              showSpinner = false;
+            });
+        }).catchError(
+              (e) => kShowAlert(
+            context: context,
+            title: 'Upload Failed',
+            desc: 'Unable to upload your video, please try again later',
+            buttonText: 'Try Again',
+            onPressed: () => Navigator.pop(context),
+            color: kColorRed,
+          ),
+        );
+      }
     });
   }
 
@@ -1474,6 +1680,7 @@ class _ProfileState extends State<Profile> {
           weeklyVisitsCount = user.weeklyVisitsCount + 1;
           totalVisitsCount = user.totalVisitsCount + 1;
           backgroundImageUrl = user.backgroundImageUrl;
+          videoUrl = user.videoUrl;
 
           displayedWeeklyCount =
               NumberFormat.compact().format(weeklyVisitsCount);
@@ -1501,6 +1708,7 @@ class _ProfileState extends State<Profile> {
         weeklyVisitsCount = user.weeklyVisitsCount + 1;
         totalVisitsCount = user.totalVisitsCount + 1;
         backgroundImageUrl = user.backgroundImageUrl;
+        videoUrl = user.videoUrl;
 
         displayedWeeklyCount = NumberFormat.compact().format(weeklyVisitsCount);
         displayedTotalCount = NumberFormat.compact().format(totalVisitsCount);
@@ -1526,6 +1734,7 @@ class _ProfileState extends State<Profile> {
         'profileImageUrl': profileImageUrl,
         'creationDate': DateTime.now().millisecondsSinceEpoch,
         'backgroundImageUrl': backgroundImageUrl,
+        'videoUrl': videoUrl,
       });
     }
   }
@@ -1544,6 +1753,7 @@ class _ProfileState extends State<Profile> {
         green = currentUser.green;
         blue = currentUser.blue;
         backgroundImageUrl = background;
+        videoUrl = currentUser.videoUrl;
       });
   }
 
@@ -1625,6 +1835,7 @@ class TopProfileHeaderButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return ButtonTheme(
       minWidth: width,
+      height: 40,
       child: FlatButton(
         child: Text(
           text,

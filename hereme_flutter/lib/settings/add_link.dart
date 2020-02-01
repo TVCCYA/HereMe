@@ -331,6 +331,7 @@ class _AddLinkState extends State<AddLink> {
     final linkId = Uuid().v4();
     String username = _usernameController.text.trim();
     String uid = currentUser.uid;
+    int creationDate = DateTime.now().millisecondsSinceEpoch;
 
     final ref =
         socialMediasRef.document(uid).collection('socials').document(linkId);
@@ -345,11 +346,16 @@ class _AddLinkState extends State<AddLink> {
         'linkId': linkId,
         '${link}Username': username,
         'url': url,
-        'creationDate': DateTime.now().millisecondsSinceEpoch,
+        'creationDate': creationDate,
       },
     ).whenComplete(() {
       usersRef.document(uid).updateData({
         'hasAccountLinked': true,
+      });
+      updateRef.document(uid).collection('posts').document(linkId).setData({
+        'creationDate': creationDate,
+        'id': linkId,
+        'type': 'link',
       });
     }).whenComplete(() {
       Navigator.pop(context, 'Successfully linked $username');

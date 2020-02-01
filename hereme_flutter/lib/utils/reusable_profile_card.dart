@@ -50,17 +50,15 @@ class ReusableCard extends StatelessWidget {
       elevation: 4.0,
       child: InkResponse(
         onTap: onTap,
-        child: Container(
-          child: imageFile != null
-              ? Image.file(
-                  imageFile,
-                  fit: BoxFit.contain,
-                )
-              : Icon(
-                  FontAwesomeIcons.exclamationTriangle,
-                  color: kColorRed,
-                ),
-        ),
+        child: imageFile != null
+            ? Image.file(
+                imageFile,
+                fit: BoxFit.contain,
+              )
+            : Icon(
+                FontAwesomeIcons.exclamationTriangle,
+                color: kColorRed,
+              ),
       ),
     );
   }

@@ -25,16 +25,14 @@ class _AddUpdateState extends State<AddUpdate> {
   String title;
 
   _isValid() {
-    if (mediaFile != null || title.isNotEmpty) {
-      if (this.mounted)
-        setState(() {
-          _isButtonDisabled = false;
-        });
+    if ((title != null && title.isNotEmpty) || mediaFile != null) {
+      if (this.mounted) setState(() {
+        _isButtonDisabled = false;
+      });
     } else {
-      if (this.mounted)
-        setState(() {
-          _isButtonDisabled = true;
-        });
+      if (this.mounted) setState(() {
+        _isButtonDisabled = true;
+      });
     }
   }
 
@@ -63,28 +61,27 @@ class _AddUpdateState extends State<AddUpdate> {
           highlightColor: Colors.transparent,
         ),
         actions: <Widget>[
-          !_isButtonDisabled
-              ? Animator(
-                  duration: Duration(milliseconds: 200),
-                  tween: Tween(begin: 0.8, end: 1.0),
-                  curve: Curves.easeInOutQuad,
-                  cycles: 1,
-                  builder: (anim) => Transform.scale(
-                    scale: anim.value,
-                    child: Center(
-                      child: FlatButton(
-                        child: Text(
-                          'Done',
-                          style: kAppBarTextStyle.copyWith(color: kColorBlue),
-                        ),
-                        onPressed: () => _addUpdate(),
-                        splashColor: kColorExtraLightGray,
-                        highlightColor: Colors.transparent,
-                      ),
-                    ),
+          _isButtonDisabled
+              ? SizedBox() : Animator(
+            duration: Duration(milliseconds: 200),
+            tween: Tween(begin: 0.8, end: 1.0),
+            curve: Curves.easeInOutQuad,
+            cycles: 1,
+            builder: (anim) => Transform.scale(
+              scale: anim.value,
+              child: Center(
+                child: FlatButton(
+                  child: Text(
+                    'Done',
+                    style: kAppBarTextStyle.copyWith(color: kColorBlue),
                   ),
-                )
-              : SizedBox()
+                  onPressed: () => _addUpdate(),
+                  splashColor: kColorExtraLightGray,
+                  highlightColor: Colors.transparent,
+                ),
+              ),
+            ),
+          )
         ],
       ),
       body: SafeArea(
@@ -138,8 +135,7 @@ class _AddUpdateState extends State<AddUpdate> {
                             onTap: () {
                               _openPhotoLibrary();
                             },
-                          )
-                        : SizedBox(),
+                          ) : SizedBox(),
                   ),
                 ],
               ),
@@ -165,7 +161,7 @@ class _AddUpdateState extends State<AddUpdate> {
                   child: FlatButton(
                     onPressed: () => _openPhotoLibrary(),
                     child:
-                        Icon(FontAwesomeIcons.photoVideo, color: kColorBlack71),
+                        Icon(FontAwesomeIcons.solidImages, color: kColorBlack71),
                     splashColor: kColorExtraLightGray,
                     highlightColor: Colors.transparent,
                   ),
@@ -196,10 +192,11 @@ class _AddUpdateState extends State<AddUpdate> {
       setState(() {
         mediaFile = null;
       });
+    _isValid();
   }
 
   _openPhotoLibrary() async {
-    await ImagePicker.pickImage(source: ImageSource.gallery).then(
+    await ImagePicker.pickImage(source: ImageSource.gallery, imageQuality: 100).then(
       (image) {
         _cropImage(image);
         if (this.mounted)
@@ -211,8 +208,8 @@ class _AddUpdateState extends State<AddUpdate> {
   }
 
   _cropImage(File imageFile) async {
-    int screenHeight = MediaQuery.of(context).size.height.round();
-    int screenWidth = MediaQuery.of(context).size.width.round();
+    int screenHeight = MediaQuery.of(context).size.height.ceil();
+    int screenWidth = MediaQuery.of(context).size.width.ceil();
 
     mediaFile = await ImageCropper.cropImage(
       sourcePath: imageFile.path,
@@ -239,7 +236,7 @@ class _AddUpdateState extends State<AddUpdate> {
       });
     StorageUploadTask uploadFile = _storage
         .ref()
-        .child('update_images/$currentUserUid')
+        .child('update_images/$currentUserUid/$id')
         .putFile(mediaFile);
 
     uploadFile.onComplete.catchError((error) {
@@ -251,6 +248,7 @@ class _AddUpdateState extends State<AddUpdate> {
             .ref()
             .child('update_images')
             .child(currentUserUid)
+            .child(id)
             .getDownloadURL();
 
         updateRef
@@ -264,6 +262,7 @@ class _AddUpdateState extends State<AddUpdate> {
           'uid': currentUserUid,
           'creationDate': creationDate,
           'title': title ?? '',
+          'likes': {},
         }).whenComplete(() {
           print('User Photo Added');
           if (this.mounted)
@@ -302,6 +301,7 @@ class _AddUpdateState extends State<AddUpdate> {
       'uid': currentUserUid,
       'creationDate': creationDate,
       'title': title,
+      'likes': {},
     }).whenComplete(() {
       if (this.mounted)
         setState(() {

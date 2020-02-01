@@ -9,33 +9,25 @@ class ProfileImageFullScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final double screenWidth = MediaQuery.of(context).size.width;
-    final double screenHeight = MediaQuery.of(context).size.height;
     return SafeArea(
       child: GestureDetector(
         onTap: () => Navigator.pop(context),
-        child: Container(
-          width: screenWidth,
-          height: screenHeight,
-          color: Colors.black,
-          child: Stack(
-            children: <Widget>[
-              Align(
-                alignment: Alignment.topLeft,
-                child: FlatButton.icon(
-                  onPressed: () => Navigator.pop(context),
-                  icon: Icon(FontAwesomeIcons.times, color: Colors.white,),
-                  label: Text(''),
-                ),
+        child: Stack(
+          children: <Widget>[
+            Center(
+              child: CachedNetworkImage(
+                imageUrl: profileImageUrl,
+                fit: BoxFit.contain,
               ),
-              Center(
-                child: CachedNetworkImage(
-                  imageUrl: profileImageUrl,
-                  fit: BoxFit.fitWidth,
-                ),
+            ),
+            Align(
+              alignment: Alignment.topLeft,
+              child: FlatButton(
+                onPressed: () => Navigator.pop(context),
+                child: Icon(FontAwesomeIcons.times, color: Colors.white),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
