@@ -35,6 +35,7 @@ import 'package:hereme_flutter/settings//menu_list.dart';
 import 'package:hereme_flutter/home/home.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:uuid/uuid.dart';
+import 'package:video_player/video_player.dart';
 
 final _firestore = Firestore.instance;
 final reportedUsersRef = Firestore.instance.collection('reportedUsers');
@@ -78,6 +79,9 @@ class _ProfileState extends State<Profile> {
   String displayedTotalCount;
   final String currentUserUid = currentUser?.uid;
 
+  VideoPlayerController _controller;
+  Future<void> _initializeVideoPlayerFuture;
+
   final User user;
   final String locationLabel;
   _ProfileState({this.user, this.locationLabel});
@@ -92,6 +96,23 @@ class _ProfileState extends State<Profile> {
     } else {
       checkIfFollowing();
     }
+
+    initializeFavVid();
+  }
+
+  void initializeFavVid() {
+    _controller = VideoPlayerController.network(
+      'http://www.sample-videos.com/video123/mp4/720/big_buck_bunny_720p_20mb.mp4',
+    );
+    _initializeVideoPlayerFuture = _controller.initialize().then((_) {
+      if (this.mounted)
+        setState(() {
+          _controller.play();
+          _controller.setVolume(0.0);
+        });
+    })
+    ;
+    _controller.setLooping(true);
   }
 
   updateCurrentUserCounts() async {
@@ -129,6 +150,7 @@ class _ProfileState extends State<Profile> {
           key: _scaffoldKey,
           backgroundColor: Colors.transparent,
           appBar: AppBar(
+            centerTitle: true,
             brightness: Brightness.light,
             backgroundColor: backgroundImageUrl != null ? Colors.white.withOpacity(0.75) : Colors.white,
             title: _isCurrentUser ? FlatButton(
@@ -386,7 +408,7 @@ class _ProfileState extends State<Profile> {
       child: Container(
         decoration: BoxDecoration(
           border: Border.all(color: kColorExtraLightGray),
-          color: Colors.white,
+          color: Colors.white.withOpacity(0.9),
         ),
         child: Padding(
           padding: EdgeInsets.only(left: 4.0, right: 4.0, top: 12.0, bottom: 4.0),
@@ -557,10 +579,10 @@ class _ProfileState extends State<Profile> {
       child: Container(
         decoration: BoxDecoration(
           border: Border.all(color: kColorExtraLightGray),
-          color: Colors.white,
+          color: Colors.white.withOpacity(0.9),
         ),
         child: ExpansionTile(
-          backgroundColor: Colors.white,
+          backgroundColor: Colors.white.withOpacity(0.9),
           initiallyExpanded: true,
           title: ReusableSectionLabel(title: 'Links'),
           children: <Widget>[
@@ -727,12 +749,12 @@ class _ProfileState extends State<Profile> {
           height: height,
           width: squareWidth,
           color: kColorExtraLightGray,
-          child: FlatButton(
+          child: videoUrl == null ? FlatButton(
             child: Icon(FontAwesomeIcons.photoVideo, size: 25, color: kColorLightGray),
             splashColor: Colors.white,
             highlightColor: Colors.transparent,
             onPressed: () => _photoVideoActionSheet(context),
-          ),
+          ) : buildVideo(screenWidth / height),
         ),
         SizedBox(height: 12),
         Container(
@@ -747,6 +769,35 @@ class _ProfileState extends State<Profile> {
           ),
         ),
       ],
+    );
+  }
+
+  buildVideo(double ratio) {
+    return FutureBuilder(
+      future: _initializeVideoPlayerFuture,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.done) {
+          return GestureDetector(
+            onTap: () {
+              if (this.mounted)
+              setState(() {
+                if (_controller.value.isPlaying) {
+                  _controller.pause();
+                } else {
+                  _controller.play();
+                  _controller.setVolume(0.5);
+                }
+              });
+            },
+            child: AspectRatio(
+              aspectRatio: ratio,
+              child: VideoPlayer(_controller),
+            ),
+          );
+        } else {
+          return Center(child: CircularProgressIndicator());
+        }
+      },
     );
   }
 
@@ -1812,6 +1863,12 @@ class _ProfileState extends State<Profile> {
     super.deactivate();
     _scaffoldKey.currentState.hideCurrentSnackBar();
   }
+
+//  @override
+//  void dispose() {
+//    super.dispose();
+//    _controller.dispose();
+//  }
 }
 
 class TopProfileHeaderButton extends StatelessWidget {

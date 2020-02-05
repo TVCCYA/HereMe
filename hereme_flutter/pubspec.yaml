@@ -13,7 +13,7 @@ dependencies:
   cupertino_icons: ^0.1.2
   url_launcher: ^5.1.2
   image_picker: ^0.6.0+2
-  cached_network_image: ^0.8.0
+  cached_network_image: ^2.0.0
   firebase_auth: ^0.10.0+1
   firebase_core: ^0.4.0
   firebase_database: ^3.0.7
@@ -44,6 +44,7 @@ dependencies:
   carousel_slider: ^1.4.0
   animated_text_kit: ^2.0.0
   bubble_bottom_bar: ^1.2.0
+  video_player: ^0.10.5+2
 
 dev_dependencies:
   flutter_test:
