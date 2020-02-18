@@ -23,6 +23,7 @@ import 'package:hereme_flutter/widgets/update_post.dart';
 import 'package:hereme_flutter/widgets/user_result.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
+import 'package:share/share.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -37,7 +38,6 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:uuid/uuid.dart';
 import 'package:video_player/video_player.dart';
 
-final _firestore = Firestore.instance;
 final reportedUsersRef = Firestore.instance.collection('reportedUsers');
 
 class Profile extends StatefulWidget {
@@ -100,7 +100,7 @@ class _ProfileState extends State<Profile> {
     initializeFavVid();
   }
 
-  void initializeFavVid() {
+  initializeFavVid() {
     _controller = VideoPlayerController.network(
       'http://www.sample-videos.com/video123/mp4/720/big_buck_bunny_720p_20mb.mp4',
     );
@@ -110,8 +110,7 @@ class _ProfileState extends State<Profile> {
           _controller.play();
           _controller.setVolume(0.0);
         });
-    })
-    ;
+    });
     _controller.setLooping(true);
   }
 
@@ -190,7 +189,7 @@ class _ProfileState extends State<Profile> {
                       buildHeader(screenHeight, screenWidth),
                       buildFeedUpdates(screenHeight, screenWidth),
                       buildLinkedAccounts(),
-                      buildBottomFavorites(screenWidth),
+//                      buildBottomFavorites(screenWidth),
                       buildFooterProfileLikes(),
                     ],
                   ),
@@ -641,18 +640,22 @@ class _ProfileState extends State<Profile> {
                     children: displayedAccounts,
                   );
                 } else {
-                  return Padding(
-                    padding: EdgeInsets.only(
-                        top: 2.0, bottom: 8.0),
-                    child: Text(
-                      'No Accounts Linked',
-                      style: kDefaultTextStyle,
-                    ),
+                  _updateFirestoreHasAccountLinked();
+                  return ReusableBottomActionSheetListTile(
+                    iconData: FontAwesomeIcons.link,
+                    title: 'Link Account',
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (BuildContext context) =>
+                                ChooseAccount()),
+                      );
+                    },
                   );
                 }
               },
-            )
-                : StreamBuilder<QuerySnapshot>(
+            ) : StreamBuilder<QuerySnapshot>(
               stream: socialMediasRef
                   .document(userUid)
                   .collection('socials')
@@ -754,7 +757,7 @@ class _ProfileState extends State<Profile> {
             splashColor: Colors.white,
             highlightColor: Colors.transparent,
             onPressed: () => _photoVideoActionSheet(context),
-          ) : buildVideo(screenWidth / height),
+          ) : buildVideo(),
         ),
         SizedBox(height: 12),
         Container(
@@ -772,7 +775,9 @@ class _ProfileState extends State<Profile> {
     );
   }
 
-  buildVideo(double ratio) {
+  buildVideo() {
+    double screenHeight = MediaQuery.of(context).size.height / 3.5;
+    double screenWidth = MediaQuery.of(context).size.width / 3.5;
     return FutureBuilder(
       future: _initializeVideoPlayerFuture,
       builder: (context, snapshot) {
@@ -790,7 +795,7 @@ class _ProfileState extends State<Profile> {
               });
             },
             child: AspectRatio(
-              aspectRatio: ratio,
+              aspectRatio: screenHeight / screenWidth,
               child: VideoPlayer(_controller),
             ),
           );
@@ -814,7 +819,7 @@ class _ProfileState extends State<Profile> {
             color: kColorExtraLightGray,
             child: FlatButton(
               child: Icon(FontAwesomeIcons.userAlt, size: 25, color: kColorLightGray),
-              onPressed: () => print('user add'),
+              onPressed: () => _favUserActionSheet(context),
               splashColor: Colors.white,
               highlightColor: Colors.transparent,
             ),
@@ -825,7 +830,7 @@ class _ProfileState extends State<Profile> {
             color: kColorExtraLightGray,
             child: FlatButton(
               child: Icon(FontAwesomeIcons.userAlt, size: 25, color: kColorLightGray),
-              onPressed: () => print('user add'),
+              onPressed: () => _favUserActionSheet(context),
               splashColor: Colors.white,
               highlightColor: Colors.transparent,
             ),
@@ -836,7 +841,7 @@ class _ProfileState extends State<Profile> {
             color: kColorExtraLightGray,
             child: FlatButton(
               child: Icon(FontAwesomeIcons.userAlt, size: 25, color: kColorLightGray),
-              onPressed: () => print('user add'),
+              onPressed: () => _favUserActionSheet(context),
               splashColor: Colors.white,
               highlightColor: Colors.transparent,
             ),
@@ -888,6 +893,41 @@ class _ProfileState extends State<Profile> {
       ),
     );
     kActionSheet(context, sheets);
+  }
+
+  _favUserActionSheet(BuildContext context) {
+    List<ReusableBottomActionSheetListTile> sheets = [];
+    sheets.add(
+      ReusableBottomActionSheetListTile(
+        title: 'Add Friend',
+        iconData: FontAwesomeIcons.userPlus,
+        onTap: () async {
+          Navigator.pop(context);
+        },
+      ),
+    );
+    sheets.add(
+      ReusableBottomActionSheetListTile(
+        title: 'Spred Around',
+        iconData: FontAwesomeIcons.solidShareSquare,
+        onTap: () {
+          _handleShare();
+          Navigator.pop(context);
+        },
+      ),
+    );
+    sheets.add(
+      ReusableBottomActionSheetListTile(
+        title: 'Cancel',
+        iconData: FontAwesomeIcons.times,
+        onTap: () => Navigator.pop(context),
+      ),
+    );
+    kActionSheet(context, sheets);
+  }
+
+  _handleShare() {
+    Share.share('Spread the word about Spred!');
   }
 
   _fullScreenProfileImage() {

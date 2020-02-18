@@ -17,6 +17,11 @@ class LinkedAccount extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: <Widget>[
+        // separator line
+        Padding(
+          padding: EdgeInsets.only(left: 12.0),
+          child: Container(height: 0.5, color: kColorExtraLightGray),
+        ),
         ListTile(
           dense: true,
           contentPadding: EdgeInsets.only(left: 16.0, right: 16.0),
@@ -46,11 +51,6 @@ class LinkedAccount extends StatelessWidget {
             color: kColorLightGray,
           ),
         ),
-        // separator line
-        Padding(
-          padding: const EdgeInsets.only(left: 12.0),
-          child: Container(height: 0.5, color: kColorExtraLightGray),
-        )
       ],
     );
   }

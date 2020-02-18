@@ -102,7 +102,7 @@ class ListPage extends StatelessWidget {
   }
   
   _handleShare() {
-    Share.share('Spread the word about HereMe!');
+    Share.share('Spread the word about Spred!');
   }
 
   _handleRate() {
