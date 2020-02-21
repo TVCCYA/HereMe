@@ -97,12 +97,17 @@ class _ProfileState extends State<Profile> {
       checkIfFollowing();
     }
 
-    initializeFavVid();
+//    initializeFavVid();
   }
 
   initializeFavVid() {
+
+    print(videoUrl);
+
+//    _calculateImageDimension(videoUrl).then((size) => print("size = $size"));
+
     _controller = VideoPlayerController.network(
-      'http://www.sample-videos.com/video123/mp4/720/big_buck_bunny_720p_20mb.mp4',
+      videoUrl,
     );
     _initializeVideoPlayerFuture = _controller.initialize().then((_) {
       if (this.mounted)
@@ -112,6 +117,21 @@ class _ProfileState extends State<Profile> {
         });
     });
     _controller.setLooping(true);
+  }
+
+  Future<Size> _calculateImageDimension(String url) {
+    Completer<Size> completer = Completer();
+    Image image = Image.network(url);
+    image.image.resolve(ImageConfiguration()).addListener(
+      ImageStreamListener(
+            (ImageInfo image, bool synchronousCall) {
+          var myImage = image.image;
+          Size size = Size(myImage.width.toDouble(), myImage.height.toDouble());
+          completer.complete(size);
+        },
+      ),
+    );
+    return completer.future;
   }
 
   updateCurrentUserCounts() async {
@@ -189,7 +209,7 @@ class _ProfileState extends State<Profile> {
                       buildHeader(screenHeight, screenWidth),
                       buildFeedUpdates(screenHeight, screenWidth),
                       buildLinkedAccounts(),
-//                      buildBottomFavorites(screenWidth),
+                      buildBottomFavorites(screenWidth),
                       buildFooterProfileLikes(),
                     ],
                   ),
@@ -533,6 +553,7 @@ class _ProfileState extends State<Profile> {
             final int creationDate = post.data['creationDate'];
             final String type = post.data['type'];
             final String id = post.data['id'];
+            final dynamic likes = post.data['likes'];
 
             final displayedPost = UpdatePost(
               photoUrl: photoUrl,
@@ -542,20 +563,30 @@ class _ProfileState extends State<Profile> {
               uid: userUid,
               id: id,
               displayName: displayName ?? username,
+              likes: likes ?? {},
             );
             displayedUpdates
                 .add(displayedPost);
           }
           if (displayedUpdates.isNotEmpty) {
-            return Stack(
+            return Column(
               children: <Widget>[
                 Align(
                   alignment: Alignment.topRight,
                   child: GestureDetector(
-                    child: Icon(FontAwesomeIcons.expand, size: 24, color: kColorBlack71),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: <Widget>[
+                        Text('See All', style: kAppBarTextStyle.copyWith(fontSize: 16)),
+                        SizedBox(width: 4.0),
+                        Icon(FontAwesomeIcons.chevronRight, size: 14),
+                      ],
+                    ),
                     onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => AllUpdates(uid: userUid, displayName: displayName ?? username))),
                   ),
                 ),
+                SizedBox(height: 8.0),
                 Column(children: displayedUpdates),
               ],
             );
@@ -751,13 +782,15 @@ class _ProfileState extends State<Profile> {
         Container(
           height: height,
           width: squareWidth,
-          color: kColorExtraLightGray,
+//          color: kColorExtraLightGray,
           child: videoUrl == null ? FlatButton(
             child: Icon(FontAwesomeIcons.photoVideo, size: 25, color: kColorLightGray),
             splashColor: Colors.white,
             highlightColor: Colors.transparent,
             onPressed: () => _photoVideoActionSheet(context),
-          ) : buildVideo(),
+          ) : Container (
+            child: buildVideo()
+          ),
         ),
         SizedBox(height: 12),
         Container(
@@ -772,37 +805,6 @@ class _ProfileState extends State<Profile> {
           ),
         ),
       ],
-    );
-  }
-
-  buildVideo() {
-    double screenHeight = MediaQuery.of(context).size.height / 3.5;
-    double screenWidth = MediaQuery.of(context).size.width / 3.5;
-    return FutureBuilder(
-      future: _initializeVideoPlayerFuture,
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.done) {
-          return GestureDetector(
-            onTap: () {
-              if (this.mounted)
-              setState(() {
-                if (_controller.value.isPlaying) {
-                  _controller.pause();
-                } else {
-                  _controller.play();
-                  _controller.setVolume(0.5);
-                }
-              });
-            },
-            child: AspectRatio(
-              aspectRatio: screenHeight / screenWidth,
-              child: VideoPlayer(_controller),
-            ),
-          );
-        } else {
-          return Center(child: CircularProgressIndicator());
-        }
-      },
     );
   }
 
@@ -848,6 +850,37 @@ class _ProfileState extends State<Profile> {
           ),
         ],
       ),
+    );
+  }
+
+  buildVideo() {
+    double screenHeight = MediaQuery.of(context).size.height / 3.5;
+    double screenWidth = MediaQuery.of(context).size.width / 3.5;
+    return FutureBuilder(
+      future: _initializeVideoPlayerFuture,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.done) {
+          return GestureDetector(
+            onTap: () {
+              if (this.mounted)
+              setState(() {
+                if (_controller.value.isPlaying) {
+                  _controller.pause();
+                } else {
+                  _controller.play();
+                  _controller.setVolume(0.5);
+                }
+              });
+            },
+            child: AspectRatio(
+              aspectRatio: screenHeight / screenWidth,
+              child: VideoPlayer(_controller),
+            ),
+          );
+        } else {
+          return Center(child: CircularProgressIndicator());
+        }
+      },
     );
   }
 
@@ -1360,6 +1393,8 @@ class _ProfileState extends State<Profile> {
   _openVideoLibrary() async {
     await ImagePicker.pickVideo(source: ImageSource.gallery).then(
           (video) {
+            var file = File(video.toString());
+            print(file.lengthSync());
             _uploadFavVideoToFirebase(video);
       },
     );
@@ -1846,6 +1881,7 @@ class _ProfileState extends State<Profile> {
         backgroundImageUrl = background;
         videoUrl = currentUser.videoUrl;
       });
+    initializeFavVid();
   }
 
   _launchUrl(String accountUsername, String iconString, String url) async {
