@@ -6,6 +6,8 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:hereme_flutter/home/home.dart';
 import 'package:hereme_flutter/user_profile/profile_image_full_screen.dart';
 import 'package:hereme_flutter/utils/reusable_bottom_sheet.dart';
+import 'package:intl/intl.dart';
+import 'package:time_ago_provider/time_ago_provider.dart';
 
 import '../constants.dart';
 
@@ -22,6 +24,7 @@ class UpdatePost extends StatelessWidget {
 
   Map likes;
   bool isLiked;
+  int likeCount;
 
   UpdatePost({
     this.photoUrl,
@@ -42,6 +45,24 @@ class UpdatePost extends StatelessWidget {
       creationDate: doc['creationDate'],
       id: doc['id'],
     );
+  }
+
+  String getLikeCount(likes) {
+    if (likes == null) {
+      return '';
+    }
+    int count = 0;
+    likes.values.forEach((val) {
+      if (val == true) {
+        count++;
+      }
+    });
+    return count == 0 ? NumberFormat.compact().format(0) : NumberFormat.compact().format(count);
+  }
+
+  String date() {
+    final timeAgo = TimeAgo.getTimeAgo(creationDate ~/ 1000);
+    return timeAgo;
   }
 
   _settingsActionSheet(BuildContext context, bool isPhotoPost) {
@@ -116,7 +137,7 @@ class UpdatePost extends StatelessWidget {
     return GestureDetector(
       onTap: () => _settingsActionSheet(context, false),
       child: Padding(
-        padding: EdgeInsets.only(right: 4.0),
+        padding: EdgeInsets.only(right: 2.0),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: <Widget>[
@@ -139,17 +160,25 @@ class UpdatePost extends StatelessWidget {
                       text: title,
                       style: kDefaultTextStyle,
                     ),
+                    TextSpan(
+                      text: ' ' + date(),
+                      style: kDefaultTextStyle.copyWith(fontSize: 12.0, color: kColorLightGray),
+                    ),
                   ],
                 ),
               ),
             ),
-            Padding(
-              padding: EdgeInsets.only(left: 4.0),
-              child: GestureDetector(
-                child: Icon(!isLiked ? FontAwesomeIcons.heart : FontAwesomeIcons.solidHeart,
-                    color: !isLiked ? kColorLightGray : kColorRed, size: 16),
-                onTap: () => handleLikePost(),
-              ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              mainAxisSize: MainAxisSize.max,
+              children: <Widget>[
+                GestureDetector(
+                  child: Icon(!isLiked ? FontAwesomeIcons.heart : FontAwesomeIcons.solidHeart,
+                      color: !isLiked ? kColorLightGray : kColorRed, size: 16),
+                  onTap: () => handleLikePost(),
+                ),
+                Text('${getLikeCount(likes)}', style: kDefaultTextStyle.copyWith(color: !isLiked ? kColorLightGray : kColorRed, fontSize: 12.0))
+              ],
             ),
           ],
         ),
@@ -175,7 +204,7 @@ class UpdatePost extends StatelessWidget {
                       children: [
                         TextSpan(
                           text:
-                              '${currentUser.displayName ?? currentUser.username}: ',
+                              '$displayName: ',
                           style: kDefaultTextStyle.copyWith(
                               color: Color.fromRGBO(
                                   currentUser.red ?? 71,
@@ -187,6 +216,10 @@ class UpdatePost extends StatelessWidget {
                         TextSpan(
                           text: title,
                           style: kDefaultTextStyle,
+                        ),
+                        TextSpan(
+                          text: ' ' + date(),
+                          style: kDefaultTextStyle.copyWith(fontSize: 12.0, color: kColorLightGray),
                         ),
                       ],
                     ),
@@ -260,6 +293,10 @@ class UpdatePost extends StatelessWidget {
               TextSpan(
                 text: '* linked a new account *',
                 style: kDefaultTextStyle.copyWith(fontStyle: FontStyle.italic),
+              ),
+              TextSpan(
+                text: ' ' + date(),
+                style: kDefaultTextStyle.copyWith(fontSize: 12.0, color: kColorLightGray),
               ),
             ],
           ),

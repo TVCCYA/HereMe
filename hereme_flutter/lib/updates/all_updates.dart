@@ -22,6 +22,7 @@ class AllUpdates extends StatefulWidget {
 class _AllUpdatesState extends State<AllUpdates> {
   final String uid;
   final String displayName;
+  String count;
 
   _AllUpdatesState({this.uid, this.displayName});
 
@@ -40,7 +41,7 @@ class _AllUpdatesState extends State<AllUpdates> {
         elevation: 2.0,
         backgroundColor: Colors.white,
         title: Text(
-          'Updates',
+          count == null ? 'Updates' : '$count Updates',
           textAlign: TextAlign.left,
           style: kAppBarTextStyle,
         ),

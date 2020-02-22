@@ -34,6 +34,8 @@ const kColorReddit = Color.fromRGBO(255, 69, 0, 1.0);
 const kColorLinkedIn = Color.fromRGBO(0, 119, 181, 1.0);
 const kColorTwitch = Color.fromRGBO(145, 70, 255, 1.0);
 const kColorTikTok = Color.fromRGBO(0, 242, 234, 1.0);
+const kColorEtsy = Color.fromRGBO(241, 101, 32, 1.0);
+const kColorCashApp = Color.fromRGBO(40, 188, 0, 1.0);
 
 ThemeData kTheme(BuildContext context) {
   return Theme.of(context).copyWith(
@@ -296,6 +298,15 @@ String kIconPath(String socialMedia) {
     case 'pinterestUsername':
       {
         return 'images/SocialMedias/pinterest120.png';
+      }
+    case 'etsyUsername':
+      {
+        return 'images/SocialMedias/etsy.png';
+      }
+
+    case 'cash appUsername':
+      {
+        return 'images/SocialMedias/cashapp120.png';
       }
     default:
       {

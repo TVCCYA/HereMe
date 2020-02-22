@@ -46,7 +46,8 @@ class _AddLinkState extends State<AddLink> {
         platform == 'Facebook' ||
         platform == 'Your Website' ||
         platform == 'SoundCloud' ||
-        platform == 'Pinterest') {
+        platform == 'Pinterest' ||
+        platform == 'Etsy') {
       if (username.isNotEmpty &&
           url.isNotEmpty &&
           !url.contains(' ') &&
@@ -135,7 +136,8 @@ class _AddLinkState extends State<AddLink> {
                         platform == 'Facebook' ||
                         platform == 'Your Website' ||
                         platform == 'SoundCloud' ||
-                        platform == 'Pinterest') {
+                        platform == 'Pinterest' ||
+                        platform == 'Etsy') {
                       FocusScope.of(context).requestFocus(_urlNode);
                     } else {
                       if (username.contains(' ')) {
@@ -174,7 +176,8 @@ class _AddLinkState extends State<AddLink> {
                         platform == 'Facebook' ||
                         platform == 'Your Website' ||
                         platform == 'SoundCloud' ||
-                        platform == 'Pinterest'
+                        platform == 'Pinterest' ||
+                        platform == 'Etsy'
                     ? TextField(
                         cursorColor: kColorLightGray,
                         onChanged: (value) {
@@ -233,7 +236,8 @@ class _AddLinkState extends State<AddLink> {
                           platform == 'Facebook' ||
                           platform == 'Your Website' ||
                           platform == 'SoundCloud' ||
-                          platform == 'Pinterest') {
+                          platform == 'Pinterest' ||
+                          platform == 'Etsy') {
                         if (url.contains(' ')) {
                           kShowSnackbar(
                               key: _scaffoldKey,
@@ -319,6 +323,8 @@ class _AddLinkState extends State<AddLink> {
       retMap = {'tiktok': 'https://www.tiktok.com/@$username'};
     } else if (platform == 'Pinterest') {
       retMap = {'pinterest': _urlController.text.trim()};
+    } else if (platform == 'Etsy') {
+      retMap = {'etsy': _urlController.text.trim()};
     } else {
       retMap = {'Unavailable': _urlController.text.trim()};
     }
