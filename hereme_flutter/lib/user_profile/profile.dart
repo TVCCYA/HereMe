@@ -473,6 +473,7 @@ class _ProfileState extends State<Profile> {
                   id: id,
                   displayName: displayName ?? username,
                   likes: likes ?? {},
+                  width: 135,
                 );
                 displayedUpdates
                     .add(displayedPost);
@@ -564,6 +565,7 @@ class _ProfileState extends State<Profile> {
               id: id,
               displayName: displayName ?? username,
               likes: likes ?? {},
+              width: 135,
             );
             displayedUpdates
                 .add(displayedPost);

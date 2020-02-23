@@ -25,6 +25,7 @@ class UpdatePost extends StatelessWidget {
   Map likes;
   bool isLiked;
   int likeCount;
+  int width;
 
   UpdatePost({
     this.photoUrl,
@@ -35,6 +36,7 @@ class UpdatePost extends StatelessWidget {
     this.type,
     this.displayName,
     this.likes,
+    this.width,
   });
 
   factory UpdatePost.fromDocument(DocumentSnapshot doc) {
@@ -57,7 +59,9 @@ class UpdatePost extends StatelessWidget {
         count++;
       }
     });
-    return count == 0 ? NumberFormat.compact().format(0) : NumberFormat.compact().format(count);
+    return count == 0
+        ? NumberFormat.compact().format(4444)
+        : NumberFormat.compact().format(count);
   }
 
   String date() {
@@ -136,13 +140,13 @@ class UpdatePost extends StatelessWidget {
   buildTextPost(BuildContext context, double screenWidth) {
     return GestureDetector(
       onTap: () => _settingsActionSheet(context, false),
-      child: Padding(
-        padding: EdgeInsets.only(right: 2.0),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: <Widget>[
-            Container(
-              width: screenWidth - 82,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: <Widget>[
+          Padding(
+            padding: EdgeInsets.only(right: 4.0),
+            child: Container(
+              width: screenWidth - (width),
               child: RichText(
                 text: TextSpan(
                   children: [
@@ -162,26 +166,38 @@ class UpdatePost extends StatelessWidget {
                     ),
                     TextSpan(
                       text: ' ' + date(),
-                      style: kDefaultTextStyle.copyWith(fontSize: 12.0, color: kColorLightGray),
+                      style: kDefaultTextStyle.copyWith(
+                          fontSize: 12.0, color: kColorLightGray),
                     ),
                   ],
                 ),
               ),
             ),
-            Column(
+          ),
+          Padding(
+            padding: EdgeInsets.only(right: 4.0),
+            child: Row(
               crossAxisAlignment: CrossAxisAlignment.center,
-              mainAxisSize: MainAxisSize.max,
               children: <Widget>[
+                Text(
+                  '${getLikeCount(likes)} ',
+                  style: kDefaultTextStyle.copyWith(
+                      color: !isLiked ? kColorLightGray : kColorRed,
+                      fontSize: 12.0),
+                ),
                 GestureDetector(
-                  child: Icon(!isLiked ? FontAwesomeIcons.heart : FontAwesomeIcons.solidHeart,
-                      color: !isLiked ? kColorLightGray : kColorRed, size: 16),
+                  child: Icon(
+                      !isLiked
+                          ? FontAwesomeIcons.heart
+                          : FontAwesomeIcons.solidHeart,
+                      color: !isLiked ? kColorLightGray : kColorRed,
+                      size: 16.0),
                   onTap: () => handleLikePost(),
                 ),
-                Text('${getLikeCount(likes)}', style: kDefaultTextStyle.copyWith(color: !isLiked ? kColorLightGray : kColorRed, fontSize: 12.0))
               ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -203,8 +219,7 @@ class UpdatePost extends StatelessWidget {
                     text: TextSpan(
                       children: [
                         TextSpan(
-                          text:
-                              '$displayName: ',
+                          text: '$displayName: ',
                           style: kDefaultTextStyle.copyWith(
                               color: Color.fromRGBO(
                                   currentUser.red ?? 71,
@@ -219,15 +234,20 @@ class UpdatePost extends StatelessWidget {
                         ),
                         TextSpan(
                           text: ' ' + date(),
-                          style: kDefaultTextStyle.copyWith(fontSize: 12.0, color: kColorLightGray),
+                          style: kDefaultTextStyle.copyWith(
+                              fontSize: 12.0, color: kColorLightGray),
                         ),
                       ],
                     ),
                   ),
                 ),
                 GestureDetector(
-                  child: Icon(!isLiked ? FontAwesomeIcons.heart : FontAwesomeIcons.solidHeart,
-                      color: !isLiked ? kColorLightGray : kColorRed, size: 16),
+                  child: Icon(
+                      !isLiked
+                          ? FontAwesomeIcons.heart
+                          : FontAwesomeIcons.solidHeart,
+                      color: !isLiked ? kColorLightGray : kColorRed,
+                      size: 16),
                   onTap: () => handleLikePost(),
                 ),
               ],
@@ -259,16 +279,16 @@ class UpdatePost extends StatelessWidget {
           .collection('posts')
           .document(id)
           .updateData({'likes.$currentUserId': false});
-        isLiked = false;
-        likes[currentUserId] = false;
+      isLiked = false;
+      likes[currentUserId] = false;
     } else if (!_isLiked) {
       updateRef
           .document(uid)
           .collection('posts')
           .document(id)
           .updateData({'likes.$currentUserId': true});
-        isLiked = true;
-        likes[currentUserId] = true;
+      isLiked = true;
+      likes[currentUserId] = true;
     }
   }
 
@@ -283,11 +303,8 @@ class UpdatePost extends StatelessWidget {
               TextSpan(
                 text: '$displayName: ',
                 style: kDefaultTextStyle.copyWith(
-                    color: Color.fromRGBO(
-                        currentUser.red ?? 71,
-                        currentUser.green ?? 71,
-                        currentUser.blue ?? 71,
-                        1.0),
+                    color: Color.fromRGBO(currentUser.red ?? 71,
+                        currentUser.green ?? 71, currentUser.blue ?? 71, 1.0),
                     fontWeight: FontWeight.w700),
               ),
               TextSpan(
@@ -296,7 +313,8 @@ class UpdatePost extends StatelessWidget {
               ),
               TextSpan(
                 text: ' ' + date(),
-                style: kDefaultTextStyle.copyWith(fontSize: 12.0, color: kColorLightGray),
+                style: kDefaultTextStyle.copyWith(
+                    fontSize: 12.0, color: kColorLightGray),
               ),
             ],
           ),
