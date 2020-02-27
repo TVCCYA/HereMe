@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:rflutter_alert/rflutter_alert.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'home/bottom_bar.dart';
 import 'home/home.dart';
 const kColorRed = Color.fromRGBO(201, 62, 62, 1.0);
 const kColorBlue = Color.fromRGBO(91, 117, 212, 1.0);

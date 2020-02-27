@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:io';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:circle_list/circle_list.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -32,71 +31,47 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:hereme_flutter/constants.dart';
 import 'package:flushbar/flushbar.dart';
 
-final usersRef = Firestore.instance.collection('users');
-final socialMediasRef = Firestore.instance.collection('socialMedias');
-final knocksRef = Firestore.instance.collection('knocks');
-final recentUploadsRef = Firestore.instance.collection('recentUploads');
-final liveChatsRef = Firestore.instance.collection('liveChats');
-final userLocationsRef = Firestore.instance.collection('userLocations');
-final liveChatLocationsRef = Firestore.instance.collection('liveChatLocations');
-final liveChatMessagesRef = Firestore.instance.collection('liveChatMessages');
-final activityRef = Firestore.instance.collection('activity');
-final usersInChatRef = Firestore.instance.collection('usersInChat');
-final followersRef = Firestore.instance.collection('followers');
-final followingRef = Firestore.instance.collection('following');
-final updateRef = Firestore.instance.collection('update');
-User currentUser;
-double currentLatitude;
-double currentLongitude;
-final bool isAdmin = currentUser.uid == 'z3Gq1WeepHfoT5HGVIWJo7oDxiX2';
-final String adminUid = 'z3Gq1WeepHfoT5HGVIWJo7oDxiX2';
+import 'bottom_bar.dart';
 
 class Home extends StatefulWidget {
+  final double latitude;
+  final double longitude;
+  final List<String> blockedUids;
+  final bool hasAccountLinked;
+  final bool hideMe;
+  final bool locationEnabled;
+  final bool pageLoading;
+
+  Home({this.latitude, this.longitude, this.blockedUids, this.hasAccountLinked, this.hideMe, this.locationEnabled, this.pageLoading});
+
   @override
-  _HomeState createState() => _HomeState();
+  _HomeState createState() => _HomeState(
+    latitude: this.latitude,
+    longitude: this.longitude,
+    blockedUids: this.blockedUids,
+    hasAccountLinked: this.hasAccountLinked,
+    hideMe: this.hideMe,
+    locationEnabled: this.locationEnabled,
+    pageLoading: this.pageLoading,
+  );
 }
 
 class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
+  final double latitude;
+  final double longitude;
+  final List<String> blockedUids;
+  final bool hasAccountLinked;
+  final bool hideMe;
+  final bool locationEnabled;
+  final bool pageLoading;
+
+  _HomeState({this.latitude, this.longitude, this.blockedUids, this.hasAccountLinked, this.hideMe, this.locationEnabled, this.pageLoading});
+
   final _scaffoldKey = GlobalKey<ScaffoldState>();
   RefreshController _refreshController =
       RefreshController(initialRefresh: false);
-  FirebaseMessaging _firebaseMessaging = FirebaseMessaging();
-  final auth = FirebaseAuth.instance;
-  bool _isAuth = false;
-  bool _hasAccountLinked = false;
-
-  double latitude;
-  double longitude;
-  bool _locationEnabled = false;
-  bool _locationLoading = true;
-  bool hideMe = false;
 
   bool get wantKeepAlive => true;
-
-  var geolocator = Geolocator();
-  StreamSubscription<Position> positionStream;
-  Position position;
-  bool pageLoading = true;
-  List<String> blockedUids = [];
-
-  @override
-  void didChangeDependencies() async {
-    super.didChangeDependencies();
-    handleLoggedIn();
-    if (hideMe) {
-      _locationEnabled = false;
-    } else {
-      getCurrentUser();
-    }
-  }
-
-  @override
-  void dispose() {
-    if (positionStream != null) {
-      positionStream.cancel();
-    }
-    super.dispose();
-  }
 
   @override
   void deactivate() {
@@ -104,202 +79,8 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
     _scaffoldKey.currentState.hideCurrentSnackBar();
   }
 
-  handleLoggedIn() async {
-    if (await auth.currentUser() != null) {
-      await getCurrentUser();
-      if (this.mounted)
-        setState(() {
-          _isAuth = true;
-          pageLoading = false;
-        });
-      await configurePushNotifications();
-    } else {
-      Navigator.pushAndRemoveUntil(
-          context,
-          MaterialPageRoute(builder: (BuildContext context) => InitialPage()),
-          (Route<dynamic> route) => false);
-      if (this.mounted)
-        setState(() {
-          _isAuth = false;
-          pageLoading = false;
-        });
-    }
-  }
-
-  configurePushNotifications() async {
-    final user = await auth.currentUser();
-    if (Platform.isIOS) getIOSPermission();
-    _firebaseMessaging.getToken().then((token) {
-      usersRef.document(user.uid).updateData({
-        'androidNotificationToken': token,
-      });
-    });
-
-    _firebaseMessaging.configure(
-//      onLaunch: (Map<String, dynamic> message) async {},
-//      onResume: (Map<String, dynamic> message) async {},
-//      onMessage: (Map<String, dynamic> message) async {
-//        print('on message: $message\n');
-//        final String recipientId = message['data']['recipient'];
-//        final String body = message['notification']['body'];
-//        if (recipientId == user.uid) {
-//          kShowSnackbar(
-//            key: _scaffoldKey,
-//            text: body,
-//            backgroundColor: kColorBlack71,
-//          );
-//        }
-//        print('NOTIFICATION NOT SHOWN');
-//      },
-        );
-  }
-
-  getIOSPermission() {
-    _firebaseMessaging.requestNotificationPermissions(
-        IosNotificationSettings(sound: true, alert: true, badge: true));
-    _firebaseMessaging.onIosSettingsRegistered.listen((settings) {});
-  }
-
-  getCurrentUser() async {
-    final user = await auth.currentUser();
-    DocumentSnapshot doc = await usersRef.document(user.uid).get();
-    currentUser = User.fromDocument(doc);
-    if (blockedUids != null) {
-      currentUser.blockedUids = blockedUids;
-    }
-    fetchBlockedUsers();
-
-    if (currentUser.profileImageUrl == null) {
-      Navigator.pushAndRemoveUntil(
-          context,
-          MaterialPageRoute(
-              builder: (BuildContext context) =>
-                  PhotoAdd(uid: currentUser.uid)),
-          (Route<dynamic> route) => false);
-    }
-
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.setString('username', currentUser.username);
-    await prefs.setString('profileImageUrl', currentUser.profileImageUrl);
-    await prefs.setString('uid', currentUser.uid);
-    await prefs.setString('backgroundImageUrl', currentUser.backgroundImageUrl);
-    if (this.mounted)
-      setState(() {
-        hideMe = prefs.getBool('hideMe') ?? false;
-      });
-
-    await getStreamedLocation();
-    if (currentUser.hasAccountLinked) {
-      if (this.mounted)
-        setState(() {
-          _hasAccountLinked = true;
-        });
-    } else {
-      _hasAccountLinked = false;
-    }
-  }
-
-  fetchBlockedUsers() {
-    List<String> uids = [];
-    if (currentUser.blockedUserUids != null) {
-      currentUser.blockedUserUids.forEach((uid, val) {
-        uids.add(uid);
-        if (this.mounted)
-          setState(() {
-            uids.forEach((i) {
-              if (!blockedUids.contains(i)) {
-                this.blockedUids.add(i);
-              }
-            });
-          });
-      });
-    }
-  }
-
-  getCurrentLocation() async {
-    GeolocationStatus geolocationStatus =
-        await Geolocator().checkGeolocationPermissionStatus();
-
-    if (geolocationStatus != GeolocationStatus.granted || hideMe) {
-      if (this.mounted)
-        setState(() {
-          _locationLoading = false;
-          _locationEnabled = false;
-        });
-    } else {
-      Position position = await Geolocator()
-          .getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
-      if (this.mounted)
-        setState(() {
-          _locationLoading = false;
-          _locationEnabled = true;
-          latitude = position.latitude;
-          longitude = position.longitude;
-        });
-      await setGeoFireData();
-      await setUserCityInFirestore();
-    }
-  }
-
-  getStreamedLocation() async {
-    GeolocationStatus geolocationStatus =
-        await Geolocator().checkGeolocationPermissionStatus();
-    geolocationStatus = GeolocationStatus.granted;
-
-    if (geolocationStatus != GeolocationStatus.granted) {
-      if (this.mounted)
-        setState(() {
-          _locationLoading = false;
-          _locationEnabled = false;
-        });
-    } else {
-      LocationOptions locationOptions = LocationOptions(
-        accuracy: LocationAccuracy.high,
-        distanceFilter: 175, //updates every 0.1 miles
-      );
-      positionStream = geolocator
-          .getPositionStream(locationOptions)
-          .listen((Position newPosition) async {
-        if (this.mounted)
-          setState(() {
-            _locationLoading = false;
-            _locationEnabled = true;
-            latitude = newPosition.latitude;
-            longitude = newPosition.longitude;
-            currentLatitude = newPosition.latitude;
-            currentLongitude = newPosition.longitude;
-          });
-        await setGeoFireData();
-        await setUserCityInFirestore();
-      });
-    }
-  }
-
-  setUserCityInFirestore() async {
-    List<Placemark> placemark =
-        await geolocator.placemarkFromCoordinates(latitude, longitude);
-    placemark.forEach((mark) {
-      usersRef.document(currentUser.uid).updateData({
-        'city': mark.locality,
-      });
-    });
-  }
-
-  setGeoFireData() async {
-    Geoflutterfire geo = Geoflutterfire();
-    GeoFirePoint myLocation =
-        geo.point(latitude: latitude, longitude: longitude);
-    await userLocationsRef.document(currentUser.uid).setData({
-      'position': myLocation.data,
-      'profileImageUrl': currentUser.profileImageUrl,
-      'uid': currentUser.uid,
-      'hasAccountLinked': _hasAccountLinked,
-      'hideMe': hideMe,
-    });
-  }
-
   showStreamedCloseByUsers() {
-    return _hasAccountLinked
+    return hasAccountLinked
         ? streamCloseByUsers()
         : Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -447,29 +228,16 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
   }
 
   enabledLocationFetchUsers() {
-    if (hideMe) {
-      return _disableHideMe();
-    } else if (_locationLoading) {
-      getCurrentLocation();
-      return circularProgress();
-    }
-    if (_locationEnabled) {
+    if (locationEnabled) {
       return showStreamedCloseByUsers();
-    } else if (!_locationEnabled) {
-      return _showNoLocationFlushBar();
-    } else {
-      return SizedBox();
     }
   }
 
   enabledLocationFetchChats() {
     if (hideMe) {
       return SizedBox();
-    } else if (_locationLoading) {
-      getCurrentLocation();
-      return circularProgress();
     }
-    if (_locationEnabled) {
+    if (locationEnabled) {
       return showStreamedCloseByChats();
     } else {
       return SizedBox();
@@ -477,7 +245,7 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
   }
 
   showStreamedCloseByChats() {
-    return _hasAccountLinked ? streamCloseByChats() : SizedBox();
+    return hasAccountLinked ? streamCloseByChats() : SizedBox();
   }
 
   streamCloseByChats() {
@@ -801,34 +569,6 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
     return Scaffold(
       key: _scaffoldKey,
       backgroundColor: kColorOffWhite,
-      appBar: AppBar(
-        titleSpacing: 8,
-        brightness: Brightness.light,
-        centerTitle: false,
-        elevation: 2.0,
-        backgroundColor: kColorOffWhite,
-        title: Image.asset(
-          'images/spredTop.png',
-          scale: 11,
-        ),
-        automaticallyImplyLeading: false,
-        actions: <Widget>[
-          Padding(
-            padding: EdgeInsets.all(10.0),
-            child: GestureDetector(
-              child: _isAuth
-                  ? cachedUserResultImage(currentUser.profileImageUrl, 5, 35)
-                  : Icon(FontAwesomeIcons.userAlt, color: kColorLightGray),
-              onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => Profile(
-                          user: currentUser,
-                          locationLabel: currentUser.city ?? 'Here'))),
-            ),
-          )
-        ],
-      ),
       body: SafeArea(
         child: Theme(
           data: kTheme(context),
@@ -867,68 +607,7 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
 
   _onRefresh() {
     kSelectionClick();
-    getCurrentLocation();
+//    getCurrentLocation();
     _refreshController.refreshCompleted();
-  }
-
-  _disableHideMe() {
-    return Container(
-      height: 50.0,
-      color: kColorBlue.withOpacity(0.75),
-      child: FlatButton(
-        splashColor: kColorExtraLightGray,
-        highlightColor: Colors.transparent,
-        onPressed: () {
-          kHandleHideMe(_scaffoldKey);
-          if (this.mounted)
-            setState(() {
-              hideMe = false;
-              _locationLoading = true;
-            });
-          getCurrentLocation();
-        },
-        child: Center(
-          child: Text(
-            'Disable Hide Me',
-            style: kAppBarTextStyle.copyWith(color: Colors.white),
-          ),
-        ),
-      ),
-    );
-  }
-
-  _showNoLocationFlushBar() {
-    return Flushbar(
-      flushbarPosition: FlushbarPosition.TOP,
-      flushbarStyle: FlushbarStyle.FLOATING,
-      reverseAnimationCurve: Curves.decelerate,
-      forwardAnimationCurve: Curves.elasticOut,
-      backgroundColor: Colors.white,
-      isDismissible: false,
-      duration: Duration(seconds: 4),
-      icon: Icon(
-        FontAwesomeIcons.searchLocation,
-        color: kColorRed,
-      ),
-      mainButton: FlatButton(
-        onPressed: () => PermissionHandler().openAppSettings(),
-        splashColor: kColorExtraLightGray,
-        highlightColor: Colors.transparent,
-        child: Text(
-          "Open",
-          style: kAppBarTextStyle.copyWith(color: kColorBlue),
-        ),
-      ),
-      showProgressIndicator: true,
-      progressIndicatorBackgroundColor: Colors.blueGrey,
-      titleText: Text(
-        "Location Disabled",
-        style: kAppBarTextStyle,
-      ),
-      messageText: Text(
-        "In order to show what's happening around you we need access to your location. Tap Open to enable your location in Settings",
-        style: kDefaultTextStyle,
-      ),
-    );
   }
 }
