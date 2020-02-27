@@ -38,6 +38,7 @@ import 'package:hereme_flutter/home/home.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:uuid/uuid.dart';
 import 'package:video_player/video_player.dart';
+import 'package:hereme_flutter/home/bottom_bar.dart';
 
 final reportedUsersRef = Firestore.instance.collection('reportedUsers');
 
@@ -467,7 +468,7 @@ class _ProfileState extends State<Profile> {
                   id: id,
                   displayName: displayName ?? username,
                   likes: likes ?? {},
-                  width: 135,
+                  width: 105,
                 );
                 displayedUpdates
                     .add(displayedPost);
@@ -559,7 +560,7 @@ class _ProfileState extends State<Profile> {
               id: id,
               displayName: displayName ?? username,
               likes: likes ?? {},
-              width: 135,
+              width: 105,
             );
             displayedUpdates
                 .add(displayedPost);
