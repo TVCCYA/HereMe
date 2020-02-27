@@ -45,6 +45,7 @@ dependencies:
   animated_text_kit: ^2.0.0
   bubble_bottom_bar: ^1.2.0
   video_player: ^0.10.5+2
+  youtube_player: ^3.5.0
 
 dev_dependencies:
   flutter_test:
