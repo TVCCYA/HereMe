@@ -11,11 +11,12 @@ Widget cachedNetworkImage(String imageUrl) {
   ) : Icon(FontAwesomeIcons.exclamationCircle, color: kColorRed);
 }
 
-Widget cachedUserResultImage(imageUrl, double radius, double size) {
+Widget cachedUserResultImage(imageUrl, double size) {
   return ClipRRect(
-      borderRadius: BorderRadius.circular(radius),
+      borderRadius: BorderRadius.circular(size * 2),
     child: Container(
       height: size,
+      width: size,
       child: imageUrl != null ? CachedNetworkImage(
         imageUrl: imageUrl,
         fit: BoxFit.cover,
@@ -25,18 +26,6 @@ Widget cachedUserResultImage(imageUrl, double radius, double size) {
             ),
         errorWidget: (context, url, error) => Icon(FontAwesomeIcons.userAlt, color: kColorLightGray,),
       ) : Icon(FontAwesomeIcons.exclamationCircle, color: kColorRed),
-    ),
-  );
-}
-
-Widget noImagePlaceholder() {
-  return Container(
-    color: Colors.black,
-    decoration: BoxDecoration(
-        border: Border.all(
-      color: Colors.red, //                   <--- border color
-      width: 5.0,
-    ),
     ),
   );
 }

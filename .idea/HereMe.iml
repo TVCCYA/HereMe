@@ -137,6 +137,9 @@
       <excludeFolder url="file://$MODULE_DIR$/hereme_flutter/ios/.symlinks/plugins/path_provider/example/.dart_tool" />
       <excludeFolder url="file://$MODULE_DIR$/hereme_flutter/ios/.symlinks/plugins/path_provider/example/.pub" />
       <excludeFolder url="file://$MODULE_DIR$/hereme_flutter/ios/.symlinks/plugins/path_provider/example/build" />
+      <excludeFolder url="file://$MODULE_DIR$/hereme_flutter/ios/.symlinks/plugins/path_provider/path_provider_macos/.dart_tool" />
+      <excludeFolder url="file://$MODULE_DIR$/hereme_flutter/ios/.symlinks/plugins/path_provider/path_provider_macos/.pub" />
+      <excludeFolder url="file://$MODULE_DIR$/hereme_flutter/ios/.symlinks/plugins/path_provider/path_provider_macos/build" />
       <excludeFolder url="file://$MODULE_DIR$/hereme_flutter/ios/.symlinks/plugins/permission_handler/.dart_tool" />
       <excludeFolder url="file://$MODULE_DIR$/hereme_flutter/ios/.symlinks/plugins/permission_handler/.pub" />
       <excludeFolder url="file://$MODULE_DIR$/hereme_flutter/ios/.symlinks/plugins/permission_handler/build" />
@@ -194,6 +197,12 @@
       <excludeFolder url="file://$MODULE_DIR$/hereme_flutter/ios/.symlinks/plugins/video_player_web/.dart_tool" />
       <excludeFolder url="file://$MODULE_DIR$/hereme_flutter/ios/.symlinks/plugins/video_player_web/.pub" />
       <excludeFolder url="file://$MODULE_DIR$/hereme_flutter/ios/.symlinks/plugins/video_player_web/build" />
+      <excludeFolder url="file://$MODULE_DIR$/hereme_flutter/ios/.symlinks/plugins/youtube_player/.dart_tool" />
+      <excludeFolder url="file://$MODULE_DIR$/hereme_flutter/ios/.symlinks/plugins/youtube_player/.pub" />
+      <excludeFolder url="file://$MODULE_DIR$/hereme_flutter/ios/.symlinks/plugins/youtube_player/build" />
+      <excludeFolder url="file://$MODULE_DIR$/hereme_flutter/ios/.symlinks/plugins/youtube_player/example/.dart_tool" />
+      <excludeFolder url="file://$MODULE_DIR$/hereme_flutter/ios/.symlinks/plugins/youtube_player/example/.pub" />
+      <excludeFolder url="file://$MODULE_DIR$/hereme_flutter/ios/.symlinks/plugins/youtube_player/example/build" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />

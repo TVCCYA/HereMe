@@ -5,6 +5,7 @@ import 'package:geoflutterfire/geoflutterfire.dart';
 import 'package:hereme_flutter/constants.dart';
 import 'package:hereme_flutter/live_chat/live_chat_result.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
+import 'bottom_bar.dart';
 import 'home.dart';
 
 class AllLiveChatsCloseBy extends StatefulWidget {

@@ -7,6 +7,7 @@ import 'package:hereme_flutter/constants.dart';
 import 'package:hereme_flutter/models/user.dart';
 import 'package:hereme_flutter/widgets/user_result.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
+import 'bottom_bar.dart';
 import 'home.dart';
 
 class AllUsersCloseBy extends StatefulWidget {

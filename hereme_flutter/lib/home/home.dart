@@ -22,6 +22,7 @@ import 'package:hereme_flutter/settings/choose_account.dart';
 import 'package:hereme_flutter/user_profile/profile.dart';
 import 'package:hereme_flutter/utils/custom_image.dart';
 import 'package:hereme_flutter/utils/reusable_bottom_sheet.dart';
+import 'package:hereme_flutter/widgets/update_post.dart';
 import 'package:hereme_flutter/widgets/user_result.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
@@ -31,63 +32,60 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:hereme_flutter/constants.dart';
 import 'package:flushbar/flushbar.dart';
-
-final usersRef = Firestore.instance.collection('users');
-final socialMediasRef = Firestore.instance.collection('socialMedias');
-final knocksRef = Firestore.instance.collection('knocks');
-final recentUploadsRef = Firestore.instance.collection('recentUploads');
-final liveChatsRef = Firestore.instance.collection('liveChats');
-final userLocationsRef = Firestore.instance.collection('userLocations');
-final liveChatLocationsRef = Firestore.instance.collection('liveChatLocations');
-final liveChatMessagesRef = Firestore.instance.collection('liveChatMessages');
-final activityRef = Firestore.instance.collection('activity');
-final usersInChatRef = Firestore.instance.collection('usersInChat');
-final followersRef = Firestore.instance.collection('followers');
-final followingRef = Firestore.instance.collection('following');
-final updateRef = Firestore.instance.collection('update');
-User currentUser;
-double currentLatitude;
-double currentLongitude;
-final bool isAdmin = currentUser.uid == 'z3Gq1WeepHfoT5HGVIWJo7oDxiX2';
-final String adminUid = 'z3Gq1WeepHfoT5HGVIWJo7oDxiX2';
+import 'bottom_bar.dart';
 
 class Home extends StatefulWidget {
+  final List<String> blockedUids;
+  final bool hasAccountLinked;
+
+  Home({this.blockedUids, this.hasAccountLinked});
+
   @override
-  _HomeState createState() => _HomeState();
+  _HomeState createState() => _HomeState(
+        blockedUids: this.blockedUids,
+        hasAccountLinked: this.hasAccountLinked,
+      );
 }
 
 class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
+  final List<String> blockedUids;
+  final bool hasAccountLinked;
+
+  _HomeState({this.blockedUids, this.hasAccountLinked});
+
+  bool get wantKeepAlive => true;
+
   final _scaffoldKey = GlobalKey<ScaffoldState>();
   RefreshController _refreshController =
       RefreshController(initialRefresh: false);
-  FirebaseMessaging _firebaseMessaging = FirebaseMessaging();
-  final auth = FirebaseAuth.instance;
-  bool _isAuth = false;
-  bool _hasAccountLinked = false;
+
+  bool hideMe = false;
+  bool pageLoading = true;
 
   double latitude;
   double longitude;
   bool _locationEnabled = false;
   bool _locationLoading = true;
-  bool hideMe = false;
-
-  bool get wantKeepAlive => true;
 
   var geolocator = Geolocator();
   StreamSubscription<Position> positionStream;
   Position position;
-  bool pageLoading = true;
-  List<String> blockedUids = [];
+
+  @override
+  void initState() {
+    super.initState();
+  }
 
   @override
   void didChangeDependencies() async {
     super.didChangeDependencies();
-    handleLoggedIn();
+    isHideMe();
     if (hideMe) {
       _locationEnabled = false;
     } else {
-      getCurrentUser();
+      await getCurrentLocation();
     }
+    print(userUIDs.length);
   }
 
   @override
@@ -104,116 +102,12 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
     _scaffoldKey.currentState.hideCurrentSnackBar();
   }
 
-  handleLoggedIn() async {
-    if (await auth.currentUser() != null) {
-      await getCurrentUser();
-      if (this.mounted)
-        setState(() {
-          _isAuth = true;
-          pageLoading = false;
-        });
-      await configurePushNotifications();
-    } else {
-      Navigator.pushAndRemoveUntil(
-          context,
-          MaterialPageRoute(builder: (BuildContext context) => InitialPage()),
-          (Route<dynamic> route) => false);
-      if (this.mounted)
-        setState(() {
-          _isAuth = false;
-          pageLoading = false;
-        });
-    }
-  }
-
-  configurePushNotifications() async {
-    final user = await auth.currentUser();
-    if (Platform.isIOS) getIOSPermission();
-    _firebaseMessaging.getToken().then((token) {
-      usersRef.document(user.uid).updateData({
-        'androidNotificationToken': token,
-      });
-    });
-
-    _firebaseMessaging.configure(
-//      onLaunch: (Map<String, dynamic> message) async {},
-//      onResume: (Map<String, dynamic> message) async {},
-//      onMessage: (Map<String, dynamic> message) async {
-//        print('on message: $message\n');
-//        final String recipientId = message['data']['recipient'];
-//        final String body = message['notification']['body'];
-//        if (recipientId == user.uid) {
-//          kShowSnackbar(
-//            key: _scaffoldKey,
-//            text: body,
-//            backgroundColor: kColorBlack71,
-//          );
-//        }
-//        print('NOTIFICATION NOT SHOWN');
-//      },
-        );
-  }
-
-  getIOSPermission() {
-    _firebaseMessaging.requestNotificationPermissions(
-        IosNotificationSettings(sound: true, alert: true, badge: true));
-    _firebaseMessaging.onIosSettingsRegistered.listen((settings) {});
-  }
-
-  getCurrentUser() async {
-    final user = await auth.currentUser();
-    DocumentSnapshot doc = await usersRef.document(user.uid).get();
-    currentUser = User.fromDocument(doc);
-    if (blockedUids != null) {
-      currentUser.blockedUids = blockedUids;
-    }
-    fetchBlockedUsers();
-
-    if (currentUser.profileImageUrl == null) {
-      Navigator.pushAndRemoveUntil(
-          context,
-          MaterialPageRoute(
-              builder: (BuildContext context) =>
-                  PhotoAdd(uid: currentUser.uid)),
-          (Route<dynamic> route) => false);
-    }
-
+  isHideMe() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.setString('username', currentUser.username);
-    await prefs.setString('profileImageUrl', currentUser.profileImageUrl);
-    await prefs.setString('uid', currentUser.uid);
-    await prefs.setString('backgroundImageUrl', currentUser.backgroundImageUrl);
     if (this.mounted)
       setState(() {
         hideMe = prefs.getBool('hideMe') ?? false;
       });
-
-    await getStreamedLocation();
-    if (currentUser.hasAccountLinked) {
-      if (this.mounted)
-        setState(() {
-          _hasAccountLinked = true;
-        });
-    } else {
-      _hasAccountLinked = false;
-    }
-  }
-
-  fetchBlockedUsers() {
-    List<String> uids = [];
-    if (currentUser.blockedUserUids != null) {
-      currentUser.blockedUserUids.forEach((uid, val) {
-        uids.add(uid);
-        if (this.mounted)
-          setState(() {
-            uids.forEach((i) {
-              if (!blockedUids.contains(i)) {
-                this.blockedUids.add(i);
-              }
-            });
-          });
-      });
-    }
   }
 
   getCurrentLocation() async {
@@ -293,13 +187,13 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
       'position': myLocation.data,
       'profileImageUrl': currentUser.profileImageUrl,
       'uid': currentUser.uid,
-      'hasAccountLinked': _hasAccountLinked,
+      'hasAccountLinked': hasAccountLinked,
       'hideMe': hideMe,
     });
   }
 
   showStreamedCloseByUsers() {
-    return _hasAccountLinked
+    return hasAccountLinked
         ? streamCloseByUsers()
         : Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -330,11 +224,13 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
           );
   }
 
+  List<String> userUIDs = [];
+
   streamCloseByUsers() {
+    int displayedUserCount = 10;
     Geoflutterfire geo = Geoflutterfire();
-    Query collectionRef = userLocationsRef;
     Stream<List<DocumentSnapshot>> stream =
-        geo.collection(collectionRef: collectionRef).within(
+        geo.collection(collectionRef: userLocationsRef).within(
               center: geo.point(latitude: latitude, longitude: longitude),
               radius: 0.4,
               field: 'position',
@@ -344,8 +240,7 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
     return StreamBuilder(
         stream: stream,
         builder: (context, snapshot) {
-          if (!snapshot.hasData ||
-              snapshot.connectionState == ConnectionState.waiting) {
+          if (!snapshot.hasData) {
             return SizedBox();
           }
           List<User> usersAround = [];
@@ -369,7 +264,7 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
                 !hideMe &&
                 hasAccountLinked != null &&
                 hasAccountLinked &&
-                usersAround.length < 4 &&
+                usersAround.length < displayedUserCount &&
                 !blockedUids.contains(uid) &&
                 uid != adminUid) {
               usersAround.add(displayedUser);
@@ -378,6 +273,9 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
 
           List<GridTile> gridTiles = [];
           usersAround.forEach((user) {
+            if (!userUIDs.contains(user.uid)) {
+              userUIDs.add(user.uid);
+            }
             gridTiles.add(GridTile(
                 child: UserResult(user: user, locationLabel: 'Nearby')));
           });
@@ -388,44 +286,47 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
                 Padding(
                   padding: EdgeInsets.only(
                       left: 8.0, top: 12.0, bottom: 8.0, right: 8.0),
-                  child: Text('People Nearby',
+                  child: Text('Around You',
                       style: kAppBarTextStyle.copyWith(fontSize: 16.0)),
                 ),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: <Widget>[
-                    GridView.count(
-                      physics: NeverScrollableScrollPhysics(),
-                      padding: EdgeInsets.only(left: 1.0, right: 1.0),
-                      crossAxisCount: 4,
-                      childAspectRatio: 1.0,
-                      mainAxisSpacing: 1.0,
-                      crossAxisSpacing: 1.0,
-                      shrinkWrap: true,
-                      children: gridTiles,
+                    Container(
+                      height: 120,
+                      child: GridView.count(
+                        padding: EdgeInsets.only(left: 8, right: 8),
+                        crossAxisCount: 1,
+                        childAspectRatio: 1.5,
+                        mainAxisSpacing: 12.0,
+                        crossAxisSpacing: 1.0,
+                        scrollDirection: Axis.horizontal,
+                        children: gridTiles,
+                      ),
                     ),
-                    users.length > 4
-                        ? FlatButton.icon(
-                            icon: Icon(
-                              FontAwesomeIcons.chevronCircleRight,
-                              color: kColorBlack71,
-                              size: 20.0,
+                    users.length > displayedUserCount
+                        ? GestureDetector(
+                            child: Padding(
+                              padding: EdgeInsets.only(top: 8.0, right: 4.0),
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                mainAxisAlignment: MainAxisAlignment.end,
+                                children: <Widget>[
+                                  Text('See All',
+                                      style: kAppBarTextStyle.copyWith(
+                                          fontSize: 16)),
+                                  SizedBox(width: 4.0),
+                                  Icon(FontAwesomeIcons.chevronRight, size: 14),
+                                ],
+                              ),
                             ),
-                            // use
-                            onPressed: () => Navigator.push(
+                            onTap: () => Navigator.push(
                                 context,
                                 MaterialPageRoute(
                                     builder: (context) => AllUsersCloseBy(
                                           latitude: latitude,
                                           longitude: longitude,
                                         ))),
-                            label: Text(
-                              'Within 1/4 mile',
-                              style: kDefaultTextStyle.copyWith(
-                                  fontWeight: FontWeight.w300, fontSize: 16.0),
-                            ),
-                            splashColor: Colors.transparent,
-                            highlightColor: kColorExtraLightGray,
                           )
                         : SizedBox(),
                   ],
@@ -443,7 +344,68 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
               ),
             );
           }
-        });
+        },
+    );
+  }
+
+  fetchNearbyLatest() {
+    if (userUIDs.isNotEmpty) {
+      return StreamBuilder(
+        stream: updateRef
+            .document(userUIDs.last)
+            .collection('posts')
+            .orderBy('creationDate', descending: true)
+            .where('type', isEqualTo: 'photo')
+            .snapshots(),
+        builder: (context, snapshot) {
+          if (!snapshot.hasData) {
+            return circularProgress();
+          }
+          final updates = snapshot.data.documents;
+          List<UpdatePost> displayedUpdates = [];
+          for (var post in updates) {
+
+            final String photoUrl = post.data['photoUrl'];
+            final String title = post.data['title'];
+            final int creationDate = post.data['creationDate'];
+            final String type = post.data['type'];
+            final String id = post.data['id'];
+            final String uid = post.data['uid'];
+            final dynamic likes = post.data['likes'];
+
+            final displayedPost = UpdatePost(
+              photoUrl: photoUrl,
+              title: title,
+              creationDate: creationDate,
+              type: type,
+              uid: uid,
+              id: id,
+              displayName: 'name',
+              likes: likes ?? {},
+              width: 105,
+            );
+            displayedUpdates
+                .add(displayedPost);
+          }
+          if (displayedUpdates.isNotEmpty) {
+            return Column(children: displayedUpdates);
+          } else {
+            return Center(
+              child: Text(
+                'No Posts Yet',
+                style: kDefaultTextStyle,
+              ),
+            );
+          }
+        },
+      );
+    } else {
+      return Container(
+        height: 50,
+        width: 200,
+        color: kColorDarkBlue,
+      );
+    }
   }
 
   enabledLocationFetchUsers() {
@@ -477,7 +439,7 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
   }
 
   showStreamedCloseByChats() {
-    return _hasAccountLinked ? streamCloseByChats() : SizedBox();
+    return hasAccountLinked ? streamCloseByChats() : SizedBox();
   }
 
   streamCloseByChats() {
@@ -621,218 +583,16 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
         });
   }
 
-  getUserInfo(String uid) {
-    usersRef.document(uid).get().then((snapshot) {
-      String username = snapshot.data['username'];
-      return username;
-    });
-  }
-
-  buildWeeklyTopViewed() {
-    double screenHeight = MediaQuery.of(context).size.height;
-    return StreamBuilder(
-      stream: usersRef
-          .where('weeklyVisitsCount', isGreaterThan: 0)
-          .orderBy('weeklyVisitsCount', descending: true)
-          .limit(10)
-          .snapshots(),
-      builder: (context, snapshot) {
-        if (!snapshot.hasData) {
-          return circularProgress();
-        }
-        List<User> topUsers = [];
-        final users = snapshot.data.documents;
-        for (var user in users) {
-          final imageUrl = user.data['profileImageUrl'];
-          final uid = user.data['uid'];
-          final hasAccountLinked = user.data['hasAccountLinked'];
-          final city = user.data['city'];
-          final username = user.data['username'];
-
-          final displayedUser = User(
-            profileImageUrl: imageUrl,
-            uid: uid,
-            city: city,
-            hasAccountLinked: hasAccountLinked,
-            username: username,
-          );
-          if (hasAccountLinked != null &&
-              hasAccountLinked &&
-              !blockedUids.contains(uid)) {
-            topUsers.add(displayedUser);
-          }
-        }
-        List<GridTile> gridTiles = [];
-        topUsers.forEach((user) {
-          gridTiles.add(
-            GridTile(
-              child: UserResult(
-                user: user,
-                locationLabel: user.city ?? 'Around',
-              ),
-            ),
-          );
-        });
-        if (topUsers.isNotEmpty) {
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              Padding(
-                padding: EdgeInsets.only(
-                    left: 8.0, top: 12.0, bottom: 8.0, right: 8.0),
-                child: Text('Most Viewed This Week',
-                    style: kAppBarTextStyle.copyWith(fontSize: 16.0)),
-              ),
-//              Container(
-//                height: 150,
-//                child: GridView.count(
-//                  padding: EdgeInsets.only(left: 8, right: 8),
-//                  crossAxisCount: 1,
-//                  childAspectRatio: 1.33,
-//                  mainAxisSpacing: 2.5,
-//                  crossAxisSpacing: 1.0,
-//                  physics: AlwaysScrollableScrollPhysics(),
-//                  scrollDirection: Axis.horizontal,
-//                  children: gridTiles,
-//                ),
-//              ),
-              CarouselSlider(
-                height: screenHeight / 1.3,
-                items: gridTiles,
-                viewportFraction: 0.9,
-              ),
-//              Center(
-//                child: CircleList(
-//                  origin: Offset(0, 0),
-//                  children: gridTiles,
-//                ),
-//              ),
-            ],
-          );
-        } else {
-          return buildTotalTopViewed();
-        }
-      },
-    );
-  }
-
-  buildTotalTopViewed() {
-    return FutureBuilder(
-      future: usersRef
-          .orderBy('totalVisitsCount', descending: true)
-          .where('totalVisitsCount', isGreaterThan: 0)
-          .limit(10)
-          .getDocuments(),
-      builder: (context, snapshot) {
-        if (!snapshot.hasData) {
-          return circularProgress();
-        }
-        List<User> topUsers = [];
-        final users = snapshot.data.documents;
-        for (var user in users) {
-          final imageUrl = user.data['profileImageUrl'];
-          final uid = user.data['uid'];
-          final hasAccountLinked = user.data['hasAccountLinked'];
-          final city = user.data['city'];
-
-          final displayedUser = User(
-              profileImageUrl: imageUrl,
-              uid: uid,
-              city: city,
-              hasAccountLinked: hasAccountLinked);
-          if (hasAccountLinked != null &&
-              hasAccountLinked &&
-              !blockedUids.contains(uid)) {
-            topUsers.add(displayedUser);
-          }
-        }
-        List<GridTile> gridTiles = [];
-        topUsers.forEach((user) {
-          if (user.hasAccountLinked != null &&
-              user.hasAccountLinked &&
-              !blockedUids.contains(user.uid)) {
-            gridTiles.add(GridTile(
-                child: UserResult(user: user, locationLabel: user.city)));
-          }
-        });
-        if (topUsers.isNotEmpty) {
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              Padding(
-                padding: EdgeInsets.only(
-                    left: 8.0, top: 12.0, bottom: 8.0, right: 8.0),
-                child: Text('Top Viewed All Time',
-                    style: kAppBarTextStyle.copyWith(fontSize: 16.0)),
-              ),
-              Container(
-                height: 150.0,
-                child: GridView.count(
-                  padding: EdgeInsets.only(left: 8, right: 8),
-                  crossAxisCount: 1,
-                  childAspectRatio: 1.33,
-                  mainAxisSpacing: 2.5,
-                  crossAxisSpacing: 1.0,
-                  physics: AlwaysScrollableScrollPhysics(),
-                  scrollDirection: Axis.horizontal,
-                  children: gridTiles,
-                ),
-              ),
-            ],
-          );
-        } else {
-          return Container(
-            height: 75.0,
-            child: Center(
-              child: Text(
-                'Nobody To Be Displayed',
-                style: kAppBarTextStyle,
-              ),
-            ),
-          );
-        }
-      },
-    );
-  }
-
   Widget build(BuildContext context) {
     super.build(context);
     SystemChrome.setEnabledSystemUIOverlays([SystemUiOverlay.top]);
     return Scaffold(
       key: _scaffoldKey,
       backgroundColor: kColorOffWhite,
-      appBar: AppBar(
-        titleSpacing: 8,
-        brightness: Brightness.light,
-        centerTitle: false,
-        elevation: 2.0,
-        backgroundColor: kColorOffWhite,
-        title: Image.asset(
-          'images/spredTop.png',
-          scale: 11,
-        ),
-        automaticallyImplyLeading: false,
-        actions: <Widget>[
-          Padding(
-            padding: EdgeInsets.all(10.0),
-            child: GestureDetector(
-              child: _isAuth
-                  ? cachedUserResultImage(currentUser.profileImageUrl, 5, 35)
-                  : Icon(FontAwesomeIcons.userAlt, color: kColorLightGray),
-              onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => Profile(
-                          user: currentUser,
-                          locationLabel: currentUser.city ?? 'Here'))),
-            ),
-          )
-        ],
-      ),
       body: SafeArea(
         child: Theme(
           data: kTheme(context),
-          child: pageLoading
+          child: _locationLoading
               ? circularProgress()
               : SmartRefresher(
                   enablePullDown: true,
@@ -856,8 +616,12 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
                   ),
                   controller: _refreshController,
                   onRefresh: _onRefresh,
-                  child: SingleChildScrollView(
-                    child: buildWeeklyTopViewed()
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      enabledLocationFetchUsers(),
+                      fetchNearbyLatest()
+                    ],
                   ),
                 ),
         ),

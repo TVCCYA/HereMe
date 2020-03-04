@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:hereme_flutter/home/bottom_bar.dart';
 import 'package:hereme_flutter/home/home.dart';
 import 'package:hereme_flutter/user_profile/profile_image_full_screen.dart';
 import 'package:hereme_flutter/utils/reusable_bottom_sheet.dart';
@@ -11,6 +12,7 @@ import 'package:time_ago_provider/time_ago_provider.dart';
 
 import '../constants.dart';
 
+final reportedPostsRef = Firestore.instance.collection('reportedPosts');
 // ignore: must_be_immutable
 class UpdatePost extends StatelessWidget {
   final String currentUserId = currentUser.uid;
@@ -25,6 +27,7 @@ class UpdatePost extends StatelessWidget {
   Map likes;
   bool isLiked;
   int likeCount;
+  int width;
 
   UpdatePost({
     this.photoUrl,
@@ -35,6 +38,7 @@ class UpdatePost extends StatelessWidget {
     this.type,
     this.displayName,
     this.likes,
+    this.width,
   });
 
   factory UpdatePost.fromDocument(DocumentSnapshot doc) {
@@ -57,7 +61,9 @@ class UpdatePost extends StatelessWidget {
         count++;
       }
     });
-    return count == 0 ? NumberFormat.compact().format(0) : NumberFormat.compact().format(count);
+    return count == 0
+        ? '0'
+        : NumberFormat.compact().format(count);
   }
 
   String date() {
@@ -108,17 +114,7 @@ class UpdatePost extends StatelessWidget {
           iconData: FontAwesomeIcons.flag,
           color: kColorRed,
           onTap: () async {
-//          _reasonToReport(context);
-          },
-        ),
-      );
-      sheets.add(
-        ReusableBottomActionSheetListTile(
-          title: 'Block',
-          color: kColorRed,
-          iconData: FontAwesomeIcons.ban,
-          onTap: () async {
-//          kConfirmBlock(context, displayName, uid);
+            _reasonToReport(context);
           },
         ),
       );
@@ -133,78 +129,89 @@ class UpdatePost extends StatelessWidget {
     kActionSheet(context, sheets);
   }
 
-  buildTextPost(BuildContext context, double screenWidth) {
-    return GestureDetector(
-      onTap: () => _settingsActionSheet(context, false),
-      child: Padding(
-        padding: EdgeInsets.only(right: 2.0),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: <Widget>[
-            Container(
-              width: screenWidth - 82,
-              child: RichText(
-                text: TextSpan(
-                  children: [
-                    TextSpan(
-                      text: '$displayName: ',
-                      style: kDefaultTextStyle.copyWith(
-                          color: Color.fromRGBO(
-                              currentUser.red ?? 71,
-                              currentUser.green ?? 71,
-                              currentUser.blue ?? 71,
-                              1.0),
-                          fontWeight: FontWeight.w700),
-                    ),
-                    TextSpan(
-                      text: title,
-                      style: kDefaultTextStyle,
-                    ),
-                    TextSpan(
-                      text: ' ' + date(),
-                      style: kDefaultTextStyle.copyWith(fontSize: 12.0, color: kColorLightGray),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              mainAxisSize: MainAxisSize.max,
-              children: <Widget>[
-                GestureDetector(
-                  child: Icon(!isLiked ? FontAwesomeIcons.heart : FontAwesomeIcons.solidHeart,
-                      color: !isLiked ? kColorLightGray : kColorRed, size: 16),
-                  onTap: () => handleLikePost(),
-                ),
-                Text('${getLikeCount(likes)}', style: kDefaultTextStyle.copyWith(color: !isLiked ? kColorLightGray : kColorRed, fontSize: 12.0))
-              ],
-            ),
-          ],
-        ),
+  _reasonToReport(BuildContext context) {
+    Navigator.pop(context);
+    List<ReusableBottomActionSheetListTile> sheets = [];
+    sheets.add(
+      ReusableBottomActionSheetListTile(
+        iconData: FontAwesomeIcons.mehRollingEyes,
+        title: 'Spam',
+        color: kColorRed,
+        onTap: () {
+          _reportUser(context, 'Spam');
+          Navigator.pop(context);
+        },
       ),
+    );
+    sheets.add(
+      ReusableBottomActionSheetListTile(
+        iconData: FontAwesomeIcons.angry,
+        title: 'Innappropriate',
+        color: kColorRed,
+        onTap: () {
+          _reportUser(context, 'Innappropriate');
+          Navigator.pop(context);
+        },
+      ),
+    );
+    sheets.add(
+      ReusableBottomActionSheetListTile(
+        iconData: FontAwesomeIcons.times,
+        title: 'Cancel',
+        onTap: () => Navigator.pop(context),
+      ),
+    );
+    kActionSheet(context, sheets);
+  }
+
+  _reportUser(BuildContext context, String reason) {
+    bool canReport = uid != null;
+    canReport
+        ? reportedPostsRef.document(uid).setData({
+      'uid': uid,
+      'displayName': displayName,
+      'reason': reason,
+      'reportedByUid': currentUser.uid,
+    }).whenComplete(() {
+      kShowAlert(
+        context: context,
+        title: 'Successfully Reported',
+        desc: 'Thank you for making Spred a better place',
+        buttonText: 'Dismiss',
+        onPressed: () => Navigator.pop(context),
+        color: kColorBlue,
+      );
+    })
+        : kShowAlert(
+      context: context,
+      title: 'Whoops',
+      desc: 'Unable to report at this time',
+      buttonText: 'Try Again',
+      onPressed: () => Navigator.pop(context),
+      color: kColorRed,
     );
   }
 
-  buildPhotoPost(BuildContext context, double screenWidth) {
-    final double screenHeight = MediaQuery.of(context).size.height;
-    return Column(
-      children: <Widget>[
-        GestureDetector(
-          onTap: () => _settingsActionSheet(context, true),
-          child: Padding(
+  buildTextPost(BuildContext context, double screenWidth) {
+    return GestureDetector(
+      onTap: () => _settingsActionSheet(context, false),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: <Widget>[
+          Padding(
             padding: EdgeInsets.only(right: 4.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: <Widget>[
-                Container(
-                  width: screenWidth - 82,
-                  child: RichText(
+            child: Container(
+              width: screenWidth - width,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: <Widget>[
+                  RichText(
                     text: TextSpan(
                       children: [
                         TextSpan(
-                          text:
-                              '$displayName: ',
+                          text: '$displayName: ',
                           style: kDefaultTextStyle.copyWith(
                               color: Color.fromRGBO(
                                   currentUser.red ?? 71,
@@ -217,21 +224,125 @@ class UpdatePost extends StatelessWidget {
                           text: title,
                           style: kDefaultTextStyle,
                         ),
-                        TextSpan(
-                          text: ' ' + date(),
-                          style: kDefaultTextStyle.copyWith(fontSize: 12.0, color: kColorLightGray),
-                        ),
                       ],
                     ),
                   ),
-                ),
-                GestureDetector(
-                  child: Icon(!isLiked ? FontAwesomeIcons.heart : FontAwesomeIcons.solidHeart,
-                      color: !isLiked ? kColorLightGray : kColorRed, size: 16),
-                  onTap: () => handleLikePost(),
-                ),
-              ],
+                  Text(
+                    date(),
+                    style: kDefaultTextStyle.copyWith(
+                        fontSize: 12.0, color: kColorLightGray),
+                  ),
+                ],
+              ),
             ),
+          ),
+          Padding(
+            padding: EdgeInsets.only(right: 2.0),
+            child: Container(
+              width: 35,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: <Widget>[
+                  GestureDetector(
+                    child: Icon(
+                        !isLiked
+                            ? FontAwesomeIcons.heart
+                            : FontAwesomeIcons.solidHeart,
+                        color: !isLiked ? kColorLightGray : kColorRed,
+                        size: 16.0),
+                    onTap: () => handleLikePost(),
+                  ),
+                  uid == currentUserId ? Text(
+                    '${getLikeCount(likes)}',
+                    style: kDefaultTextStyle.copyWith(
+                        color: !isLiked ? kColorLightGray : kColorRed,
+                        fontSize: 12.0),
+                  ) : SizedBox(),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  buildPhotoPost(BuildContext context, double screenWidth) {
+    final double screenHeight = MediaQuery.of(context).size.height;
+    return Column(
+      children: <Widget>[
+        GestureDetector(
+          onTap: () => _settingsActionSheet(context, true),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: <Widget>[
+              Padding(
+                padding: EdgeInsets.only(right: 4.0),
+                child: Container(
+                  width: screenWidth - width,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children: <Widget>[
+                      RichText(
+                        text: TextSpan(
+                          children: [
+                            TextSpan(
+                              text: '$displayName: ',
+                              style: kDefaultTextStyle.copyWith(
+                                  color: Color.fromRGBO(
+                                      currentUser.red ?? 71,
+                                      currentUser.green ?? 71,
+                                      currentUser.blue ?? 71,
+                                      1.0),
+                                  fontWeight: FontWeight.w700),
+                            ),
+                            TextSpan(
+                              text: title,
+                              style: kDefaultTextStyle,
+                            ),
+                          ],
+                        ),
+                      ),
+                      Text(
+                        date(),
+                        style: kDefaultTextStyle.copyWith(
+                            fontSize: 12.0, color: kColorLightGray),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              Padding(
+                padding: EdgeInsets.only(right: 2.0),
+                child: Container(
+                  width: 35,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: <Widget>[
+                      GestureDetector(
+                        child: Icon(
+                            !isLiked
+                                ? FontAwesomeIcons.heart
+                                : FontAwesomeIcons.solidHeart,
+                            color: !isLiked ? kColorLightGray : kColorRed,
+                            size: 16.0),
+                        onTap: () => handleLikePost(),
+                      ),
+                      uid == currentUserId ? Text(
+                        '${getLikeCount(likes)}',
+                        style: kDefaultTextStyle.copyWith(
+                            color: !isLiked ? kColorLightGray : kColorRed,
+                            fontSize: 12.0),
+                      ) : SizedBox(),
+                    ],
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
         SizedBox(height: 8.0),
@@ -259,16 +370,16 @@ class UpdatePost extends StatelessWidget {
           .collection('posts')
           .document(id)
           .updateData({'likes.$currentUserId': false});
-        isLiked = false;
-        likes[currentUserId] = false;
+      isLiked = false;
+      likes[currentUserId] = false;
     } else if (!_isLiked) {
       updateRef
           .document(uid)
           .collection('posts')
           .document(id)
           .updateData({'likes.$currentUserId': true});
-        isLiked = true;
-        likes[currentUserId] = true;
+      isLiked = true;
+      likes[currentUserId] = true;
     }
   }
 
@@ -277,29 +388,33 @@ class UpdatePost extends StatelessWidget {
       alignment: Alignment.centerLeft,
       child: Padding(
         padding: EdgeInsets.only(right: 4.0),
-        child: RichText(
-          text: TextSpan(
-            children: [
-              TextSpan(
-                text: '$displayName: ',
-                style: kDefaultTextStyle.copyWith(
-                    color: Color.fromRGBO(
-                        currentUser.red ?? 71,
-                        currentUser.green ?? 71,
-                        currentUser.blue ?? 71,
-                        1.0),
-                    fontWeight: FontWeight.w700),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: <Widget>[
+            RichText(
+              text: TextSpan(
+                children: [
+                  TextSpan(
+                    text: '$displayName: ',
+                    style: kDefaultTextStyle.copyWith(
+                        color: Color.fromRGBO(currentUser.red ?? 71,
+                            currentUser.green ?? 71, currentUser.blue ?? 71, 1.0),
+                        fontWeight: FontWeight.w700),
+                  ),
+                  TextSpan(
+                    text: '* linked a new account *',
+                    style: kDefaultTextStyle.copyWith(fontStyle: FontStyle.italic),
+                  ),
+                ],
               ),
-              TextSpan(
-                text: '* linked a new account *',
-                style: kDefaultTextStyle.copyWith(fontStyle: FontStyle.italic),
-              ),
-              TextSpan(
-                text: ' ' + date(),
-                style: kDefaultTextStyle.copyWith(fontSize: 12.0, color: kColorLightGray),
-              ),
-            ],
-          ),
+            ),
+            Text(
+              ' ' + date(),
+              style: kDefaultTextStyle.copyWith(
+                  fontSize: 12.0, color: kColorLightGray),
+            ),
+          ],
         ),
       ),
     );
@@ -324,3 +439,4 @@ class UpdatePost extends StatelessWidget {
     return determineFeedItem(context, screenWidth);
   }
 }
+

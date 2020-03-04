@@ -1,4 +1,5 @@
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'dart:io';
 import 'dart:async';
@@ -37,6 +38,7 @@ import 'package:hereme_flutter/home/home.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:uuid/uuid.dart';
 import 'package:video_player/video_player.dart';
+import 'package:hereme_flutter/home/bottom_bar.dart';
 
 final reportedUsersRef = Firestore.instance.collection('reportedUsers');
 
@@ -96,16 +98,9 @@ class _ProfileState extends State<Profile> {
     } else {
       checkIfFollowing();
     }
-
-//    initializeFavVid();
   }
 
   initializeFavVid() {
-
-    print(videoUrl);
-
-//    _calculateImageDimension(videoUrl).then((size) => print("size = $size"));
-
     _controller = VideoPlayerController.network(
       videoUrl,
     );
@@ -473,6 +468,7 @@ class _ProfileState extends State<Profile> {
                   id: id,
                   displayName: displayName ?? username,
                   likes: likes ?? {},
+                  width: 105,
                 );
                 displayedUpdates
                     .add(displayedPost);
@@ -564,6 +560,7 @@ class _ProfileState extends State<Profile> {
               id: id,
               displayName: displayName ?? username,
               likes: likes ?? {},
+              width: 105,
             );
             displayedUpdates
                 .add(displayedPost);
@@ -783,13 +780,40 @@ class _ProfileState extends State<Profile> {
           height: height,
           width: squareWidth,
 //          color: kColorExtraLightGray,
-          child: videoUrl == null ? FlatButton(
+          child: videoUrl == null || videoUrl == '' ? FlatButton(
             child: Icon(FontAwesomeIcons.photoVideo, size: 25, color: kColorLightGray),
+            color: kColorExtraLightGray,
             splashColor: Colors.white,
             highlightColor: Colors.transparent,
             onPressed: () => _photoVideoActionSheet(context),
-          ) : Container (
-            child: buildVideo()
+          ) : new Stack(
+            children: <Widget> [
+              Container(
+                height: height,
+                width: squareWidth,
+                child: buildVideo(),
+              ),
+              Container(
+                  height: height,
+                  width: squareWidth,
+                alignment: Alignment(-squareWidth * .015, -1.0),
+                child: FlatButton(
+                  child: Icon(FontAwesomeIcons.cog, color: kColorLightGray),
+                  onPressed: () => _photoVideoActionSheet(context),
+                )
+              ),
+              Container(
+                  height: height,
+                  width: squareWidth,
+                  alignment: Alignment(squareWidth * .015, -1.0),
+                  child: FlatButton(
+                    child: vidVolumeIcon(),
+                    onPressed: () => muteVideo(),
+                    splashColor: Colors.transparent,
+                    highlightColor: Colors.transparent,
+                  )
+              ),
+            ],
           ),
         ),
         SizedBox(height: 12),
@@ -806,6 +830,21 @@ class _ProfileState extends State<Profile> {
         ),
       ],
     );
+  }
+
+  muteVideo() {
+    setState(() {
+      _controller.value.volume == 0.0 ? _controller.setVolume(0.5) : _controller.setVolume(0.0);
+      vidVolumeIcon();
+    });
+  }
+
+  Icon vidVolumeIcon() {
+    if(_controller.value.volume == 0.0) {
+      return Icon(FontAwesomeIcons.volumeMute, size: 25, color: kColorLightGray);
+    } else {
+      return Icon(FontAwesomeIcons.volumeUp, size: 25, color: kColorLightGray);
+    }
   }
 
   buildLeftFavorites(double screenWidth) {
@@ -899,6 +938,18 @@ class _ProfileState extends State<Profile> {
 
   _photoVideoActionSheet(BuildContext context) {
     List<ReusableBottomActionSheetListTile> sheets = [];
+    if(videoUrl != null && videoUrl != '') {
+      sheets.add(
+        ReusableBottomActionSheetListTile(
+          title: 'Delete Video',
+          iconData: FontAwesomeIcons.video, color: kColorRed,
+          onTap: () {
+            _deleteVideo();
+            Navigator.pop(context);
+          },
+        ),
+      );
+    }
     sheets.add(
       ReusableBottomActionSheetListTile(
         title: 'Add Photo',
@@ -926,6 +977,27 @@ class _ProfileState extends State<Profile> {
       ),
     );
     kActionSheet(context, sheets);
+  }
+
+  Future _deleteVideo() async {
+    final FirebaseStorage _storage = FirebaseStorage.instance;
+    final userReference = Firestore.instance.collection('users').document(currentUserUid);
+
+    if (this.mounted)
+      setState(() {
+        showSpinner = true;
+      });
+
+    _storage.ref().child('profile_video/$currentUserUid').delete();
+
+    userReference.updateData({'videoUrl': ''}).catchError((e) => print(e)).whenComplete(() {
+      if (this.mounted)
+        setState(() {
+          showSpinner = false;
+          videoUrl = '';
+        });
+    }
+    );
   }
 
   _favUserActionSheet(BuildContext context) {
@@ -1393,9 +1465,7 @@ class _ProfileState extends State<Profile> {
   _openVideoLibrary() async {
     await ImagePicker.pickVideo(source: ImageSource.gallery).then(
           (video) {
-            var file = File(video.toString());
-            print(file.lengthSync());
-            _uploadFavVideoToFirebase(video);
+            if(video != null)  _uploadFavVideoToFirebase(video);
       },
     );
   }
@@ -1430,12 +1500,12 @@ class _ProfileState extends State<Profile> {
         };
 
         usersRef.document(currentUserUid).updateData(data).whenComplete(() {
-          print('Background Image Added');
           if (this.mounted)
             setState(() {
               videoUrl = downloadUrl;
               showSpinner = false;
             });
+          initializeFavVid();
         }).catchError(
               (e) => kShowAlert(
             context: context,
@@ -1817,6 +1887,7 @@ class _ProfileState extends State<Profile> {
         'totalVisitsCount': user.totalVisitsCount + 1,
       });
     });
+    if(videoUrl != null) initializeFavVid();
     _recentProfileVisitUpdate();
   }
 
@@ -1881,7 +1952,7 @@ class _ProfileState extends State<Profile> {
         backgroundImageUrl = background;
         videoUrl = currentUser.videoUrl;
       });
-    initializeFavVid();
+    if(videoUrl != null || videoUrl != '') initializeFavVid();
   }
 
   _launchUrl(String accountUsername, String iconString, String url) async {
@@ -1938,6 +2009,7 @@ class _ProfileState extends State<Profile> {
   void deactivate() {
     super.deactivate();
     _scaffoldKey.currentState.hideCurrentSnackBar();
+    if(_controller != null) _controller.pause();
   }
 
 //  @override
