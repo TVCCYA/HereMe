@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:circle_list/circle_list.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -21,6 +22,7 @@ import 'package:hereme_flutter/settings/choose_account.dart';
 import 'package:hereme_flutter/user_profile/profile.dart';
 import 'package:hereme_flutter/utils/custom_image.dart';
 import 'package:hereme_flutter/utils/reusable_bottom_sheet.dart';
+import 'package:hereme_flutter/widgets/update_post.dart';
 import 'package:hereme_flutter/widgets/user_result.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
@@ -30,53 +32,164 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:hereme_flutter/constants.dart';
 import 'package:flushbar/flushbar.dart';
-
 import 'bottom_bar.dart';
 
 class Home extends StatefulWidget {
-  final double latitude;
-  final double longitude;
   final List<String> blockedUids;
   final bool hasAccountLinked;
-  final bool hideMe;
-  final bool locationEnabled;
-  final bool pageLoading;
 
-  Home({this.latitude, this.longitude, this.blockedUids, this.hasAccountLinked, this.hideMe, this.locationEnabled, this.pageLoading});
+  Home({this.blockedUids, this.hasAccountLinked});
 
   @override
   _HomeState createState() => _HomeState(
-    latitude: this.latitude,
-    longitude: this.longitude,
-    blockedUids: this.blockedUids,
-    hasAccountLinked: this.hasAccountLinked,
-    hideMe: this.hideMe,
-    locationEnabled: this.locationEnabled,
-    pageLoading: this.pageLoading,
-  );
+        blockedUids: this.blockedUids,
+        hasAccountLinked: this.hasAccountLinked,
+      );
 }
 
 class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
-  final double latitude;
-  final double longitude;
   final List<String> blockedUids;
   final bool hasAccountLinked;
-  final bool hideMe;
-  final bool locationEnabled;
-  final bool pageLoading;
 
-  _HomeState({this.latitude, this.longitude, this.blockedUids, this.hasAccountLinked, this.hideMe, this.locationEnabled, this.pageLoading});
+  _HomeState({this.blockedUids, this.hasAccountLinked});
+
+  bool get wantKeepAlive => true;
 
   final _scaffoldKey = GlobalKey<ScaffoldState>();
   RefreshController _refreshController =
       RefreshController(initialRefresh: false);
 
-  bool get wantKeepAlive => true;
+  bool hideMe = false;
+  bool pageLoading = true;
+
+  double latitude;
+  double longitude;
+  bool _locationEnabled = false;
+  bool _locationLoading = true;
+
+  var geolocator = Geolocator();
+  StreamSubscription<Position> positionStream;
+  Position position;
+
+  @override
+  void initState() {
+    super.initState();
+  }
+
+  @override
+  void didChangeDependencies() async {
+    super.didChangeDependencies();
+    isHideMe();
+    if (hideMe) {
+      _locationEnabled = false;
+    } else {
+      await getCurrentLocation();
+    }
+    print(userUIDs.length);
+  }
+
+  @override
+  void dispose() {
+    if (positionStream != null) {
+      positionStream.cancel();
+    }
+    super.dispose();
+  }
 
   @override
   void deactivate() {
     super.deactivate();
     _scaffoldKey.currentState.hideCurrentSnackBar();
+  }
+
+  isHideMe() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    if (this.mounted)
+      setState(() {
+        hideMe = prefs.getBool('hideMe') ?? false;
+      });
+  }
+
+  getCurrentLocation() async {
+    GeolocationStatus geolocationStatus =
+        await Geolocator().checkGeolocationPermissionStatus();
+
+    if (geolocationStatus != GeolocationStatus.granted || hideMe) {
+      if (this.mounted)
+        setState(() {
+          _locationLoading = false;
+          _locationEnabled = false;
+        });
+    } else {
+      Position position = await Geolocator()
+          .getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
+      if (this.mounted)
+        setState(() {
+          _locationLoading = false;
+          _locationEnabled = true;
+          latitude = position.latitude;
+          longitude = position.longitude;
+        });
+      await setGeoFireData();
+      await setUserCityInFirestore();
+    }
+  }
+
+  getStreamedLocation() async {
+    GeolocationStatus geolocationStatus =
+        await Geolocator().checkGeolocationPermissionStatus();
+    geolocationStatus = GeolocationStatus.granted;
+
+    if (geolocationStatus != GeolocationStatus.granted) {
+      if (this.mounted)
+        setState(() {
+          _locationLoading = false;
+          _locationEnabled = false;
+        });
+    } else {
+      LocationOptions locationOptions = LocationOptions(
+        accuracy: LocationAccuracy.high,
+        distanceFilter: 175, //updates every 0.1 miles
+      );
+      positionStream = geolocator
+          .getPositionStream(locationOptions)
+          .listen((Position newPosition) async {
+        if (this.mounted)
+          setState(() {
+            _locationLoading = false;
+            _locationEnabled = true;
+            latitude = newPosition.latitude;
+            longitude = newPosition.longitude;
+            currentLatitude = newPosition.latitude;
+            currentLongitude = newPosition.longitude;
+          });
+        await setGeoFireData();
+        await setUserCityInFirestore();
+      });
+    }
+  }
+
+  setUserCityInFirestore() async {
+    List<Placemark> placemark =
+        await geolocator.placemarkFromCoordinates(latitude, longitude);
+    placemark.forEach((mark) {
+      usersRef.document(currentUser.uid).updateData({
+        'city': mark.locality,
+      });
+    });
+  }
+
+  setGeoFireData() async {
+    Geoflutterfire geo = Geoflutterfire();
+    GeoFirePoint myLocation =
+        geo.point(latitude: latitude, longitude: longitude);
+    await userLocationsRef.document(currentUser.uid).setData({
+      'position': myLocation.data,
+      'profileImageUrl': currentUser.profileImageUrl,
+      'uid': currentUser.uid,
+      'hasAccountLinked': hasAccountLinked,
+      'hideMe': hideMe,
+    });
   }
 
   showStreamedCloseByUsers() {
@@ -111,11 +224,13 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
           );
   }
 
+  List<String> userUIDs = [];
+
   streamCloseByUsers() {
+    int displayedUserCount = 10;
     Geoflutterfire geo = Geoflutterfire();
-    Query collectionRef = userLocationsRef;
     Stream<List<DocumentSnapshot>> stream =
-        geo.collection(collectionRef: collectionRef).within(
+        geo.collection(collectionRef: userLocationsRef).within(
               center: geo.point(latitude: latitude, longitude: longitude),
               radius: 0.4,
               field: 'position',
@@ -125,8 +240,7 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
     return StreamBuilder(
         stream: stream,
         builder: (context, snapshot) {
-          if (!snapshot.hasData ||
-              snapshot.connectionState == ConnectionState.waiting) {
+          if (!snapshot.hasData) {
             return SizedBox();
           }
           List<User> usersAround = [];
@@ -150,7 +264,7 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
                 !hideMe &&
                 hasAccountLinked != null &&
                 hasAccountLinked &&
-                usersAround.length < 4 &&
+                usersAround.length < displayedUserCount &&
                 !blockedUids.contains(uid) &&
                 uid != adminUid) {
               usersAround.add(displayedUser);
@@ -159,6 +273,9 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
 
           List<GridTile> gridTiles = [];
           usersAround.forEach((user) {
+            if (!userUIDs.contains(user.uid)) {
+              userUIDs.add(user.uid);
+            }
             gridTiles.add(GridTile(
                 child: UserResult(user: user, locationLabel: 'Nearby')));
           });
@@ -169,44 +286,47 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
                 Padding(
                   padding: EdgeInsets.only(
                       left: 8.0, top: 12.0, bottom: 8.0, right: 8.0),
-                  child: Text('People Nearby',
+                  child: Text('Around You',
                       style: kAppBarTextStyle.copyWith(fontSize: 16.0)),
                 ),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: <Widget>[
-                    GridView.count(
-                      physics: NeverScrollableScrollPhysics(),
-                      padding: EdgeInsets.only(left: 1.0, right: 1.0),
-                      crossAxisCount: 4,
-                      childAspectRatio: 1.0,
-                      mainAxisSpacing: 1.0,
-                      crossAxisSpacing: 1.0,
-                      shrinkWrap: true,
-                      children: gridTiles,
+                    Container(
+                      height: 120,
+                      child: GridView.count(
+                        padding: EdgeInsets.only(left: 8, right: 8),
+                        crossAxisCount: 1,
+                        childAspectRatio: 1.5,
+                        mainAxisSpacing: 12.0,
+                        crossAxisSpacing: 1.0,
+                        scrollDirection: Axis.horizontal,
+                        children: gridTiles,
+                      ),
                     ),
-                    users.length > 4
-                        ? FlatButton.icon(
-                            icon: Icon(
-                              FontAwesomeIcons.chevronCircleRight,
-                              color: kColorBlack71,
-                              size: 20.0,
+                    users.length > displayedUserCount
+                        ? GestureDetector(
+                            child: Padding(
+                              padding: EdgeInsets.only(top: 8.0, right: 4.0),
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                mainAxisAlignment: MainAxisAlignment.end,
+                                children: <Widget>[
+                                  Text('See All',
+                                      style: kAppBarTextStyle.copyWith(
+                                          fontSize: 16)),
+                                  SizedBox(width: 4.0),
+                                  Icon(FontAwesomeIcons.chevronRight, size: 14),
+                                ],
+                              ),
                             ),
-                            // use
-                            onPressed: () => Navigator.push(
+                            onTap: () => Navigator.push(
                                 context,
                                 MaterialPageRoute(
                                     builder: (context) => AllUsersCloseBy(
                                           latitude: latitude,
                                           longitude: longitude,
                                         ))),
-                            label: Text(
-                              'Within 1/4 mile',
-                              style: kDefaultTextStyle.copyWith(
-                                  fontWeight: FontWeight.w300, fontSize: 16.0),
-                            ),
-                            splashColor: Colors.transparent,
-                            highlightColor: kColorExtraLightGray,
                           )
                         : SizedBox(),
                   ],
@@ -224,20 +344,94 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
               ),
             );
           }
-        });
+        },
+    );
+  }
+
+  fetchNearbyLatest() {
+    if (userUIDs.isNotEmpty) {
+      return StreamBuilder(
+        stream: updateRef
+            .document(userUIDs.last)
+            .collection('posts')
+            .orderBy('creationDate', descending: true)
+            .where('type', isEqualTo: 'photo')
+            .snapshots(),
+        builder: (context, snapshot) {
+          if (!snapshot.hasData) {
+            return circularProgress();
+          }
+          final updates = snapshot.data.documents;
+          List<UpdatePost> displayedUpdates = [];
+          for (var post in updates) {
+
+            final String photoUrl = post.data['photoUrl'];
+            final String title = post.data['title'];
+            final int creationDate = post.data['creationDate'];
+            final String type = post.data['type'];
+            final String id = post.data['id'];
+            final String uid = post.data['uid'];
+            final dynamic likes = post.data['likes'];
+
+            final displayedPost = UpdatePost(
+              photoUrl: photoUrl,
+              title: title,
+              creationDate: creationDate,
+              type: type,
+              uid: uid,
+              id: id,
+              displayName: 'name',
+              likes: likes ?? {},
+              width: 105,
+            );
+            displayedUpdates
+                .add(displayedPost);
+          }
+          if (displayedUpdates.isNotEmpty) {
+            return Column(children: displayedUpdates);
+          } else {
+            return Center(
+              child: Text(
+                'No Posts Yet',
+                style: kDefaultTextStyle,
+              ),
+            );
+          }
+        },
+      );
+    } else {
+      return Container(
+        height: 50,
+        width: 200,
+        color: kColorDarkBlue,
+      );
+    }
   }
 
   enabledLocationFetchUsers() {
-    if (locationEnabled) {
+    if (hideMe) {
+      return _disableHideMe();
+    } else if (_locationLoading) {
+      getCurrentLocation();
+      return circularProgress();
+    }
+    if (_locationEnabled) {
       return showStreamedCloseByUsers();
+    } else if (!_locationEnabled) {
+      return _showNoLocationFlushBar();
+    } else {
+      return SizedBox();
     }
   }
 
   enabledLocationFetchChats() {
     if (hideMe) {
       return SizedBox();
+    } else if (_locationLoading) {
+      getCurrentLocation();
+      return circularProgress();
     }
-    if (locationEnabled) {
+    if (_locationEnabled) {
       return showStreamedCloseByChats();
     } else {
       return SizedBox();
@@ -389,180 +583,6 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
         });
   }
 
-  getUserInfo(String uid) {
-    usersRef.document(uid).get().then((snapshot) {
-      String username = snapshot.data['username'];
-      return username;
-    });
-  }
-
-  buildWeeklyTopViewed() {
-    double screenHeight = MediaQuery.of(context).size.height;
-    return StreamBuilder(
-      stream: usersRef
-          .where('weeklyVisitsCount', isGreaterThan: 0)
-          .orderBy('weeklyVisitsCount', descending: true)
-          .limit(10)
-          .snapshots(),
-      builder: (context, snapshot) {
-        if (!snapshot.hasData) {
-          return circularProgress();
-        }
-        List<User> topUsers = [];
-        final users = snapshot.data.documents;
-        for (var user in users) {
-          final imageUrl = user.data['profileImageUrl'];
-          final uid = user.data['uid'];
-          final hasAccountLinked = user.data['hasAccountLinked'];
-          final city = user.data['city'];
-          final username = user.data['username'];
-
-          final displayedUser = User(
-            profileImageUrl: imageUrl,
-            uid: uid,
-            city: city,
-            hasAccountLinked: hasAccountLinked,
-            username: username,
-          );
-          if (hasAccountLinked != null &&
-              hasAccountLinked &&
-              !blockedUids.contains(uid)) {
-            topUsers.add(displayedUser);
-          }
-        }
-        List<GridTile> gridTiles = [];
-        topUsers.forEach((user) {
-          gridTiles.add(
-            GridTile(
-              child: UserResult(
-                user: user,
-                locationLabel: user.city ?? 'Around',
-              ),
-            ),
-          );
-        });
-        if (topUsers.isNotEmpty) {
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              Padding(
-                padding: EdgeInsets.only(
-                    left: 8.0, top: 12.0, bottom: 8.0, right: 8.0),
-                child: Text('Most Viewed This Week',
-                    style: kAppBarTextStyle.copyWith(fontSize: 16.0)),
-              ),
-//              Container(
-//                height: 150,
-//                child: GridView.count(
-//                  padding: EdgeInsets.only(left: 8, right: 8),
-//                  crossAxisCount: 1,
-//                  childAspectRatio: 1.33,
-//                  mainAxisSpacing: 2.5,
-//                  crossAxisSpacing: 1.0,
-//                  physics: AlwaysScrollableScrollPhysics(),
-//                  scrollDirection: Axis.horizontal,
-//                  children: gridTiles,
-//                ),
-//              ),
-              CarouselSlider(
-                height: screenHeight / 1.3,
-                items: gridTiles,
-                viewportFraction: 0.9,
-              ),
-//              Center(
-//                child: CircleList(
-//                  origin: Offset(0, 0),
-//                  children: gridTiles,
-//                ),
-//              ),
-            ],
-          );
-        } else {
-          return buildTotalTopViewed();
-        }
-      },
-    );
-  }
-
-  buildTotalTopViewed() {
-    return FutureBuilder(
-      future: usersRef
-          .orderBy('totalVisitsCount', descending: true)
-          .where('totalVisitsCount', isGreaterThan: 0)
-          .limit(10)
-          .getDocuments(),
-      builder: (context, snapshot) {
-        if (!snapshot.hasData) {
-          return circularProgress();
-        }
-        List<User> topUsers = [];
-        final users = snapshot.data.documents;
-        for (var user in users) {
-          final imageUrl = user.data['profileImageUrl'];
-          final uid = user.data['uid'];
-          final hasAccountLinked = user.data['hasAccountLinked'];
-          final city = user.data['city'];
-
-          final displayedUser = User(
-              profileImageUrl: imageUrl,
-              uid: uid,
-              city: city,
-              hasAccountLinked: hasAccountLinked);
-          if (hasAccountLinked != null &&
-              hasAccountLinked &&
-              !blockedUids.contains(uid)) {
-            topUsers.add(displayedUser);
-          }
-        }
-        List<GridTile> gridTiles = [];
-        topUsers.forEach((user) {
-          if (user.hasAccountLinked != null &&
-              user.hasAccountLinked &&
-              !blockedUids.contains(user.uid)) {
-            gridTiles.add(GridTile(
-                child: UserResult(user: user, locationLabel: user.city)));
-          }
-        });
-        if (topUsers.isNotEmpty) {
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              Padding(
-                padding: EdgeInsets.only(
-                    left: 8.0, top: 12.0, bottom: 8.0, right: 8.0),
-                child: Text('Top Viewed All Time',
-                    style: kAppBarTextStyle.copyWith(fontSize: 16.0)),
-              ),
-              Container(
-                height: 150.0,
-                child: GridView.count(
-                  padding: EdgeInsets.only(left: 8, right: 8),
-                  crossAxisCount: 1,
-                  childAspectRatio: 1.33,
-                  mainAxisSpacing: 2.5,
-                  crossAxisSpacing: 1.0,
-                  physics: AlwaysScrollableScrollPhysics(),
-                  scrollDirection: Axis.horizontal,
-                  children: gridTiles,
-                ),
-              ),
-            ],
-          );
-        } else {
-          return Container(
-            height: 75.0,
-            child: Center(
-              child: Text(
-                'Nobody To Be Displayed',
-                style: kAppBarTextStyle,
-              ),
-            ),
-          );
-        }
-      },
-    );
-  }
-
   Widget build(BuildContext context) {
     super.build(context);
     SystemChrome.setEnabledSystemUIOverlays([SystemUiOverlay.top]);
@@ -572,7 +592,7 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
       body: SafeArea(
         child: Theme(
           data: kTheme(context),
-          child: pageLoading
+          child: _locationLoading
               ? circularProgress()
               : SmartRefresher(
                   enablePullDown: true,
@@ -596,8 +616,12 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
                   ),
                   controller: _refreshController,
                   onRefresh: _onRefresh,
-                  child: SingleChildScrollView(
-                    child: buildWeeklyTopViewed()
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      enabledLocationFetchUsers(),
+                      fetchNearbyLatest()
+                    ],
                   ),
                 ),
         ),
@@ -607,7 +631,68 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
 
   _onRefresh() {
     kSelectionClick();
-//    getCurrentLocation();
+    getCurrentLocation();
     _refreshController.refreshCompleted();
+  }
+
+  _disableHideMe() {
+    return Container(
+      height: 50.0,
+      color: kColorBlue.withOpacity(0.75),
+      child: FlatButton(
+        splashColor: kColorExtraLightGray,
+        highlightColor: Colors.transparent,
+        onPressed: () {
+          kHandleHideMe(_scaffoldKey);
+          if (this.mounted)
+            setState(() {
+              hideMe = false;
+              _locationLoading = true;
+            });
+          getCurrentLocation();
+        },
+        child: Center(
+          child: Text(
+            'Disable Hide Me',
+            style: kAppBarTextStyle.copyWith(color: Colors.white),
+          ),
+        ),
+      ),
+    );
+  }
+
+  _showNoLocationFlushBar() {
+    return Flushbar(
+      flushbarPosition: FlushbarPosition.TOP,
+      flushbarStyle: FlushbarStyle.FLOATING,
+      reverseAnimationCurve: Curves.decelerate,
+      forwardAnimationCurve: Curves.elasticOut,
+      backgroundColor: Colors.white,
+      isDismissible: false,
+      duration: Duration(seconds: 4),
+      icon: Icon(
+        FontAwesomeIcons.searchLocation,
+        color: kColorRed,
+      ),
+      mainButton: FlatButton(
+        onPressed: () => PermissionHandler().openAppSettings(),
+        splashColor: kColorExtraLightGray,
+        highlightColor: Colors.transparent,
+        child: Text(
+          "Open",
+          style: kAppBarTextStyle.copyWith(color: kColorBlue),
+        ),
+      ),
+      showProgressIndicator: true,
+      progressIndicatorBackgroundColor: Colors.blueGrey,
+      titleText: Text(
+        "Location Disabled",
+        style: kAppBarTextStyle,
+      ),
+      messageText: Text(
+        "In order to show what's happening around you we need access to your location. Tap Open to enable your location in Settings",
+        style: kDefaultTextStyle,
+      ),
+    );
   }
 }

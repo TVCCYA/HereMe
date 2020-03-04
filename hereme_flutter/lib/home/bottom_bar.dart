@@ -10,6 +10,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:geoflutterfire/geoflutterfire.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:hereme_flutter/constants.dart';
+import 'package:hereme_flutter/home/explore.dart';
 import 'package:hereme_flutter/models/user.dart';
 import 'package:hereme_flutter/registration/initial_page.dart';
 import 'package:hereme_flutter/registration/photo_add.dart';
@@ -49,56 +50,36 @@ class BottomBar extends StatefulWidget {
 
 class _BottomBarState extends State<BottomBar>
     with SingleTickerProviderStateMixin {
-  RubberAnimationController _controller;
-  double colorVal = 1.0;
-
   final _scaffoldKey = GlobalKey<ScaffoldState>();
   FirebaseMessaging _firebaseMessaging = FirebaseMessaging();
   final auth = FirebaseAuth.instance;
   bool _isAuth = false;
   bool _hasAccountLinked = false;
-  bool hideMe = false;
-  bool _locationEnabled = false;
   bool pageLoading = true;
   List<String> blockedUids = [];
-  bool _locationLoading = true;
-  var geolocator = Geolocator();
-  StreamSubscription<Position> positionStream;
-  Position position;
-  double latitude;
-  double longitude;
+  TabController _tabController;
 
   @override
-  void didChangeDependencies() async {
+  void didChangeDependencies() {
     super.didChangeDependencies();
 
     handleLoggedIn();
-    if (hideMe) {
-      _locationEnabled = false;
-    } else {
-      getCurrentUser();
-    }
+    getCurrentUser();
+//    if (hideMe) {
+//      _locationEnabled = false;
+//    } else {
+//      getCurrentUser();
+//    }
   }
 
   @override
   void initState() {
-    _controller = RubberAnimationController(
-        vsync: this,
-        upperBoundValue: AnimationControllerValue(percentage: 0.93),
-        lowerBoundValue: AnimationControllerValue(pixel: 65),
-        duration: Duration(milliseconds: 100));
-    _controller.addStatusListener(_statusListener);
-    _controller.animationState.addListener(_stateListener);
     super.initState();
+    _tabController = new TabController(vsync: this, length: 2);
   }
 
   @override
   void dispose() {
-    if (positionStream != null) {
-      positionStream.cancel();
-    }
-    _controller.removeStatusListener(_statusListener);
-    _controller.animationState.removeListener(_stateListener);
     super.dispose();
   }
 
@@ -181,12 +162,7 @@ class _BottomBarState extends State<BottomBar>
     await prefs.setString('profileImageUrl', currentUser.profileImageUrl);
     await prefs.setString('uid', currentUser.uid);
     await prefs.setString('backgroundImageUrl', currentUser.backgroundImageUrl);
-    if (this.mounted)
-      setState(() {
-        hideMe = prefs.getBool('hideMe') ?? false;
-      });
 
-    await getStreamedLocation();
     if (currentUser.hasAccountLinked) {
       if (this.mounted)
         setState(() {
@@ -194,40 +170,6 @@ class _BottomBarState extends State<BottomBar>
         });
     } else {
       _hasAccountLinked = false;
-    }
-  }
-
-  getStreamedLocation() async {
-    GeolocationStatus geolocationStatus =
-        await Geolocator().checkGeolocationPermissionStatus();
-//    geolocationStatus = GeolocationStatus.granted;
-
-    if (geolocationStatus != GeolocationStatus.granted) {
-      if (this.mounted)
-        setState(() {
-          _locationLoading = false;
-          _locationEnabled = false;
-        });
-    } else {
-      LocationOptions locationOptions = LocationOptions(
-        accuracy: LocationAccuracy.high,
-        distanceFilter: 175, //updates every 0.1 miles
-      );
-      positionStream = geolocator
-          .getPositionStream(locationOptions)
-          .listen((Position newPosition) async {
-        if (this.mounted)
-          setState(() {
-            _locationLoading = false;
-            _locationEnabled = true;
-            latitude = newPosition.latitude;
-            longitude = newPosition.longitude;
-            currentLatitude = newPosition.latitude;
-            currentLongitude = newPosition.longitude;
-          });
-        await setGeoFireData();
-        await setUserCityInFirestore();
-      });
     }
   }
 
@@ -248,184 +190,37 @@ class _BottomBarState extends State<BottomBar>
     }
   }
 
-  getCurrentLocation() async {
-    GeolocationStatus geolocationStatus =
-        await Geolocator().checkGeolocationPermissionStatus();
-
-    if (geolocationStatus != GeolocationStatus.granted || hideMe) {
-      if (this.mounted)
-        setState(() {
-          _locationLoading = false;
-          _locationEnabled = false;
-        });
-    } else {
-      Position position = await Geolocator()
-          .getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
-      if (this.mounted)
-        setState(() {
-          _locationLoading = false;
-          _locationEnabled = true;
-          latitude = position.latitude;
-          longitude = position.longitude;
-        });
-      await setGeoFireData();
-      await setUserCityInFirestore();
-    }
-  }
-
-  setUserCityInFirestore() async {
-    List<Placemark> placemark =
-        await geolocator.placemarkFromCoordinates(latitude, longitude);
-    placemark.forEach((mark) {
-      usersRef.document(currentUser.uid).updateData({
-        'city': mark.locality,
-      });
-    });
-  }
-
-  setGeoFireData() async {
-    Geoflutterfire geo = Geoflutterfire();
-    GeoFirePoint myLocation =
-        geo.point(latitude: latitude, longitude: longitude);
-    await userLocationsRef.document(currentUser.uid).setData({
-      'position': myLocation.data,
-      'profileImageUrl': currentUser.profileImageUrl,
-      'uid': currentUser.uid,
-      'hasAccountLinked': _hasAccountLinked,
-      'hideMe': hideMe,
-    });
-  }
-
-  _stateListener() {
-    print("state changed ${_controller.animationState.value}");
-    if (_controller.animationState.value == AnimationState.expanded) {
-      setState(() {
-        colorVal = 0.25;
-      });
-    } else if (_controller.animationState.value == AnimationState.animating) {
-      setState(() {
-        colorVal = 0.5;
-      });
-    } else {
-      setState(() {
-        colorVal = 1.0;
-      });
-    }
-  }
-
-  _statusListener(AnimationStatus status) {
-    print("changed status ${_controller.status}");
-    if (_controller.status == AnimationStatus.forward) {
-      setState(() {
-        colorVal = 0.5;
-      });
-    } else {
-      setState(() {
-        colorVal = 1.0;
-      });
-    }
-  }
-
-  _expand() {
-    _controller.expand();
-  }
-
-  _disableHideMe() {
-    return Container(
-      height: 50.0,
-      color: kColorBlue.withOpacity(0.75),
-      child: FlatButton(
-        splashColor: kColorExtraLightGray,
-        highlightColor: Colors.transparent,
-        onPressed: () {
-          kHandleHideMe(_scaffoldKey);
-          if (this.mounted)
-            setState(() {
-              hideMe = false;
-              _locationLoading = true;
-            });
-          getCurrentLocation();
-        },
-        child: Center(
-          child: Text(
-            'Disable Hide Me',
-            style: kAppBarTextStyle.copyWith(color: Colors.white),
-          ),
-        ),
-      ),
-    );
-  }
-
-  buildFeed() {
-    if (pageLoading) {
-      return circularProgress();
-   } else if (hideMe) {
-      return _disableHideMe();
-    } else if (_locationLoading) {
-      return circularProgress();
-    } else if (!_locationEnabled) {
-      return _showNoLocationFlushBar();
-    } else {
-      return _getLowerLayer();
-    }
-  }
-
-  _showNoLocationFlushBar() {
-    return Flushbar(
-      flushbarPosition: FlushbarPosition.TOP,
-      flushbarStyle: FlushbarStyle.FLOATING,
-      reverseAnimationCurve: Curves.decelerate,
-      forwardAnimationCurve: Curves.elasticOut,
-      backgroundColor: Colors.white,
-      isDismissible: false,
-      duration: Duration(seconds: 10),
-      icon: Icon(
-        FontAwesomeIcons.searchLocation,
-        color: kColorRed,
-      ),
-      mainButton: FlatButton(
-        onPressed: () => PermissionHandler().openAppSettings(),
-        splashColor: kColorExtraLightGray,
-        highlightColor: Colors.transparent,
-        child: Text(
-          "Open",
-          style: kAppBarTextStyle.copyWith(color: kColorBlue),
-        ),
-      ),
-      showProgressIndicator: true,
-      progressIndicatorBackgroundColor: kColorLightGray,
-      progressIndicatorValueColor: AlwaysStoppedAnimation<Color>(kColorRed),
-      titleText: Text(
-        "Location Disabled",
-        style: kAppBarTextStyle,
-      ),
-      messageText: Text(
-        "In order to show what's happening around you we need access to your location. Tap Open to enable your location in Settings",
-        style: kDefaultTextStyle,
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        titleSpacing: 8,
+        automaticallyImplyLeading: false,
+        titleSpacing: 4,
         brightness: Brightness.light,
         centerTitle: false,
-        elevation: 2.0,
+        elevation: 0.0,
         backgroundColor: kColorOffWhite,
-        title: Image.asset(
-          'images/spredTop.png',
-          scale: 11,
+        title: TabBar(
+          controller: _tabController,
+          isScrollable: true,
+          labelPadding: EdgeInsets.only(left: 8.0, right: 8.0),
+          indicatorPadding: EdgeInsets.only(bottom: 4.0, left: 4.0, right: 4.0),
+          indicatorWeight: 1.5,
+          indicatorColor: kColorRed,
+          labelColor: kColorRed,
+          unselectedLabelColor: kColorLightGray,
+          labelStyle: kAppBarTextStyle.copyWith(fontSize: 16.0),
+          tabs: [
+            Tab(text: 'Nearby'),
+            Tab(text: 'Explore'),
+          ],
         ),
-        automaticallyImplyLeading: false,
         actions: <Widget>[
           Padding(
             padding: EdgeInsets.all(10.0),
             child: GestureDetector(
               child: _isAuth
-                  ? cachedUserResultImage(currentUser.profileImageUrl, 5, 35)
+                  ? cachedUserResultImage(currentUser.profileImageUrl, 35)
                   : Icon(FontAwesomeIcons.userAlt, color: kColorLightGray),
               onTap: () => Navigator.push(
                   context,
@@ -434,45 +229,16 @@ class _BottomBarState extends State<BottomBar>
                           user: currentUser,
                           locationLabel: currentUser.city ?? 'Here'))),
             ),
-          )
+          ),
         ],
       ),
-      body: Container(
-        child: RubberBottomSheet(
-          lowerLayer: buildFeed(),
-          upperLayer: _getUpperLayer(),
-          animationController: _controller,
-        ),
+      body: pageLoading ? circularProgress() : TabBarView(
+        controller: _tabController,
+        children: <Widget>[
+          Home(blockedUids: blockedUids, hasAccountLinked: _hasAccountLinked,),
+          Explore(blockedUids: blockedUids,),
+        ],
       ),
-    );
-  }
-
-  Widget _getLowerLayer() {
-    return Home(
-            latitude: latitude,
-            longitude: longitude,
-            blockedUids: blockedUids,
-            hasAccountLinked: _hasAccountLinked,
-            hideMe: hideMe,
-            locationEnabled: _locationEnabled,
-            pageLoading: pageLoading,
-          );
-  }
-
-  Widget _getUpperLayer() {
-    return Container(
-      decoration: BoxDecoration(color: Colors.cyan.withOpacity(colorVal)),
-    );
-    return Container(
-      color: Colors.transparent,
-      child: Container(
-          decoration: BoxDecoration(
-              borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(40.0),
-            topRight: Radius.circular(40.0),
-          )),
-          child: AllUpdates(
-              uid: currentUser.uid, displayName: currentUser.displayName)),
     );
   }
 }
