@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:hereme_flutter/constants.dart';
 import 'package:hereme_flutter/models/user.dart';
+import 'package:hereme_flutter/user_profile/new_profile.dart';
 import 'package:hereme_flutter/user_profile/profile.dart';
 import 'package:hereme_flutter/utils/custom_image.dart';
 
@@ -15,14 +15,13 @@ class UserResult extends StatelessWidget {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => Profile(user: user, locationLabel: locationLabel),
+        builder: (context) => NewProfile(user: user, locationLabel: locationLabel),
       ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    double screenHeight = MediaQuery.of(context).size.height;
     return GestureDetector(
       onTap: () => toProfile(context),
 //      child: cachedUserResultImage(user.profileImageUrl, 5, 40),
@@ -30,7 +29,7 @@ class UserResult extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: <Widget>[
-          cachedUserResultImage(user.profileImageUrl, 80),
+          cachedUserResultImage(user.profileImageUrl, 70, false),
           Text(user.username ?? 'name', style: kDefaultTextStyle.copyWith(fontSize: 14), overflow: TextOverflow.ellipsis, textAlign: TextAlign.center,),
         ],
       ),
@@ -47,7 +46,7 @@ class BlockedUserResult extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
-      child: cachedUserResultImage(user.profileImageUrl, 40),
+      child: cachedUserResultImage(user.profileImageUrl, 40, false),
     );
   }
 }

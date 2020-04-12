@@ -3,7 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:hereme_flutter/live_chat/add_live_chat.dart';
 import 'package:hereme_flutter/settings/choose_account.dart';
-import 'package:hereme_flutter/settings/recents/add_recents.dart';
+import 'package:hereme_flutter/updates/add_update.dart';
 import 'package:hereme_flutter/utils/settings_tile.dart';
 import 'package:hereme_flutter/registration/initial_page.dart';
 import 'package:hereme_flutter/settings//help_support.dart';
@@ -48,8 +48,16 @@ class ListPage extends StatelessWidget {
                   builder: (BuildContext context) => ChooseAccount())),
         ),
         SettingsTile(
-          label: 'Create Live Chat',
+          label: 'Add Latest Post',
           color: kColorRed.withOpacity(0.9),
+          onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (BuildContext context) => AddLatest())),
+        ),
+        SettingsTile(
+          label: 'Create Live Chat',
+          color: kColorRed.withOpacity(0.8),
           onTap: () => Navigator.push(
               context,
               MaterialPageRoute(
@@ -57,22 +65,22 @@ class ListPage extends StatelessWidget {
         ),
         SettingsTile(
           label: 'Hide Me',
-          color: kColorRed.withOpacity(0.8),
+          color: kColorRed.withOpacity(0.7),
           onTap: () => kHandleHideMe(_scaffoldKey),
         ),
         SettingsTile(
           label: 'Tell Your Friends',
-          color: kColorRed.withOpacity(0.7),
+          color: kColorRed.withOpacity(0.6),
           onTap: () => _handleShare(),
         ),
         SettingsTile(
           label: 'Rate HereMe',
-          color: kColorRed.withOpacity(0.6),
+          color: kColorRed.withOpacity(0.5),
           onTap: () => _handleRate(),
         ),
         SettingsTile(
           label: 'Help & Support',
-          color: kColorRed.withOpacity(0.5),
+          color: kColorRed.withOpacity(0.4),
           onTap: () => Navigator.push(
               context,
               MaterialPageRoute(
@@ -83,7 +91,7 @@ class ListPage extends StatelessWidget {
           child: InkWell(
             onTap: () => _handleLogout(context),
             child: Container(
-              color: kColorRed.withOpacity(0.5),
+              color: kColorRed.withOpacity(0.4),
               width: MediaQuery.of(context).size.width,
               height: 50.0,
               child: Center(

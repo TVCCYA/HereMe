@@ -1,26 +1,19 @@
-import 'dart:async';
 import 'dart:io';
-import 'package:bubble_bottom_bar/bubble_bottom_bar.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:flushbar/flushbar.dart';
 import 'package:flutter/material.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:geoflutterfire/geoflutterfire.dart';
-import 'package:geolocator/geolocator.dart';
 import 'package:hereme_flutter/constants.dart';
 import 'package:hereme_flutter/home/explore.dart';
 import 'package:hereme_flutter/models/user.dart';
+import 'package:hereme_flutter/registration/create_display_name.dart';
 import 'package:hereme_flutter/registration/initial_page.dart';
 import 'package:hereme_flutter/registration/photo_add.dart';
-import 'package:hereme_flutter/updates/all_updates.dart';
+import 'package:hereme_flutter/user_profile/new_profile.dart';
 import 'package:hereme_flutter/user_profile/profile.dart';
 import 'package:hereme_flutter/utils/custom_image.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:rubber/rubber.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:video_player/video_player.dart';
 
 import 'home.dart';
 
@@ -37,11 +30,17 @@ final usersInChatRef = Firestore.instance.collection('usersInChat');
 final followersRef = Firestore.instance.collection('followers');
 final followingRef = Firestore.instance.collection('following');
 final updateRef = Firestore.instance.collection('update');
+final usersNearbyRef = Firestore.instance.collection('usersNearby');
+final topUsersRef = Firestore.instance.collection('topUsers');
+final timelineRef = Firestore.instance.collection('timeline');
+final exploreTimelineRef = Firestore.instance.collection('exploreTimeline');
+
 User currentUser;
 double currentLatitude;
 double currentLongitude;
 final bool isAdmin = currentUser.uid == 'z3Gq1WeepHfoT5HGVIWJo7oDxiX2';
 final String adminUid = 'z3Gq1WeepHfoT5HGVIWJo7oDxiX2';
+final auth = FirebaseAuth.instance;
 
 class BottomBar extends StatefulWidget {
   @override
@@ -52,9 +51,7 @@ class _BottomBarState extends State<BottomBar>
     with SingleTickerProviderStateMixin {
   final _scaffoldKey = GlobalKey<ScaffoldState>();
   FirebaseMessaging _firebaseMessaging = FirebaseMessaging();
-  final auth = FirebaseAuth.instance;
   bool _isAuth = false;
-  bool _hasAccountLinked = false;
   bool pageLoading = true;
   List<String> blockedUids = [];
   TabController _tabController;
@@ -64,12 +61,6 @@ class _BottomBarState extends State<BottomBar>
     super.didChangeDependencies();
 
     handleLoggedIn();
-    getCurrentUser();
-//    if (hideMe) {
-//      _locationEnabled = false;
-//    } else {
-//      getCurrentUser();
-//    }
   }
 
   @override
@@ -153,8 +144,13 @@ class _BottomBarState extends State<BottomBar>
           context,
           MaterialPageRoute(
               builder: (BuildContext context) =>
-                  PhotoAdd(uid: currentUser.uid)),
+                  PhotoAdd()),
           (Route<dynamic> route) => false);
+
+      if (currentUser.displayName == null) {
+        Navigator.of(context).pushAndRemoveUntil(createRoute(CreateDisplayName(showBackButton: false)),
+                (Route<dynamic> route) => false);
+      }
     }
 
     SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -162,15 +158,6 @@ class _BottomBarState extends State<BottomBar>
     await prefs.setString('profileImageUrl', currentUser.profileImageUrl);
     await prefs.setString('uid', currentUser.uid);
     await prefs.setString('backgroundImageUrl', currentUser.backgroundImageUrl);
-
-    if (currentUser.hasAccountLinked) {
-      if (this.mounted)
-        setState(() {
-          _hasAccountLinked = true;
-        });
-    } else {
-      _hasAccountLinked = false;
-    }
   }
 
   fetchBlockedUsers() {
@@ -193,6 +180,7 @@ class _BottomBarState extends State<BottomBar>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: kColorOffWhite,
       appBar: AppBar(
         automaticallyImplyLeading: false,
         titleSpacing: 4,
@@ -200,43 +188,47 @@ class _BottomBarState extends State<BottomBar>
         centerTitle: false,
         elevation: 0.0,
         backgroundColor: kColorOffWhite,
-        title: TabBar(
-          controller: _tabController,
-          isScrollable: true,
-          labelPadding: EdgeInsets.only(left: 8.0, right: 8.0),
-          indicatorPadding: EdgeInsets.only(bottom: 4.0, left: 4.0, right: 4.0),
-          indicatorWeight: 1.5,
-          indicatorColor: kColorRed,
-          labelColor: kColorRed,
-          unselectedLabelColor: kColorLightGray,
-          labelStyle: kAppBarTextStyle.copyWith(fontSize: 16.0),
-          tabs: [
-            Tab(text: 'Nearby'),
-            Tab(text: 'Explore'),
-          ],
+        title: Theme(
+          data: kTheme(context),
+          child: TabBar(
+            controller: _tabController,
+            isScrollable: true,
+            labelPadding: EdgeInsets.only(left: 8.0, right: 8.0),
+            indicatorPadding: EdgeInsets.only(bottom: 4.0, left: 4.0, right: 4.0),
+            indicatorWeight: 1.5,
+            indicatorColor: kColorRed,
+            labelColor: kColorRed,
+            unselectedLabelColor: kColorLightGray,
+            labelStyle: kAppBarTextStyle.copyWith(fontSize: 16.0),
+            tabs: [
+              Tab(text: 'Explore'),
+              Tab(text: 'Nearby'),
+            ],
+          ),
         ),
         actions: <Widget>[
           Padding(
             padding: EdgeInsets.all(10.0),
-            child: GestureDetector(
-              child: _isAuth
-                  ? cachedUserResultImage(currentUser.profileImageUrl, 35)
-                  : Icon(FontAwesomeIcons.userAlt, color: kColorLightGray),
-              onTap: () => Navigator.push(
+            child: _isAuth ? GestureDetector(
+              child: cachedUserResultImage(currentUser.profileImageUrl, 35, false),
+              onTap: () =>
+                  Navigator.push(
                   context,
                   MaterialPageRoute(
-                      builder: (context) => Profile(
+                      builder: (context) => NewProfile(
                           user: currentUser,
-                          locationLabel: currentUser.city ?? 'Here'))),
-            ),
+                          locationLabel: currentUser.city ?? 'Here'),
+                  ),
+              ),
+            ) : SizedBox(),
           ),
         ],
       ),
       body: pageLoading ? circularProgress() : TabBarView(
         controller: _tabController,
         children: <Widget>[
-          Home(blockedUids: blockedUids, hasAccountLinked: _hasAccountLinked,),
           Explore(blockedUids: blockedUids,),
+          Home(blockedUids: blockedUids),
         ],
       ),
     );

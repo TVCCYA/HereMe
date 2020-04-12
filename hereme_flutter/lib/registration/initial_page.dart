@@ -28,82 +28,73 @@ class _InitialPageState extends State<InitialPage> {
       ),
       body: SafeArea(
         child: Padding(
-          padding: EdgeInsets.all(32.0),
+          padding: EdgeInsets.only(left: 16.0),
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            crossAxisAlignment: CrossAxisAlignment.center,
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
-              Padding(
-                padding: const EdgeInsets.only(left: 8.0, right: 8.0),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: <Widget>[
-                    Text(
-                      'Connect with\nPeople Nearby',
-                      textAlign: TextAlign.left,
-                      style: kAppBarTextStyle.copyWith(
-                        color: kColorOffWhite,
-                        fontSize: 32.0
-                      ),
-                    ),
-                    SizedBox(
-                      height: 36.0,
-                    ),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
-                      children: <Widget>[
-                        ButtonTheme(
-                          minWidth: 125.0,
-                          child: FlatButton(
-                            child: Text(
-                              'Sign Up',
-                              style: kAppBarTextStyle.copyWith(
-                                  fontSize: 16.0, color: Colors.white),
-                            ),
-                            color: Colors.transparent,
-                            onPressed: () =>
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(builder: (context) => SignUp()),
-                                ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(5.0),
-                              side: BorderSide(color: Colors.white),
-                            ),
-                            splashColor: kColorDarkRed,
-                            highlightColor: Colors.transparent,
-                          ),
-                        ),
-                        ButtonTheme(
-                          minWidth: 125.0,
-                          child: FlatButton(
-                            child: Text(
-                              'Log In',
-                              style: kAppBarTextStyle.copyWith(
-                                  fontSize: 16.0, color: Colors.white),
-                            ),
-                            color: Colors.transparent,
-                            onPressed: () =>
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(builder: (context) => LogIn()),
-                                ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(5.0),
-                              side: BorderSide(color: Colors.white),
-                            ),
-                            splashColor: kColorDarkRed,
-                            highlightColor: Colors.transparent,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
+              Text(
+                'Connect with\nPeople Nearby',
+                textAlign: TextAlign.left,
+                style: kAppBarTextStyle.copyWith(
+                  color: kColorOffWhite,
+                  fontSize: 32.0
                 ),
               ),
-            ].toList(),
+              SizedBox(
+                height: 36.0,
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: <Widget>[
+                  ButtonTheme(
+                    minWidth: 125.0,
+                    child: FlatButton(
+                      child: Text(
+                        'Sign Up',
+                        style: kAppBarTextStyle.copyWith(
+                            fontSize: 16.0, color: Colors.white),
+                      ),
+                      color: Colors.transparent,
+                      onPressed: () =>
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => SignUp()),
+                          ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(5.0),
+                        side: BorderSide(color: Colors.white),
+                      ),
+                      splashColor: kColorDarkRed,
+                      highlightColor: Colors.transparent,
+                    ),
+                  ),
+                  ButtonTheme(
+                    minWidth: 125.0,
+                    child: FlatButton(
+                      child: Text(
+                        'Log In',
+                        style: kAppBarTextStyle.copyWith(
+                            fontSize: 16.0, color: Colors.white),
+                      ),
+                      color: Colors.transparent,
+                      onPressed: () =>
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => LogIn()),
+                          ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(5.0),
+                        side: BorderSide(color: Colors.white),
+                      ),
+                      splashColor: kColorDarkRed,
+                      highlightColor: Colors.transparent,
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
         ),
       ),

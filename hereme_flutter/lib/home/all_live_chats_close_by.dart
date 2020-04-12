@@ -174,14 +174,7 @@ class _AllLiveChatsCloseByState extends State<AllLiveChatsCloseBy> {
             ),
           ),
           controller: _refreshController,
-          onRefresh: () async {
-              kShowSnackbar(
-                key: _scaffoldKey,
-                text: 'Your feed will auto update when a new Live Chat has started within your vicinity',
-                backgroundColor: kColorBlack71,
-              );
-              _refreshController.refreshCompleted();
-            },
+          onRefresh: _onRefresh,
             child: SingleChildScrollView(
               padding: EdgeInsets.only(bottom: 50.0),
               child: streamCloseByChats(),
@@ -190,5 +183,15 @@ class _AllLiveChatsCloseByState extends State<AllLiveChatsCloseBy> {
         ),
       ),
     );
+  }
+
+  _onRefresh() {
+    kSelectionClick();
+//    kShowSnackbar(
+//      key: _scaffoldKey,
+//      text: 'Your feed will auto update as someone comes within or leaves your vicinity',
+//      backgroundColor: kColorBlack71,
+//    );
+    _refreshController.refreshCompleted();
   }
 }

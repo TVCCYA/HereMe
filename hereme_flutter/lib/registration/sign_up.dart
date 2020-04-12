@@ -56,6 +56,8 @@ class _SignUpState extends State<SignUp> {
 
   @override
   Widget build(BuildContext context) {
+    final double screenHeight = (MediaQuery.of(context).size.height);
+    final double screenWidth = (MediaQuery.of(context).size.width);
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
@@ -79,178 +81,185 @@ class _SignUpState extends State<SignUp> {
           highlightColor: Colors.transparent,
         ),
       ),
-      body: SafeArea(
-        child: ModalProgressHUD(
-          inAsyncCall: showSpinner,
-          progressIndicator: CircularProgressIndicator(
-            valueColor: AlwaysStoppedAnimation<Color>(kColorRed),
-          ),
-          child: GestureDetector(
-            behavior: HitTestBehavior.translucent,
-            onPanDown: (_) {
-              FocusScope.of(context).requestFocus(FocusNode());
-            },
-            child: Padding(
-              padding: EdgeInsets.all(12.0),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.start,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: <Widget>[
-                  TextField(
-                    cursorColor: kColorLightGray,
-                    onChanged: (value) {
-                      email = value;
-                      _isValid();
-                      _showTerms();
-                    },
-                    focusNode: null,
-                    onSubmitted: (v) {
-                      FocusScope.of(context)
-                          .requestFocus(_emailFocus);
-                    },
-                    autocorrect: false,
-                    keyboardType: TextInputType.emailAddress,
-                    textInputAction: TextInputAction.next,
-                    autofocus: true,
-                    style: kDefaultTextStyle,
-                    decoration: kRegistrationInputDecoration.copyWith(
-                      labelText: 'Email',
-                      hintText: 'Enter your email',
-                      hintStyle: kDefaultTextStyle.copyWith(
-                        color: kColorLightGray,
-                      ),
-                      labelStyle: kAppBarTextStyle.copyWith(fontSize: 16.0),
-                      icon: Icon(
-                        FontAwesomeIcons.envelope,
-                        color: kColorBlack71,
-                        size: 20.0,
-                      ),
-                    ),
-                  ),
-                  SizedBox(height: 8.0),
-                  TextField(
-                    cursorColor: kColorLightGray,
-                    onChanged: (value) {
-                      firstName = value;
-                      _isValid();
-                      _showTerms();
-                    },
-                    focusNode: _emailFocus,
-                    onSubmitted: (v) {
-                      FocusScope.of(context)
-                          .requestFocus(_firstNameFocus);
-                    },
-                    autocorrect: false,
-                    keyboardType: TextInputType.text,
-                    textInputAction: TextInputAction.next,
-                    autofocus: true,
-                    style: kDefaultTextStyle,
-                    decoration: kRegistrationInputDecoration.copyWith(
-                      labelText: 'First Name',
-                      hintText: 'Enter your first name',
-                      hintStyle: kDefaultTextStyle.copyWith(
-                        color: kColorLightGray,
-                      ),
-                      labelStyle: kAppBarTextStyle.copyWith(fontSize: 16.0),
-                      icon: Icon(
-                        FontAwesomeIcons.signature,
-                        color: kColorBlack71,
-                        size: 20.0,
-                      ),
-                    ),
-                  ),
-                  SizedBox(height: 8.0),
-                  TextField(
-                    obscureText: true,
-                    cursorColor: kColorLightGray,
-                    onChanged: (value) {
-                      password = value;
-                      _isValid();
-                      _showTerms();
-                    },
-                    focusNode: _firstNameFocus,
-                    onSubmitted: (v) {
-                      FocusScope.of(context)
-                          .requestFocus(_passwordFocus);
-                      _signUp();
-                    },
-                    autocorrect: false,
-                    keyboardType: TextInputType.text,
-                    textInputAction: TextInputAction.done,
-                    autofocus: true,
-                    style: kDefaultTextStyle,
-                    decoration: kRegistrationInputDecoration.copyWith(
-                      labelText: 'Password',
-                      hintText: 'Enter your password',
-                      hintStyle: kDefaultTextStyle.copyWith(
-                        color: kColorLightGray,
-                      ),
-                      labelStyle: kAppBarTextStyle.copyWith(fontSize: 16.0),
-                      icon: Icon(
-                        FontAwesomeIcons.lock,
-                        color: kColorBlack71,
-                        size: 20.0,
-                      ),
-                    ),
-                  ),
-                  SizedBox(height: 8.0),
-                  _termsHidden ? SizedBox() : Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
+      body: Container(
+        height: screenHeight,
+        width: screenWidth,
+        child: SingleChildScrollView(
+          physics: AlwaysScrollableScrollPhysics(),
+          child: SafeArea(
+            child: ModalProgressHUD(
+              inAsyncCall: showSpinner,
+              progressIndicator: CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(kColorRed),
+              ),
+              child: GestureDetector(
+                behavior: HitTestBehavior.translucent,
+                onPanDown: (_) {
+//                  FocusScope.of(context).requestFocus(FocusNode());
+                },
+                child: Padding(
+                  padding: EdgeInsets.all(12.0),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: <Widget>[
-                      Checkbox(
-                        activeColor: kColorRed,
-                        value: _agreed,
+                      TextField(
+                        cursorColor: kColorLightGray,
                         onChanged: (value) {
-                          if (this.mounted) setState(() {
-                            _agreed = value;
-                          });
+                          email = value;
                           _isValid();
+                          _showTerms();
                         },
+                        focusNode: null,
+                        onSubmitted: (v) {
+                          FocusScope.of(context)
+                              .requestFocus(_emailFocus);
+                        },
+                        autocorrect: false,
+                        keyboardType: TextInputType.emailAddress,
+                        textInputAction: TextInputAction.next,
+                        autofocus: true,
+                        style: kDefaultTextStyle,
+                        decoration: kRegistrationInputDecoration.copyWith(
+                          labelText: 'Email',
+                          hintText: 'Enter your email',
+                          hintStyle: kDefaultTextStyle.copyWith(
+                            color: kColorLightGray,
+                          ),
+                          labelStyle: kAppBarTextStyle.copyWith(fontSize: 16.0),
+                          icon: Icon(
+                            FontAwesomeIcons.envelope,
+                            color: kColorBlack71,
+                            size: 20.0,
+                          ),
+                        ),
                       ),
-                      FlatButton(
-                        padding: EdgeInsets.all(0.0),
-                        onPressed: _launchURL,
-                        splashColor: kColorExtraLightGray,
-                        highlightColor: Colors.transparent,
-                        child: Text(
-                          'Agree to Terms & Conditions',
-                          style: kAppBarTextStyle.copyWith(
-                              fontSize: 14.0),
+                      SizedBox(height: 8.0),
+                      TextField(
+                        cursorColor: kColorLightGray,
+                        onChanged: (value) {
+                          firstName = value;
+                          _isValid();
+                          _showTerms();
+                        },
+                        focusNode: _emailFocus,
+                        onSubmitted: (v) {
+                          FocusScope.of(context)
+                              .requestFocus(_firstNameFocus);
+                        },
+                        autocorrect: false,
+                        keyboardType: TextInputType.text,
+                        textInputAction: TextInputAction.next,
+                        autofocus: true,
+                        style: kDefaultTextStyle,
+                        decoration: kRegistrationInputDecoration.copyWith(
+                          labelText: 'First Name',
+                          hintText: 'Enter your first name',
+                          hintStyle: kDefaultTextStyle.copyWith(
+                            color: kColorLightGray,
+                          ),
+                          labelStyle: kAppBarTextStyle.copyWith(fontSize: 16.0),
+                          icon: Icon(
+                            FontAwesomeIcons.signature,
+                            color: kColorBlack71,
+                            size: 20.0,
+                          ),
+                        ),
+                      ),
+                      SizedBox(height: 8.0),
+                      TextField(
+                        obscureText: true,
+                        cursorColor: kColorLightGray,
+                        onChanged: (value) {
+                          password = value;
+                          _isValid();
+                          _showTerms();
+                        },
+                        focusNode: _firstNameFocus,
+                        onSubmitted: (v) {
+                          FocusScope.of(context)
+                              .requestFocus(_passwordFocus);
+                          _signUp();
+                        },
+                        autocorrect: false,
+                        keyboardType: TextInputType.text,
+                        textInputAction: TextInputAction.done,
+                        autofocus: true,
+                        style: kDefaultTextStyle,
+                        decoration: kRegistrationInputDecoration.copyWith(
+                          labelText: 'Password',
+                          hintText: 'Enter your password',
+                          hintStyle: kDefaultTextStyle.copyWith(
+                            color: kColorLightGray,
+                          ),
+                          labelStyle: kAppBarTextStyle.copyWith(fontSize: 16.0),
+                          icon: Icon(
+                            FontAwesomeIcons.lock,
+                            color: kColorBlack71,
+                            size: 20.0,
+                          ),
+                        ),
+                      ),
+                      SizedBox(height: 8.0),
+                      _termsHidden ? SizedBox() : Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: <Widget>[
+                          Checkbox(
+                            activeColor: kColorRed,
+                            value: _agreed,
+                            onChanged: (value) {
+                              if (this.mounted) setState(() {
+                                _agreed = value;
+                              });
+                              _isValid();
+                            },
+                          ),
+                          FlatButton(
+                            padding: EdgeInsets.all(0.0),
+                            onPressed: _launchURL,
+                            splashColor: kColorExtraLightGray,
+                            highlightColor: Colors.transparent,
+                            child: Text(
+                              'Agree to Terms & Conditions',
+                              style: kAppBarTextStyle.copyWith(
+                                  fontSize: 14.0),
+                            ),
+                          ),
+                        ],
+                      ),
+                      Align(
+                        alignment: Alignment.topRight,
+                        child: FlatButton.icon(
+                          onPressed: _signUp,
+                          splashColor: _isButtonDisabled
+                              ? Colors.transparent
+                              : kColorOffWhite,
+                          highlightColor: Colors.transparent,
+                          icon: Icon(
+                            _isButtonDisabled
+                                ? FontAwesomeIcons
+                                    .arrowAltCircleUp
+                                : FontAwesomeIcons
+                                    .arrowAltCircleRight,
+                            size: 30.0,
+                            color: _isButtonDisabled
+                                ? kColorLightGray
+                                : kColorBlue,
+                          ),
+                          label: Text(
+                            _isButtonDisabled
+                                ? 'Not Done'
+                                : 'Add Photo',
+                            style: kDefaultTextStyle.copyWith(
+                                color: _isButtonDisabled
+                                    ? kColorLightGray
+                                    : kColorBlue),
+                          ),
                         ),
                       ),
                     ],
                   ),
-                  Align(
-                    alignment: Alignment.topRight,
-                    child: FlatButton.icon(
-                      onPressed: _signUp,
-                      splashColor: _isButtonDisabled
-                          ? Colors.transparent
-                          : kColorOffWhite,
-                      highlightColor: Colors.transparent,
-                      icon: Icon(
-                        _isButtonDisabled
-                            ? FontAwesomeIcons
-                                .arrowAltCircleUp
-                            : FontAwesomeIcons
-                                .arrowAltCircleRight,
-                        size: 30.0,
-                        color: _isButtonDisabled
-                            ? kColorLightGray
-                            : kColorBlue,
-                      ),
-                      label: Text(
-                        _isButtonDisabled
-                            ? 'Not Done'
-                            : 'Add Photo',
-                        style: kDefaultTextStyle.copyWith(
-                            color: _isButtonDisabled
-                                ? kColorLightGray
-                                : kColorBlue),
-                      ),
-                    ),
-                  ),
-                ],
+                ),
               ),
             ),
           ),
@@ -304,15 +313,16 @@ class _SignUpState extends State<SignUp> {
       'weeklyVisitsCount': 0,
       'totalVisitsCount': 0,
       'hasAccountLinked': false,
+      'creationDate': DateTime.now().millisecondsSinceEpoch,
     };
 
     userReference.setData(signUpUserData).whenComplete(() {
       print('User Added');
       _saveUserSharedPref();
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => PhotoAdd(uid: uid)),
-      );
+      Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (context) => PhotoAdd()),
+              (Route<dynamic> route) => false);
     }).catchError((e) => print(e));
   }
 

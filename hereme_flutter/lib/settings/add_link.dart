@@ -326,6 +326,8 @@ class _AddLinkState extends State<AddLink> {
       retMap = {'pinterest': _urlController.text.trim()};
     } else if (platform == 'Etsy') {
       retMap = {'etsy': _urlController.text.trim()};
+    } else if (platform == 'Cash App') {
+      retMap = {'cashapp': _urlController.text.trim()};
     } else {
       retMap = {'Unavailable': _urlController.text.trim()};
     }
@@ -359,6 +361,7 @@ class _AddLinkState extends State<AddLink> {
       usersRef.document(uid).updateData({
         'hasAccountLinked': true,
       });
+      currentUser.hasAccountLinked = true;
       updateRef.document(uid).collection('posts').document(linkId).setData({
         'creationDate': creationDate,
         'id': linkId,

@@ -25,7 +25,7 @@ dependencies:
   font_awesome_flutter: ^8.5.0
   modal_progress_hud: ^0.1.3
   rflutter_alert: ^1.0.3
-  flushbar: ^1.8.2
+  flushbar: ^1.10.0
   uuid: ^2.0.2
   time_ago_provider: ^1.0.3
   async: ^2.2.0
@@ -39,14 +39,16 @@ dependencies:
   firebase_messaging: ^5.1.8
   flutter_google_ad_manager: ^0.10.1
   pull_to_refresh: ^1.5.7
-  zoom_widget: ^0.1.3
   circle_list: ^1.0.1
   carousel_slider: ^1.4.0
   animated_text_kit: ^2.0.0
-  bubble_bottom_bar: ^1.2.0
   video_player: ^0.10.5+2
   youtube_player: ^3.5.0
-  rubber: ^0.4.0
+  loading_animations: ^2.1.0
+  pinch_zoom_image: ^0.2.5
+  flutter_staggered_grid_view: ^0.3.0
+  palette_generator: ^0.2.2
+  icon_shadow: ^1.0.1
 
 dev_dependencies:
   flutter_test:
@@ -62,6 +64,18 @@ flutter:
        - family: Arimo
          fonts:
              - asset: fonts/Arimo-Regular.ttf
+
+       - family: Montserrat
+         fonts:
+           - asset: fonts/Montserrat-Medium.ttf
+
+       - family: Corben
+         fonts:
+           - asset: fonts/Corben-Regular.ttf
+
+       - family: Nobile
+         fonts:
+           - asset: fonts/Nobile-Regular.ttf
 
   uses-material-design: true
 

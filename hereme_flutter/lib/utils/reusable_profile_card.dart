@@ -25,7 +25,7 @@ class ReusableProfileCard extends StatelessWidget {
                 imageUrl: imageUrl,
                 height: cardSize,
                 width: cardSize,
-                fit: BoxFit.fill,
+                fit: BoxFit.cover,
               )
             : Container(
                 height: cardSize,
@@ -38,10 +38,9 @@ class ReusableProfileCard extends StatelessWidget {
 }
 
 class ReusableCard extends StatelessWidget {
-  ReusableCard({this.imageFile, this.cardSize, this.onTap});
+  ReusableCard({this.imageFile, this.onTap});
 
   final File imageFile;
-  final double cardSize;
   final Function onTap;
 
   @override
@@ -59,6 +58,40 @@ class ReusableCard extends StatelessWidget {
                 FontAwesomeIcons.exclamationTriangle,
                 color: kColorRed,
               ),
+      ),
+    );
+  }
+}
+
+
+class CircleCard extends StatelessWidget {
+  CircleCard({this.imageFile, this.size, this.onTap});
+
+  final File imageFile;
+  final double size;
+  final Function onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      clipBehavior: Clip.hardEdge,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(size / 2),
+      ),
+      elevation: 4.0,
+      child: InkResponse(
+        onTap: onTap,
+        child: imageFile != null
+            ? Image.file(
+          imageFile,
+          height: size,
+          width: size,
+          fit: BoxFit.cover,
+        )
+            : Icon(
+          FontAwesomeIcons.exclamationTriangle,
+          color: kColorRed,
+        ),
       ),
     );
   }

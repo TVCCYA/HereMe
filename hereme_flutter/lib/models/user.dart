@@ -8,7 +8,6 @@ class User {
   int weeklyVisitsCount;
   bool hasAccountLinked;
   bool isVerified;
-  String storageFilename;
   String displayName;
   String city;
   int red;
@@ -18,6 +17,7 @@ class User {
   List<String> blockedUids;
   String backgroundImageUrl;
   String videoUrl;
+  String bio;
 
   User({
     this.username,
@@ -27,7 +27,6 @@ class User {
     this.weeklyVisitsCount,
     this.hasAccountLinked,
     this.isVerified,
-    this.storageFilename,
     this.displayName,
     this.city,
     this.red,
@@ -37,6 +36,7 @@ class User {
     this.blockedUids,
     this.backgroundImageUrl,
     this.videoUrl,
+    this.bio
   });
 
   factory User.fromDocument(DocumentSnapshot doc) {
@@ -48,15 +48,15 @@ class User {
       weeklyVisitsCount: doc['weeklyVisitsCount'],
       hasAccountLinked: doc['hasAccountLinked'],
       isVerified: doc['isVerified'],
-      storageFilename: doc['storageFilename'],
       displayName: doc['displayName'],
-      city: doc['city'],
-      red: doc['red'],
-      green: doc['green'],
-      blue: doc['blue'],
+      city: doc['city'] ?? 'Around',
+      red: doc['red'] ?? 0,
+      green: doc['green'] ?? 0,
+      blue: doc['blue'] ?? 0,
       blockedUserUids: doc['blockedUsers'],
       backgroundImageUrl: doc['backgroundImageUrl'],
-      videoUrl: doc['videoUrl'],
+      videoUrl: doc['videoUrl'] ?? '',
+      bio: doc['bio'] ?? '',
     );
   }
 }

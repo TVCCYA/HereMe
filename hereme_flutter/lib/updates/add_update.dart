@@ -13,12 +13,12 @@ import 'package:uuid/uuid.dart';
 
 import '../constants.dart';
 
-class AddUpdate extends StatefulWidget {
+class AddLatest extends StatefulWidget {
   @override
-  _AddUpdateState createState() => _AddUpdateState();
+  _AddLatestState createState() => _AddLatestState();
 }
 
-class _AddUpdateState extends State<AddUpdate> {
+class _AddLatestState extends State<AddLatest> {
   bool showSpinner = false;
   File mediaFile;
   bool _isButtonDisabled = true;
@@ -26,7 +26,7 @@ class _AddUpdateState extends State<AddUpdate> {
   String title;
 
   _isValid() {
-    if ((title != null && title.isNotEmpty) || mediaFile != null) {
+    if ((title != null && title.isNotEmpty && title.trim().length != 0) || mediaFile != null) {
       if (this.mounted) setState(() {
         _isButtonDisabled = false;
       });
@@ -40,55 +40,54 @@ class _AddUpdateState extends State<AddUpdate> {
   @override
   Widget build(BuildContext context) {
     double screenWidth = MediaQuery.of(context).size.width;
-    double screenHeight = MediaQuery.of(context).size.height;
-    return Scaffold(
-      appBar: AppBar(
-        centerTitle: true,
-        brightness: Brightness.light,
-        elevation: 2.0,
-        backgroundColor: Colors.white,
-        title: Text(
-          'Add Update',
-          textAlign: TextAlign.left,
-          style: kAppBarTextStyle,
-        ),
-        leading: IconButton(
-          icon: Icon(FontAwesomeIcons.chevronLeft),
-          onPressed: () {
-            Navigator.pop(context);
-          },
-          color: kColorBlack71,
-          splashColor: kColorExtraLightGray,
-          highlightColor: Colors.transparent,
-        ),
-        actions: <Widget>[
-          _isButtonDisabled
-              ? SizedBox() : Animator(
-            duration: Duration(milliseconds: 200),
-            tween: Tween(begin: 0.8, end: 1.0),
-            curve: Curves.easeInOutQuad,
-            cycles: 1,
-            builder: (anim) => Transform.scale(
-              scale: anim.value,
-              child: Center(
-                child: FlatButton(
-                  child: Text(
-                    'Done',
-                    style: kAppBarTextStyle.copyWith(color: kColorBlue),
+    return ModalProgressHUD(
+      inAsyncCall: showSpinner,
+      progressIndicator: circularProgress(),
+      child: Scaffold(
+        appBar: AppBar(
+          centerTitle: true,
+          brightness: Brightness.light,
+          elevation: 2.0,
+          backgroundColor: Colors.white,
+          title: Text(
+            'Add Latest',
+            textAlign: TextAlign.left,
+            style: kAppBarTextStyle,
+          ),
+          leading: IconButton(
+            icon: Icon(FontAwesomeIcons.chevronLeft),
+            onPressed: () {
+              Navigator.pop(context);
+            },
+            color: kColorBlack71,
+            splashColor: kColorExtraLightGray,
+            highlightColor: Colors.transparent,
+          ),
+          actions: <Widget>[
+            _isButtonDisabled
+                ? SizedBox() : Animator(
+              duration: Duration(milliseconds: 200),
+              tween: Tween(begin: 0.8, end: 1.0),
+              curve: Curves.easeInOutQuad,
+              cycles: 1,
+              builder: (anim) => Transform.scale(
+                scale: anim.value,
+                child: Center(
+                  child: FlatButton(
+                    child: Text(
+                      'Done',
+                      style: kAppBarTextStyle.copyWith(color: kColorBlue),
+                    ),
+                    onPressed: () => _addUpdate(),
+                    splashColor: kColorExtraLightGray,
+                    highlightColor: Colors.transparent,
                   ),
-                  onPressed: () => _addUpdate(),
-                  splashColor: kColorExtraLightGray,
-                  highlightColor: Colors.transparent,
                 ),
               ),
-            ),
-          )
-        ],
-      ),
-      body: SafeArea(
-        child: ModalProgressHUD(
-          inAsyncCall: showSpinner,
-          progressIndicator: circularProgress(),
+            )
+          ],
+        ),
+        body: SafeArea(
           child: SingleChildScrollView(
             child: Padding(
               padding: EdgeInsets.all(12.0),
@@ -117,7 +116,7 @@ class _AddUpdateState extends State<AddUpdate> {
                       focusedBorder: UnderlineInputBorder(
                         borderSide: BorderSide(color: Colors.transparent),
                       ),
-                      labelText: 'Update',
+                      labelText: 'Headline',
                       hintText: 'Spred the news...',
                       hintStyle: kDefaultTextStyle.copyWith(
                         color: kColorLightGray,
@@ -132,7 +131,6 @@ class _AddUpdateState extends State<AddUpdate> {
                     child: mediaFile != null
                         ? ReusableCard(
                             imageFile: mediaFile,
-                            cardSize: screenHeight,
                             onTap: () {
                               _openPhotoLibrary();
                             },
@@ -143,44 +141,44 @@ class _AddUpdateState extends State<AddUpdate> {
             ),
           ),
         ),
-      ),
-      bottomSheet: SafeArea(
-        child: Container(
-          height: 50,
-          width: screenWidth,
-          decoration: BoxDecoration(
-            border: Border.all(color: kColorExtraLightGray),
-            color: Colors.white,
-          ),
-          child: Padding(
-            padding: EdgeInsets.only(right: 4.0, left: 4.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: <Widget>[
-                ButtonTheme(
-                  minWidth: 40,
-                  child: FlatButton(
-                    onPressed: () => _openPhotoLibrary(),
-                    child:
-                        Icon(FontAwesomeIcons.solidImages, color: kColorBlack71),
-                    splashColor: kColorExtraLightGray,
-                    highlightColor: Colors.transparent,
+        bottomSheet: SafeArea(
+          child: Container(
+            height: 50,
+            width: screenWidth,
+            decoration: BoxDecoration(
+              border: Border.all(color: kColorExtraLightGray),
+              color: Colors.white,
+            ),
+            child: Padding(
+              padding: EdgeInsets.only(right: 4.0, left: 4.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: <Widget>[
+                  ButtonTheme(
+                    minWidth: 40,
+                    child: FlatButton(
+                      onPressed: () => _openPhotoLibrary(),
+                      child:
+                          Icon(FontAwesomeIcons.solidImages, color: kColorBlack71),
+                      splashColor: kColorExtraLightGray,
+                      highlightColor: Colors.transparent,
+                    ),
                   ),
-                ),
-                mediaFile != null
-                    ? ButtonTheme(
-                        minWidth: 40,
-                        child: FlatButton(
-                          onPressed: () => _removeMediaFile(),
-                          child: Text('Remove',
-                              style: kAppBarTextStyle.copyWith(
-                                  color: kColorRed, fontSize: 16)),
-                          splashColor: kColorExtraLightGray,
-                          highlightColor: Colors.transparent,
-                        ),
-                      )
-                    : SizedBox(),
-              ],
+                  mediaFile != null
+                      ? ButtonTheme(
+                          minWidth: 40,
+                          child: FlatButton(
+                            onPressed: () => _removeMediaFile(),
+                            child: Text('Remove',
+                                style: kAppBarTextStyle.copyWith(
+                                    color: kColorRed, fontSize: 16)),
+                            splashColor: kColorExtraLightGray,
+                            highlightColor: Colors.transparent,
+                          ),
+                        )
+                      : SizedBox(),
+                ],
+              ),
             ),
           ),
         ),
@@ -209,13 +207,9 @@ class _AddUpdateState extends State<AddUpdate> {
   }
 
   _cropImage(File imageFile) async {
-    int screenHeight = MediaQuery.of(context).size.height.ceil();
-    int screenWidth = MediaQuery.of(context).size.width.ceil();
-
     mediaFile = await ImageCropper.cropImage(
       sourcePath: imageFile.path,
-      maxHeight: screenHeight,
-      maxWidth: screenWidth,
+      compressQuality: 100,
     );
     if (this.mounted)
       setState(() {
@@ -301,7 +295,7 @@ class _AddUpdateState extends State<AddUpdate> {
       'id': id,
       'uid': currentUserUid,
       'creationDate': creationDate,
-      'title': title,
+      'title': title.trim(),
       'likes': {},
     }).whenComplete(() {
       if (this.mounted)

@@ -8,26 +8,29 @@ import 'package:hereme_flutter/models/user.dart';
 import 'package:hereme_flutter/widgets/user_result.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'bottom_bar.dart';
-import 'home.dart';
 
 class AllUsersCloseBy extends StatefulWidget {
   final double latitude;
   final double longitude;
-  AllUsersCloseBy({this.latitude, this.longitude});
+  final List<String> blockedUids;
+  AllUsersCloseBy({this.latitude, this.longitude, this.blockedUids});
 
   @override
   _AllUsersCloseByState createState() => _AllUsersCloseByState(
         latitude: this.latitude,
         longitude: this.longitude,
+        blockedUids: this.blockedUids,
       );
 }
 
-class _AllUsersCloseByState extends State<AllUsersCloseBy> {
-  final _scaffoldKey = GlobalKey<ScaffoldState>();
-  RefreshController _refreshController = RefreshController(initialRefresh: false);
+  class _AllUsersCloseByState extends State<AllUsersCloseBy> {
   final double latitude;
   final double longitude;
-  _AllUsersCloseByState({this.latitude, this.longitude});
+  final List<String> blockedUids;
+  _AllUsersCloseByState({this.latitude, this.longitude, this.blockedUids});
+
+  final _scaffoldKey = GlobalKey<ScaffoldState>();
+  RefreshController _refreshController = RefreshController(initialRefresh: false);
 
   @override
   void deactivate() {
@@ -62,17 +65,19 @@ class _AllUsersCloseByState extends State<AllUsersCloseBy> {
           final imageUrl = user.data['profileImageUrl'];
           final uid = user.data['uid'];
           final hasAccountLinked = user.data['hasAccountLinked'];
+          final username = user.data['username'];
 
           final displayedUser = User(
             profileImageUrl: imageUrl,
             uid: uid,
             hasAccountLinked: hasAccountLinked,
+            username: username ?? 'name',
           );
 
           if (currentUser.uid != uid &&
               hasAccountLinked != null &&
               hasAccountLinked &&
-              !currentUser.blockedUids.contains(uid) &&
+              !blockedUids.contains(uid) &&
               uid != adminUid) {
             usersAround.add(displayedUser);
           }
@@ -92,15 +97,18 @@ class _AllUsersCloseByState extends State<AllUsersCloseBy> {
                 child: Text('Everyone Within 1/4 Mile',
                     style: kAppBarTextStyle.copyWith(fontSize: 16.0)),
               ),
-              GridView.count(
-                physics: NeverScrollableScrollPhysics(),
-                padding: EdgeInsets.only(left: 1.0, right: 1.0),
-                crossAxisCount: 3,
-                childAspectRatio: 1.0,
-                mainAxisSpacing: 1.0,
-                crossAxisSpacing: 1.0,
-                shrinkWrap: true,
-                children: gridTiles,
+              Padding(
+                padding: EdgeInsets.only(bottom: 40.0),
+                child: GridView.count(
+                  physics: NeverScrollableScrollPhysics(),
+                  padding: EdgeInsets.only(left: 1.0, right: 1.0),
+                  crossAxisCount: 3,
+                  childAspectRatio: 1.0,
+                  mainAxisSpacing: 1.0,
+                  crossAxisSpacing: 1.0,
+                  shrinkWrap: true,
+                  children: gridTiles,
+                ),
               ),
             ],
           );
@@ -121,8 +129,6 @@ class _AllUsersCloseByState extends State<AllUsersCloseBy> {
 
   @override
   Widget build(BuildContext context) {
-    final double screenWidth = MediaQuery.of(context).size.width;
-    final double screenHeight = MediaQuery.of(context).size.height;
     return Scaffold(
       key: _scaffoldKey,
       backgroundColor: kColorOffWhite,
@@ -142,46 +148,42 @@ class _AllUsersCloseByState extends State<AllUsersCloseBy> {
           highlightColor: Colors.transparent,
         ),
       ),
-      body: SafeArea(
-        child: SmartRefresher(
-          enablePullDown: true,
-          header: WaterDropHeader(
-            waterDropColor: kColorExtraLightGray,
-            idleIcon: Icon(
-              FontAwesomeIcons.user,
-              color: kColorRed,
-              size: 18.0,
-            ),
-            complete: Icon(
-              FontAwesomeIcons. arrowDown,
-              color: kColorLightGray,
-              size: 20.0,
-            ),
-            failed: Icon(
-              FontAwesomeIcons.times,
-              color: kColorRed,
-              size: 20.0,
-            ),
+      body: SmartRefresher(
+        enablePullDown: true,
+        header: WaterDropHeader(
+          waterDropColor: kColorExtraLightGray,
+          idleIcon: Icon(
+            FontAwesomeIcons.userAlt,
+            color: kColorRed,
+            size: 18.0,
           ),
-          controller: _refreshController,
-          onRefresh: () async {
-            kShowSnackbar(
-              key: _scaffoldKey,
-              text: 'Your feed will auto update as someone comes within or leaves your vicinity',
-              backgroundColor: kColorBlack71,
-            );
-            _refreshController.refreshCompleted();
-          },
-          child: Container(
-            height: screenHeight,
-            width: screenWidth,
-            child: SingleChildScrollView(
-              padding: EdgeInsets.only(bottom: 50.0),
-              child: streamCloseByUsers(),
-            ),
+          complete: Icon(
+            FontAwesomeIcons. arrowDown,
+            color: kColorLightGray,
+            size: 20.0,
           ),
+          failed: Icon(
+            FontAwesomeIcons.times,
+            color: kColorRed,
+            size: 20.0,
+          ),
+        ),
+        controller: _refreshController,
+        onRefresh: _onRefresh,
+        child: SingleChildScrollView(
+          child: streamCloseByUsers(),
         ),
       ),
     );
+  }
+
+  _onRefresh() {
+    kSelectionClick();
+//    kShowSnackbar(
+//      key: _scaffoldKey,
+//      text: 'Your feed will auto update as someone comes within or leaves your vicinity',
+//      backgroundColor: kColorBlack71,
+//    );
+    _refreshController.refreshCompleted();
   }
 }

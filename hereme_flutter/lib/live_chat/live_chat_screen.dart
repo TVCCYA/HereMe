@@ -682,7 +682,7 @@ class LiveChatMessage extends StatelessWidget {
           );
   }
 
-  _goToHostUserProfile(BuildContext context) {
+  _goToUserProfile(BuildContext context) {
     if (uid != null) {
       bool isCurrentUser = currentUser.uid == uid;
       User user = User(uid: uid);
@@ -723,9 +723,9 @@ class LiveChatMessage extends StatelessWidget {
       ReusableBottomActionSheetListTile(
         title: !isCurrentUser ? "$displayName's Profile" : 'Your Profile',
         iconData: FontAwesomeIcons.user,
-        onTap: () async {
+        onTap: () {
           Navigator.pop(context);
-          _goToHostUserProfile(context);
+          _goToUserProfile(context);
         },
       ),
     );

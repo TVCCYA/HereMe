@@ -6,7 +6,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:rflutter_alert/rflutter_alert.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'home/bottom_bar.dart';
-import 'home/home.dart';
+
 const kColorRed = Color.fromRGBO(201, 62, 62, 1.0);
 const kColorBlue = Color.fromRGBO(91, 117, 212, 1.0);
 const kColorGreen = Color.fromRGBO(62, 201, 62, 1.0);
@@ -44,7 +44,7 @@ ThemeData kTheme(BuildContext context) {
     unselectedWidgetColor: kColorLightGray,
     dividerColor: Colors.transparent,
     highlightColor: Colors.transparent,
-    splashColor: kColorExtraLightGray,
+    splashColor: Colors.black.withOpacity(0.05),
   );
 }
 
@@ -58,8 +58,21 @@ const kAppBarTextStyle = TextStyle(
 const kDefaultTextStyle = TextStyle(
   color: kColorBlack71,
   fontFamily: 'Avenir',
-  fontWeight: FontWeight.w400,
+  fontWeight: FontWeight.w300,
   fontSize: 16.0,
+);
+
+const kUsernameTextStyle = TextStyle(
+  fontFamily: 'Avenir',
+  fontWeight: FontWeight.w800,
+  color: Colors.white,
+  fontSize: 32,
+  shadows: <Shadow>[
+    Shadow(
+      blurRadius: 3.0,
+      color: kColorBlack71,
+    ),
+  ],
 );
 
 const kRegistrationInputDecoration = InputDecoration(
@@ -316,10 +329,12 @@ String kIconPath(String socialMedia) {
   }
 }
 
-Container circularProgress() {
+Container circularProgress({double size}) {
   return Container(
+    height: size,
+    width: size,
     alignment: Alignment.center,
-    padding: EdgeInsets.only(top: 10.0),
+    padding: EdgeInsets.only(top: 10.0, bottom: 10.0),
     child: CircularProgressIndicator(
       valueColor: AlwaysStoppedAnimation(kColorRed),
       backgroundColor: kColorLightGray,
@@ -392,7 +407,12 @@ void kDeleteSentKnocks(String currentUserUid) {
     snapshot.documents.forEach((doc) {
       if (doc.exists) {
         final uid = doc.data['uid'];
-        knocksRef.document(uid).collection('receivedKnockFrom').document(currentUserUid).get().then((document) {
+        knocksRef
+            .document(uid)
+            .collection('receivedKnockFrom')
+            .document(currentUserUid)
+            .get()
+            .then((document) {
           if (document.exists) {
             document.reference.delete().whenComplete(() {
               doc.reference.delete();
@@ -517,7 +537,10 @@ void kShowSnackbar(
     duration: Duration(seconds: 5),
     content: Text(
       text,
-      style: kDefaultTextStyle.copyWith(color: Colors.white, fontSize: 15.0,),
+      style: kDefaultTextStyle.copyWith(
+        color: Colors.white,
+        fontSize: 15.0,
+      ),
       textAlign: TextAlign.center,
     ),
     backgroundColor: backgroundColor,
@@ -526,9 +549,7 @@ void kShowSnackbar(
 }
 
 void kUpdateHideMe(bool val) {
-  userLocationsRef.document(currentUser.uid).updateData({
-    'hideMe': val
-  });
+  userLocationsRef.document(currentUser.uid).updateData({'hideMe': val});
 }
 
 void kHandleHideMe(GlobalKey<ScaffoldState> key) async {
@@ -539,7 +560,8 @@ void kHandleHideMe(GlobalKey<ScaffoldState> key) async {
     kUpdateHideMe(true);
     kShowSnackbar(
       key: key,
-      text: 'Hide Me Active: you will not be seen by people nearby, and you cannot see any content nearby',
+      text:
+          'Hide Me Active: you will not be seen by people nearby, and you cannot see any content nearby',
       backgroundColor: kColorGreen,
     );
   } else {
@@ -555,12 +577,67 @@ void kHandleHideMe(GlobalKey<ScaffoldState> key) async {
 
 void kSelectionClick() {
   SystemChannels.platform.invokeMethod<void>(
-    'HapticFeedback.vibrate',
-    'HapticFeedbackType.selectionClick');
+      'HapticFeedback.vibrate', 'HapticFeedbackType.selectionClick');
 }
 
 void kHeavyImpact() {
   SystemChannels.platform.invokeMethod<void>(
-    'HapticFeedback.vibrate',
-    'HapticFeedbackType.heavyImpact');
+      'HapticFeedback.vibrate', 'HapticFeedbackType.heavyImpact');
+}
+
+Route createRoute(Widget page) {
+  return PageRouteBuilder(
+    pageBuilder: (context, animation, secondaryAnimation) => page,
+    transitionsBuilder: (context, animation, secondaryAnimation, child) {
+      var begin = Offset(0.0, 1.0);
+      var end = Offset.zero;
+      var curve = Curves.ease;
+
+      var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+
+      return SlideTransition(
+        position: animation.drive(tween),
+        child: child,
+      );
+    },
+  );
+}
+
+String timeAgoDisplay(int creationDate) {
+  final now = (DateTime.now().millisecondsSinceEpoch);
+  final secondsAgo = now - creationDate;
+
+  final minute = 60;
+  final hour = 60 * minute;
+  final day = 24 * hour;
+  final week = 7 * day;
+  final month = 4 * week;
+  final year = 12 * month;
+
+  double quotient;
+  String unit;
+  if (secondsAgo < minute) {
+    quotient = secondsAgo as double;
+    unit = "s";
+  } else if (secondsAgo < hour) {
+    quotient = secondsAgo / minute;
+    unit = "m";
+  } else if (secondsAgo < day) {
+    quotient = secondsAgo / hour;
+    unit = "h";
+  } else if (secondsAgo < week) {
+    quotient = secondsAgo / day;
+    unit = "d";
+  } else if (secondsAgo < month) {
+    quotient = secondsAgo / week;
+    unit = "w";
+  } else if (secondsAgo < year) {
+    quotient = secondsAgo / month;
+    unit = "mo";
+  } else {
+    quotient = secondsAgo / year;
+    unit = "y";
+  }
+
+  return '${quotient.round()}$unit';
 }

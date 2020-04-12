@@ -13,10 +13,11 @@ import 'package:hereme_flutter/models/knock.dart';
 import 'package:hereme_flutter/models/linked_account.dart';
 import 'package:hereme_flutter/models/user.dart';
 import 'package:hereme_flutter/registration/create_display_name.dart';
-import 'package:hereme_flutter/settings/add_update.dart';
+import 'package:hereme_flutter/updates/add_update.dart';
 import 'package:hereme_flutter/settings/choose_account.dart';
 import 'package:hereme_flutter/updates/all_updates.dart';
 import 'package:hereme_flutter/user_profile/profile_image_full_screen.dart';
+import 'package:hereme_flutter/utils/custom_image.dart';
 import 'package:hereme_flutter/utils/reusable_button.dart';
 import 'package:hereme_flutter/utils/reusable_profile_card.dart';
 import 'package:hereme_flutter/widgets/activity_feed_item.dart';
@@ -53,9 +54,9 @@ class Profile extends StatefulWidget {
 
   @override
   _ProfileState createState() => _ProfileState(
-        user: this.user,
-        locationLabel: this.locationLabel,
-      );
+    user: this.user,
+    locationLabel: this.locationLabel,
+  );
 }
 
 class _ProfileState extends State<Profile> {
@@ -74,6 +75,7 @@ class _ProfileState extends State<Profile> {
   String displayedFollowersCount;
   String profileImageUrl;
   String backgroundImageUrl;
+  File mediaFile;
   String videoUrl;
   int weeklyVisitsCount;
   String displayedWeeklyCount;
@@ -149,16 +151,16 @@ class _ProfileState extends State<Profile> {
     return Stack(
       children: <Widget>[
         Container(
-          decoration: backgroundImageUrl != null ? BoxDecoration(
-            image: DecorationImage(
-              image: CachedNetworkImageProvider(backgroundImageUrl),
-              fit: BoxFit.cover,
-              colorFilter: ColorFilter.mode(kColorBlack71.withOpacity(0.35), BlendMode.multiply)
-            ),
-            color: Colors.white
-          ) : BoxDecoration(
-            color: Colors.white,
-          )
+            decoration: backgroundImageUrl != null ? BoxDecoration(
+                image: DecorationImage(
+                    image: CachedNetworkImageProvider(backgroundImageUrl),
+                    fit: BoxFit.cover,
+                    colorFilter: ColorFilter.mode(kColorBlack71.withOpacity(0.35), BlendMode.multiply)
+                ),
+                color: Colors.white
+            ) : BoxDecoration(
+              color: Colors.white,
+            )
         ),
         Scaffold(
           key: _scaffoldKey,
@@ -219,12 +221,12 @@ class _ProfileState extends State<Profile> {
 
   Text appBarTitle() {
     return Text(
-            displayName ?? username ?? '',
-            style: kAppBarTextStyle.copyWith(
-              color:
-              Color.fromRGBO(red ?? 71, green ?? 71, blue ?? 71, 1.0),
-            ),
-          );
+      displayName ?? username ?? '',
+      style: kAppBarTextStyle.copyWith(
+        color:
+        Color.fromRGBO(red ?? 71, green ?? 71, blue ?? 71, 1.0),
+      ),
+    );
   }
 
   buildHeader(double screenHeight, double screenWidth) {
@@ -243,13 +245,19 @@ class _ProfileState extends State<Profile> {
               crossAxisAlignment: CrossAxisAlignment.center,
               mainAxisAlignment: MainAxisAlignment.start,
               children: <Widget>[
-                ReusableProfileCard(
-                  imageUrl: profileImageUrl,
-                  cardSize: profileImageSize,
+                GestureDetector(
                   onTap: () => _isCurrentUser
                       ? _changeUserPhoto(true)
                       : _fullScreenProfileImage(),
+                  child: cachedUserResultImage(profileImageUrl != null ? profileImageUrl : '', profileImageSize, true),
                 ),
+//                ReusableProfileCard(
+//                  imageUrl: profileImageUrl,
+//                  cardSize: profileImageSize,
+//                  onTap: () => _isCurrentUser
+//                      ? _changeUserPhoto(true)
+//                      : _fullScreenProfileImage(),
+//                ),
                 Container(
                   height: profileImageSize,
                   width: topHalfContainerSize,
@@ -281,7 +289,7 @@ class _ProfileState extends State<Profile> {
                               Text(
                                 locationLabel ?? 'Around',
                                 style:
-                                    kAppBarTextStyle.copyWith(fontSize: 16.0),
+                                kAppBarTextStyle.copyWith(fontSize: 16.0),
                               ),
                             ],
                           ),
@@ -289,16 +297,16 @@ class _ProfileState extends State<Profile> {
                         Row(
                           children: _isCurrentUser
                               ? <Widget>[
-                                  TopProfileHeaderContainer(
-                                      text: 'Profile Views:',
-                                      fontSize: 16.0,
-                                      padding: 8.0),
-                                  SizedBox(width: 6.0),
-                                  TopProfileHeaderContainer(
-                                      text: displayedTotalCount ?? '0',
-                                      fontSize: 16.0,
-                                      padding: 4.0),
-                                ]
+                            TopProfileHeaderContainer(
+                                text: 'Profile Views:',
+                                fontSize: 16.0,
+                                padding: 8.0),
+                            SizedBox(width: 6.0),
+                            TopProfileHeaderContainer(
+                                text: displayedTotalCount ?? '0',
+                                fontSize: 16.0,
+                                padding: 4.0),
+                          ]
                               : <Widget>[],
                         )
                       ],
@@ -312,51 +320,51 @@ class _ProfileState extends State<Profile> {
             height: 40,
             child: _isCurrentUser
                 ? TopProfileHeaderButton(
-                    text: 'Change Background',
-                    onPressed: () => _changeUserPhoto(false),
-                    width: screenWidth,
-                  )
+              text: 'Change Background',
+              onPressed: () => _changeUserPhoto(false),
+              width: screenWidth,
+            )
                 : Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: <Widget>[
-                      TopProfileHeaderButton(
-                        text: _isFollowing ? 'Liked' : 'Like',
-                        onPressed: () =>
-                            _isFollowing ? _unfollowUser() : _followUser(),
-                        width: screenWidth / 2.5,
-                        textColor:
-                            _isFollowing ? kColorBlack71 : Colors.white,
-                        backgroundColor:
-                            _isFollowing ? Colors.white : kColorBlue,
-                        splashColor:
-                            _isFollowing ? Colors.white : kColorDarkBlue,
-                      ),
-                      TopProfileHeaderButton(
-                        text: 'Knock',
-                        onPressed: () => {
-                          kShowAlertMultiButtons(
-                            context: context,
-                            title: 'Knock Knock',
-                            desc: 'Did you mean to Knock $username?',
-                            buttonText1: 'Yes',
-                            color1: kColorGreen,
-                            buttonText2: 'Cancel',
-                            color2: kColorLightGray,
-                            onPressed1: () {
-                              _handleKnock(
-                                uid: userUid,
-                                username: username,
-                                profileImageUrl: profileImageUrl,
-                              );
-                              Navigator.pop(context);
-                            },
-                            onPressed2: () => Navigator.pop(context),
-                          )
-                        },
-                        width: screenWidth / 2.5,
-                      ),
-                    ],
-                  ),
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: <Widget>[
+                TopProfileHeaderButton(
+                  text: _isFollowing ? 'Liked' : 'Like',
+                  onPressed: () =>
+                  _isFollowing ? _unfollowUser() : _followUser(),
+                  width: screenWidth / 2.5,
+                  textColor:
+                  _isFollowing ? kColorBlack71 : Colors.white,
+                  backgroundColor:
+                  _isFollowing ? Colors.white : kColorBlue,
+                  splashColor:
+                  _isFollowing ? Colors.white : kColorDarkBlue,
+                ),
+                TopProfileHeaderButton(
+                  text: 'Knock',
+                  onPressed: () => {
+                    kShowAlertMultiButtons(
+                      context: context,
+                      title: 'Knock Knock',
+                      desc: 'Did you mean to Knock $username?',
+                      buttonText1: 'Yes',
+                      color1: kColorGreen,
+                      buttonText2: 'Cancel',
+                      color2: kColorLightGray,
+                      onPressed1: () {
+                        _handleKnock(
+                          uid: userUid,
+                          username: username,
+                          profileImageUrl: profileImageUrl,
+                        );
+                        Navigator.pop(context);
+                      },
+                      onPressed2: () => Navigator.pop(context),
+                    )
+                  },
+                  width: screenWidth / 2.5,
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -449,7 +457,8 @@ class _ProfileState extends State<Profile> {
                 return circularProgress();
               }
               final updates = snapshot.data.documents;
-              List<UpdatePost> displayedUpdates = [];
+              List<ProfileLatestPost> displayedUpdates = [];
+              List<ProfileLatestPost> displayedPhotos = [];
               for (var post in updates) {
 
                 final String photoUrl = post.data['photoUrl'];
@@ -459,7 +468,7 @@ class _ProfileState extends State<Profile> {
                 final String id = post.data['id'];
                 final dynamic likes = post.data['likes'];
 
-                final displayedPost = UpdatePost(
+                final displayedPost = ProfileLatestPost(
                   photoUrl: photoUrl,
                   title: title,
                   creationDate: creationDate,
@@ -468,10 +477,12 @@ class _ProfileState extends State<Profile> {
                   id: id,
                   displayName: displayName ?? username,
                   likes: likes ?? {},
-                  width: 105,
                 );
                 displayedUpdates
                     .add(displayedPost);
+                if (type == 'photo') {
+                  displayedPhotos.add(displayedPost);
+                }
               }
               if (displayedUpdates.isNotEmpty) {
                 return Column(
@@ -479,20 +490,33 @@ class _ProfileState extends State<Profile> {
                     Align(
                       alignment: Alignment.topRight,
                       child: GestureDetector(
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          children: <Widget>[
-                            Text('See All', style: kAppBarTextStyle.copyWith(fontSize: 16)),
-                            SizedBox(width: 4.0),
-                            Icon(FontAwesomeIcons.chevronRight, size: 14),
-                          ],
+                        child: Padding(
+                          padding: EdgeInsets.only(right: 4.0),
+                          child: Text('View All',
+                              style: kAppBarTextStyle.copyWith(
+                                  fontSize: 16.0, color: kColorRed)),
                         ),
                         onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => AllUpdates(uid: currentUserUid, displayName: displayName ?? username))),
                       ),
                     ),
                     SizedBox(height: 8.0),
-                    Column(children: displayedUpdates),
+                    ListView.builder(
+                      physics: NeverScrollableScrollPhysics(),
+                      shrinkWrap: true,
+                      itemCount: displayedUpdates.length,
+                      itemBuilder: (context, i) {
+                        return GestureDetector(
+                          onTap: () =>
+                              Navigator.push(
+                                context,
+                                FadeRoute(
+                                  page: FullScreenLatestPhoto(index: i, displayedUpdates: displayedPhotos),
+                                ),
+                              ),
+                          child: displayedUpdates[i],
+                        );
+                      },
+                    ),
                   ],
                 );
               } else {
@@ -521,7 +545,7 @@ class _ProfileState extends State<Profile> {
                 ),
               ),
               onPressed: () =>
-                  Navigator.push(context, MaterialPageRoute(builder: (context) => AddUpdate())),
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => AddLatest())),
               splashColor: kColorDarkBlue,
               highlightColor: Colors.transparent,
             ),
@@ -541,7 +565,8 @@ class _ProfileState extends State<Profile> {
             return circularProgress();
           }
           final updates = snapshot.data.documents;
-          List<UpdatePost> displayedUpdates = [];
+          List<ProfileLatestPost> displayedUpdates = [];
+          List<ProfileLatestPost> displayedPhotos = [];
           for (var post in updates) {
 
             final String photoUrl = post.data['photoUrl'];
@@ -551,7 +576,7 @@ class _ProfileState extends State<Profile> {
             final String id = post.data['id'];
             final dynamic likes = post.data['likes'];
 
-            final displayedPost = UpdatePost(
+            final displayedPost = ProfileLatestPost(
               photoUrl: photoUrl,
               title: title,
               creationDate: creationDate,
@@ -560,10 +585,12 @@ class _ProfileState extends State<Profile> {
               id: id,
               displayName: displayName ?? username,
               likes: likes ?? {},
-              width: 105,
             );
             displayedUpdates
                 .add(displayedPost);
+            if (type == 'photo') {
+              displayedPhotos.add(displayedPost);
+            }
           }
           if (displayedUpdates.isNotEmpty) {
             return Column(
@@ -571,20 +598,34 @@ class _ProfileState extends State<Profile> {
                 Align(
                   alignment: Alignment.topRight,
                   child: GestureDetector(
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: <Widget>[
-                        Text('See All', style: kAppBarTextStyle.copyWith(fontSize: 16)),
-                        SizedBox(width: 4.0),
-                        Icon(FontAwesomeIcons.chevronRight, size: 14),
-                      ],
+                    child: Padding(
+                      padding: EdgeInsets.only(right: 4.0),
+                      child: Text('View All',
+                          style: kAppBarTextStyle.copyWith(
+                              fontSize: 16.0, color: kColorRed)),
                     ),
                     onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => AllUpdates(uid: userUid, displayName: displayName ?? username))),
                   ),
                 ),
                 SizedBox(height: 8.0),
-                Column(children: displayedUpdates),
+                ListView.builder(
+                  physics: NeverScrollableScrollPhysics(),
+                  shrinkWrap: true,
+                  itemCount: displayedUpdates.length,
+                  itemBuilder: (context, i) {
+                    return GestureDetector(
+                      onTap: () =>
+                          Navigator.push(
+                            context,
+                            FadeRoute(
+                              page: FullScreenLatestPhoto(index: i, displayedUpdates: displayedPhotos),
+                            ),
+                          ),
+                      child: displayedUpdates[i],
+                    );
+                  },
+                ),
+//                Column(children: displayedUpdates),
               ],
             );
           } else {
@@ -611,7 +652,7 @@ class _ProfileState extends State<Profile> {
         child: ExpansionTile(
           backgroundColor: Colors.white.withOpacity(0.9),
           initiallyExpanded: true,
-          title: ReusableSectionLabel(title: 'Links'),
+          title: ReusableSectionLabel('Links'),
           children: <Widget>[
             _isCurrentUser
                 ? StreamBuilder<QuerySnapshot>(
@@ -796,11 +837,11 @@ class _ProfileState extends State<Profile> {
               Container(
                   height: height,
                   width: squareWidth,
-                alignment: Alignment(-squareWidth * .015, -1.0),
-                child: FlatButton(
-                  child: Icon(FontAwesomeIcons.cog, color: kColorLightGray),
-                  onPressed: () => _photoVideoActionSheet(context),
-                )
+                  alignment: Alignment(-squareWidth * .015, -1.0),
+                  child: FlatButton(
+                    child: Icon(FontAwesomeIcons.cog, color: kColorLightGray),
+                    onPressed: () => _photoVideoActionSheet(context),
+                  )
               ),
               Container(
                   height: height,
@@ -902,14 +943,14 @@ class _ProfileState extends State<Profile> {
           return GestureDetector(
             onTap: () {
               if (this.mounted)
-              setState(() {
-                if (_controller.value.isPlaying) {
-                  _controller.pause();
-                } else {
-                  _controller.play();
-                  _controller.setVolume(0.5);
-                }
-              });
+                setState(() {
+                  if (_controller.value.isPlaying) {
+                    _controller.pause();
+                  } else {
+                    _controller.play();
+                    _controller.setVolume(0.5);
+                  }
+                });
             },
             child: AspectRatio(
               aspectRatio: screenHeight / screenWidth,
@@ -1037,7 +1078,7 @@ class _ProfileState extends State<Profile> {
 
   _fullScreenProfileImage() {
     Navigator.push(
-        context, SizeRoute(page: ProfileImageFullScreen(profileImageUrl)));
+        context, FadeRoute(page: ProfileImageFullScreen(profileImageUrl)));
   }
 
   _updateFirestoreHasAccountLinked() {
@@ -1048,9 +1089,9 @@ class _ProfileState extends State<Profile> {
 
   _knocksActionSheet(
       {BuildContext context,
-      String uid,
-      String username,
-      String profileImageUrl}) {
+        String uid,
+        String username,
+        String profileImageUrl}) {
     List<ReusableBottomActionSheetListTile> sheets = [];
     sheets.add(
       ReusableBottomActionSheetListTile(
@@ -1207,7 +1248,7 @@ class _ProfileState extends State<Profile> {
 
   _removePendingKnockActivityFeed(String uid1, String uid2) {
     DocumentReference ref =
-        activityRef.document(uid1).collection('feedItems').document(uid2);
+    activityRef.document(uid1).collection('feedItems').document(uid2);
     ref.get().then((snapshot) {
       if (snapshot.exists) {
         final type = snapshot.data['type'];
@@ -1273,34 +1314,34 @@ class _ProfileState extends State<Profile> {
       String iconString, String url, String linkId) {
     String platform;
     for (var platformString
-        in _determineUrl(accountUsername, iconString, url).keys) {
+    in _determineUrl(accountUsername, iconString, url).keys) {
       platform = platformString;
     }
     List<ReusableBottomActionSheetListTile> sheets = [];
     _isCurrentUser
         ? sheets.add(
-            ReusableBottomActionSheetListTile(
-              title: 'Unlink $accountUsername',
-              iconData: FontAwesomeIcons.unlink,
-              color: kColorRed,
-              onTap: () {
-                kShowAlert(
-                  context: context,
-                  title: "Unlink Account?",
-                  desc: "Are you sure you want to unlink $accountUsername?",
-                  buttonText: "Unlink",
-                  onPressed: () {
-                    Navigator.pop(context);
-                    kHandleRemoveDataAtId(
-                        linkId, currentUserUid, 'socialMedias', 'socials');
-                    kHandleRemoveDataAtId(linkId, currentUserUid, 'update', 'posts');
-                    Navigator.pop(context);
-                  },
-                  color: kColorRed,
-                );
-              },
-            ),
-          )
+      ReusableBottomActionSheetListTile(
+        title: 'Unlink $accountUsername',
+        iconData: FontAwesomeIcons.unlink,
+        color: kColorRed,
+        onTap: () {
+          kShowAlert(
+            context: context,
+            title: "Unlink Account?",
+            desc: "Are you sure you want to unlink $accountUsername?",
+            buttonText: "Unlink",
+            onPressed: () {
+              Navigator.pop(context);
+              kHandleRemoveDataAtId(
+                  linkId, currentUserUid, 'socialMedias', 'socials');
+              kHandleRemoveDataAtId(linkId, currentUserUid, 'update', 'posts');
+              Navigator.pop(context);
+            },
+            color: kColorRed,
+          );
+        },
+      ),
+    )
         : SizedBox();
     sheets.add(
       ReusableBottomActionSheetListTile(
@@ -1350,24 +1391,24 @@ class _ProfileState extends State<Profile> {
     List<ReusableBottomActionSheetListTile> sheets = [];
     _isCurrentUser
         ? sheets.add(ReusableBottomActionSheetListTile(
-            title: 'Delete $title',
-            iconData: FontAwesomeIcons.minusCircle,
-            color: kColorRed,
-            onTap: () {
-              kShowAlert(
-                context: context,
-                title: "Delete Live Chat?",
-                desc: "Are you sure you want to delete $title?",
-                buttonText: "Delete",
-                onPressed: () {
-                  Navigator.pop(context);
-                  kHandleRemoveAllLiveChatData(chatId, currentUserUid);
-                  Navigator.pop(context);
-                },
-                color: kColorRed,
-              );
-            },
-          ))
+      title: 'Delete $title',
+      iconData: FontAwesomeIcons.minusCircle,
+      color: kColorRed,
+      onTap: () {
+        kShowAlert(
+          context: context,
+          title: "Delete Live Chat?",
+          desc: "Are you sure you want to delete $title?",
+          buttonText: "Delete",
+          onPressed: () {
+            Navigator.pop(context);
+            kHandleRemoveAllLiveChatData(chatId, currentUserUid);
+            Navigator.pop(context);
+          },
+          color: kColorRed,
+        );
+      },
+    ))
         : SizedBox();
     sheets.add(
       ReusableBottomActionSheetListTile(
@@ -1380,15 +1421,15 @@ class _ProfileState extends State<Profile> {
               MaterialPageRoute(
                   builder: (context) => currentUser.displayName != null
                       ? LiveChatScreen(
-                          title: title ?? '',
-                          chatId: chatId,
-                          chatHostDisplayName: hostDisplayName,
-                          chatHostUid: chatHostUid,
-                          hostRed: hostRed,
-                          hostGreen: hostGreen,
-                          hostBlue: hostBlue,
-                          duration: duration,
-                        )
+                    title: title ?? '',
+                    chatId: chatId,
+                    chatHostDisplayName: hostDisplayName,
+                    chatHostUid: chatHostUid,
+                    hostRed: hostRed,
+                    hostGreen: hostGreen,
+                    hostBlue: hostBlue,
+                    duration: duration,
+                  )
                       : CreateDisplayName()));
         },
       ),
@@ -1465,7 +1506,7 @@ class _ProfileState extends State<Profile> {
   _openVideoLibrary() async {
     await ImagePicker.pickVideo(source: ImageSource.gallery).then(
           (video) {
-            if(video != null)  _uploadFavVideoToFirebase(video);
+        if(video != null)  _uploadFavVideoToFirebase(video);
       },
     );
   }
@@ -1521,45 +1562,39 @@ class _ProfileState extends State<Profile> {
   }
 
   _openPhotoLibrary(bool isChangingProfileImage) async {
-    await ImagePicker.pickImage(source: ImageSource.gallery).then(
+    await ImagePicker.pickImage(source: ImageSource.gallery, imageQuality: 100).then(
           (profilePic) {
         _cropImage(profilePic, isChangingProfileImage);
-        if (this.mounted)
-          setState(() {
-            showSpinner = false;
-          });
       },
     );
   }
 
   _openCamera(bool isChangingProfileImage) async {
-    await ImagePicker.pickImage(source: ImageSource.camera).then(
+    await ImagePicker.pickImage(source: ImageSource.camera, imageQuality: 100).then(
           (profilePic) {
         if (profilePic != null) {
           _cropImage(profilePic, isChangingProfileImage);
-          if (this.mounted)
-            setState(() {
-              showSpinner = false;
-            });
-        } else {
-          if (this.mounted)
-            setState(() {
-              showSpinner = false;
-            });
         }
       },
     );
   }
 
-  Future<Null> _cropImage(File imageFile, bool isChangingProfileImage) async {
-    int screenHeight = MediaQuery.of(context).size.height.round();
-    int screenWidth = MediaQuery.of(context).size.width.round();
-    File croppedFile = await ImageCropper.cropImage(
+  _cropImage(File imageFile, bool isChangingProfileImage) async {
+    mediaFile = await ImageCropper.cropImage(
       sourcePath: imageFile.path,
-      maxHeight: screenHeight,
-      maxWidth: screenWidth,
+      compressQuality: 100,
+      cropStyle: isChangingProfileImage ? CropStyle.circle : CropStyle.rectangle,
     );
-    isChangingProfileImage ? _uploadProfileImageToFirebase(croppedFile) : _uploadBackgroundImageToFirebase(croppedFile);
+    print(mediaFile);
+    if (mediaFile == null) {
+      print('did nothing');
+      if (this.mounted)
+        setState(() {
+          showSpinner = false;
+        });
+    } else {
+      isChangingProfileImage ? _uploadProfileImageToFirebase(mediaFile) : _uploadBackgroundImageToFirebase(mediaFile);
+    }
   }
 
   Future _uploadProfileImageToFirebase(File profileImage) async {
@@ -1589,14 +1624,16 @@ class _ProfileState extends State<Profile> {
         Map<String, String> photoUrl = <String, String>{
           'profileImageUrl': '$downloadUrl'
         };
-
-        usersRef.document(currentUserUid).updateData(photoUrl).whenComplete(() {
-          print('User Photo Added');
-          if (this.mounted)
-            setState(() {
-              profileImageUrl = downloadUrl;
-              showSpinner = false;
-            });
+        final ref = usersRef.document(currentUserUid);
+        ref.updateData(photoUrl).whenComplete(() {
+          ref.collection('updatedFields').document('profileImageUrl').setData(photoUrl).whenComplete(() {
+            print('User updated Photo');
+            if (this.mounted)
+              setState(() {
+                profileImageUrl = downloadUrl;
+                showSpinner = false;
+              });
+          });
         }).catchError(
               (e) => kShowAlert(
             context: context,
@@ -1710,29 +1747,29 @@ class _ProfileState extends State<Profile> {
     bool canReport = userUid != null;
     canReport
         ? reportedUsersRef.document(userUid).setData({
-            'uid': userUid,
-            'username': username,
-            'displayName': displayName,
-            'reason': reason,
-            'reportedByUid': currentUser.uid,
-          }).whenComplete(() {
-            kShowAlert(
-              context: context,
-              title: 'Successfully Reported',
-              desc: 'Thank you for making HereMe a better place',
-              buttonText: 'Dismiss',
-              onPressed: () => Navigator.pop(context),
-              color: kColorBlue,
-            );
-          })
+      'uid': userUid,
+      'username': username,
+      'displayName': displayName,
+      'reason': reason,
+      'reportedByUid': currentUser.uid,
+    }).whenComplete(() {
+      kShowAlert(
+        context: context,
+        title: 'Successfully Reported',
+        desc: 'Thank you for making HereMe a better place',
+        buttonText: 'Dismiss',
+        onPressed: () => Navigator.pop(context),
+        color: kColorBlue,
+      );
+    })
         : kShowAlert(
-            context: context,
-            title: 'Whoops',
-            desc: 'Unable to report at this time',
-            buttonText: 'Try Again',
-            onPressed: () => Navigator.pop(context),
-            color: kColorRed,
-          );
+      context: context,
+      title: 'Whoops',
+      desc: 'Unable to report at this time',
+      buttonText: 'Try Again',
+      onPressed: () => Navigator.pop(context),
+      color: kColorRed,
+    );
   }
 
   _reportBlockSettings() {
@@ -1999,6 +2036,10 @@ class _ProfileState extends State<Profile> {
       retMap = {'TikTok': url};
     } else if (icon.contains('pinterest')) {
       retMap = {'Pinterest': url};
+    } else if (icon.contains('etsy')) {
+      retMap = {'Etsy': url};
+    } else if (icon.contains('cashapp')) {
+      retMap = {'Cash App': url};
     } else {
       retMap = {'Browser': url};
     }
@@ -2018,6 +2059,7 @@ class _ProfileState extends State<Profile> {
 //    _controller.dispose();
 //  }
 }
+
 
 class TopProfileHeaderButton extends StatelessWidget {
   const TopProfileHeaderButton({
@@ -2106,19 +2148,17 @@ class ReusableContentContainer extends StatelessWidget {
 }
 
 class ReusableSectionLabel extends StatelessWidget {
-  ReusableSectionLabel(
-      {@required this.title, this.screenWidth, this.icon, this.iconColor});
+  ReusableSectionLabel(this.title, {this.top = 20.0, this.left = 12.0});
 
   final String title;
-  final double screenWidth;
-  final IconData icon;
-  final Color iconColor;
+  final double top;
+  final double left;
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: EdgeInsets.only(left: 4.0),
-      child: Text(title, style: kAppBarTextStyle.copyWith(fontSize: 16.0)),
+      padding: EdgeInsets.only(top: top, left: left, bottom: 8.0),
+      child: Text(title, style: kAppBarTextStyle),
     );
   }
 }

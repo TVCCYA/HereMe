@@ -167,9 +167,9 @@ class _AddRecentState extends State<AddRecent> {
                           ),
                           SizedBox(height: 8.0),
                           mediaFile != null
-                              ? ReusableCard(
+                              ? CircleCard(
                                   imageFile: mediaFile,
-                                  cardSize: screenHeight / 5,
+                                  size: screenHeight / 5,
                                   onTap: () {
                                     _openPhotoLibrary();
                                   },
@@ -234,7 +234,7 @@ class _AddRecentState extends State<AddRecent> {
   }
 
   _openPhotoLibrary() async {
-    await ImagePicker.pickImage(source: ImageSource.gallery).then(
+    await ImagePicker.pickImage(source: ImageSource.gallery, imageQuality: 100).then(
       (profilePic) {
         _cropImage(profilePic);
         if (this.mounted) setState(() {
@@ -247,12 +247,7 @@ class _AddRecentState extends State<AddRecent> {
   _cropImage(File imageFile) async {
     mediaFile = await ImageCropper.cropImage(
       sourcePath: imageFile.path,
-      aspectRatio: CropAspectRatio(
-        ratioX: 1.0,
-        ratioY: 1.0,
-      ),
-      maxWidth: 512,
-      maxHeight: 512,
+      compressQuality: 100
     );
     if (this.mounted) setState(() {
       mediaFile = mediaFile;

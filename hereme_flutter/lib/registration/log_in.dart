@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:hereme_flutter/home/bottom_bar.dart';
 import 'package:hereme_flutter/home/home.dart';
 import 'package:hereme_flutter/constants.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -48,6 +49,8 @@ class _LogInState extends State<LogIn> {
 
   @override
   Widget build(BuildContext context) {
+    final double screenHeight = (MediaQuery.of(context).size.height);
+    final double screenWidth = (MediaQuery.of(context).size.width);
     return Scaffold(
       backgroundColor: kColorOffWhite,
       appBar: AppBar(
@@ -72,193 +75,198 @@ class _LogInState extends State<LogIn> {
           highlightColor: Colors.transparent,
         ),
       ),
-      body: SafeArea(
-        child: ModalProgressHUD(
-          inAsyncCall: showSpinner,
-          progressIndicator: CircularProgressIndicator(
-            valueColor: AlwaysStoppedAnimation<Color>(kColorRed),
-          ),
-          child: GestureDetector(
-            behavior: HitTestBehavior.translucent,
-            onPanDown: (_) {
-              FocusScope.of(context).requestFocus(FocusNode());
-            },
-            child: Padding(
-              padding: EdgeInsets.all(12.0),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.start,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: <Widget>[
-                  Column(
+      body: Container(
+        height: screenHeight,
+        width: screenWidth,
+        child: SingleChildScrollView(
+          physics: AlwaysScrollableScrollPhysics(),
+          child: SafeArea(
+            child: ModalProgressHUD(
+              inAsyncCall: showSpinner,
+              progressIndicator: circularProgress(),
+              child: GestureDetector(
+                behavior: HitTestBehavior.translucent,
+                onPanDown: (_) {
+                  FocusScope.of(context).requestFocus(FocusNode());
+                },
+                child: Padding(
+                  padding: EdgeInsets.all(12.0),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: <Widget>[
-                      TextField(
-                        cursorColor: kColorLightGray,
-                        onChanged: (value) {
-                          email = value;
-                          isTextFieldValid();
-                        },
-                        focusNode: null,
-                        onSubmitted: (v) {
-                          FocusScope.of(context)
-                              .requestFocus(_emailFocus);
-                        },
-                        autocorrect: false,
-                        keyboardType: TextInputType.emailAddress,
-                        textInputAction: TextInputAction.next,
-                        autofocus: true,
-                        style: kDefaultTextStyle,
-                        decoration: kRegistrationInputDecoration.copyWith(
-                          labelText: 'Email',
-                          hintText: 'Enter your email',
-                          hintStyle: kDefaultTextStyle.copyWith(
-                            color: kColorLightGray,
-                          ),
-                          labelStyle: kAppBarTextStyle.copyWith(fontSize: 16.0),
-                          icon: Icon(
-                            FontAwesomeIcons.envelope,
-                            color: kColorBlack71,
-                            size: 20.0,
-                          ),
-                        ),
-                      ),
-                      SizedBox(height: 8.0),
-                      TextField(
-                        obscureText: true,
-                        cursorColor: kColorLightGray,
-                        onChanged: (value) {
-                          password = value;
-                          isTextFieldValid();
-                        },
-                        focusNode: _emailFocus,
-                        onSubmitted: (v) {
-                          FocusScope.of(context)
-                              .requestFocus(_passwordFocus);
-                          _logIn();
-                        },
-                        autocorrect: false,
-                        keyboardType: TextInputType.text,
-                        textInputAction: TextInputAction.done,
-                        autofocus: true,
-                        style: kDefaultTextStyle,
-                        decoration: kRegistrationInputDecoration.copyWith(
-                          labelText: 'Password',
-                          hintText: 'Enter your password',
-                          hintStyle: kDefaultTextStyle.copyWith(
-                            color: kColorLightGray,
-                          ),
-                          labelStyle: kAppBarTextStyle.copyWith(fontSize: 16.0),
-                          icon: Icon(
-                            FontAwesomeIcons.lockOpen,
-                            color: kColorBlack71,
-                            size: 20.0,
-                          ),
-                        ),
-                      ),
-                      Align(
-                        alignment: Alignment.topRight,
-                        child: FlatButton(
-                          onPressed: () {
-                            Alert(
-                              context: context,
-                              title: 'Password Reset Link',
-                              style: AlertStyle(
-                                backgroundColor: kColorOffWhite,
-                                overlayColor:
-                                Colors.black.withOpacity(0.75),
-                                titleStyle: kDefaultTextStyle.copyWith(
-                                  color: kColorBlack71,
-                                  fontSize: 24.0,
-                                ),
-                                descStyle: kDefaultTextStyle.copyWith(
-                                  color: kColorBlack71,
-                                  fontSize: 16.0,
-                                ),
+                      Column(
+                        children: <Widget>[
+                          TextField(
+                            cursorColor: kColorLightGray,
+                            onChanged: (value) {
+                              email = value;
+                              isTextFieldValid();
+                            },
+                            focusNode: null,
+                            onSubmitted: (v) {
+                              FocusScope.of(context)
+                                  .requestFocus(_emailFocus);
+                            },
+                            autocorrect: false,
+                            keyboardType: TextInputType.emailAddress,
+                            textInputAction: TextInputAction.next,
+                            autofocus: true,
+                            style: kDefaultTextStyle,
+                            decoration: kRegistrationInputDecoration.copyWith(
+                              labelText: 'Email',
+                              hintText: 'Enter your email',
+                              hintStyle: kDefaultTextStyle.copyWith(
+                                color: kColorLightGray,
                               ),
-                              content: TextField(
-                                onChanged: (value) {
-                                  forgotPasswordEmail = value;
-                                },
-                                onSubmitted: (v) {
-                                  FocusScope.of(context).requestFocus(
-                                      _forgotPasswordFocus);
-                                  forgotPassword();
-                                },
-                                autocorrect: false,
-                                keyboardType:
-                                TextInputType.emailAddress,
-                                textInputAction: TextInputAction.send,
-                                autofocus: true,
-                                style: kDefaultTextStyle,
-                                cursorColor: kColorLightGray,
-                                decoration:
-                                kRegistrationInputDecoration
-                                    .copyWith(
-                                  labelText: 'Email',
-                                  labelStyle:
-                                  kDefaultTextStyle.copyWith(
-                                    color: kColorLightGray,
-                                  ),
-                                  icon: Icon(
-                                    FontAwesomeIcons.at,
-                                    color: kColorBlack71,
-                                  ),
-                                ),
+                              labelStyle: kAppBarTextStyle.copyWith(fontSize: 16.0),
+                              icon: Icon(
+                                FontAwesomeIcons.envelope,
+                                color: kColorBlack71,
+                                size: 20.0,
                               ),
-                              buttons: [
-                                DialogButton(
-                                  onPressed: () => forgotPassword(),
-                                  child: Text('Send It',
-                                      style: kDefaultTextStyle.copyWith(
-                                        color: Colors.white,
-                                      )),
-                                  color: kColorBlue,
-                                ),
-                              ],
-                            ).show();
-                          },
-                          splashColor: kColorOffWhite,
-                          highlightColor: Colors.transparent,
-                          child: Text(
-                            'Forgot Password?',
-                            textAlign: TextAlign.right,
-                            style: TextStyle(
-                              color: kColorBlue,
-                              fontFamily: 'Arimo',
-                              fontSize: 14.0,
                             ),
                           ),
-                        ),
-                      ),
-                      Align(
-                        alignment: Alignment.topRight,
-                        child: FlatButton.icon(
-                          onPressed: _logIn,
-                          splashColor: _isButtonDisabled
-                              ? Colors.transparent
-                              : kColorOffWhite,
-                          highlightColor: Colors.transparent,
-                          icon: Icon(
-                            _isButtonDisabled
-                                ? FontAwesomeIcons.arrowAltCircleUp
-                                : FontAwesomeIcons
-                                .arrowAltCircleRight,
-                            size: 30.0,
-                            color: _isButtonDisabled
-                                ? kColorLightGray
-                                : kColorBlue,
+                          SizedBox(height: 8.0),
+                          TextField(
+                            obscureText: true,
+                            cursorColor: kColorLightGray,
+                            onChanged: (value) {
+                              password = value;
+                              isTextFieldValid();
+                            },
+                            focusNode: _emailFocus,
+                            onSubmitted: (v) {
+                              FocusScope.of(context)
+                                  .requestFocus(_passwordFocus);
+                              _logIn();
+                            },
+                            autocorrect: false,
+                            keyboardType: TextInputType.text,
+                            textInputAction: TextInputAction.done,
+                            autofocus: true,
+                            style: kDefaultTextStyle,
+                            decoration: kRegistrationInputDecoration.copyWith(
+                              labelText: 'Password',
+                              hintText: 'Enter your password',
+                              hintStyle: kDefaultTextStyle.copyWith(
+                                color: kColorLightGray,
+                              ),
+                              labelStyle: kAppBarTextStyle.copyWith(fontSize: 16.0),
+                              icon: Icon(
+                                FontAwesomeIcons.lockOpen,
+                                color: kColorBlack71,
+                                size: 20.0,
+                              ),
+                            ),
                           ),
-                          label: Text(
-                            _isButtonDisabled ? 'Not Done' : 'Log In',
-                            style: kDefaultTextStyle.copyWith(
+                          Align(
+                            alignment: Alignment.topRight,
+                            child: FlatButton(
+                              onPressed: () {
+                                Alert(
+                                  context: context,
+                                  title: 'Password Reset Link',
+                                  style: AlertStyle(
+                                    backgroundColor: kColorOffWhite,
+                                    overlayColor:
+                                    Colors.black.withOpacity(0.75),
+                                    titleStyle: kDefaultTextStyle.copyWith(
+                                      color: kColorBlack71,
+                                      fontSize: 24.0,
+                                    ),
+                                    descStyle: kDefaultTextStyle.copyWith(
+                                      color: kColorBlack71,
+                                      fontSize: 16.0,
+                                    ),
+                                  ),
+                                  content: TextField(
+                                    onChanged: (value) {
+                                      forgotPasswordEmail = value;
+                                    },
+                                    onSubmitted: (v) {
+                                      FocusScope.of(context).requestFocus(
+                                          _forgotPasswordFocus);
+                                      forgotPassword();
+                                    },
+                                    autocorrect: false,
+                                    keyboardType:
+                                    TextInputType.emailAddress,
+                                    textInputAction: TextInputAction.send,
+                                    autofocus: true,
+                                    style: kDefaultTextStyle,
+                                    cursorColor: kColorLightGray,
+                                    decoration:
+                                    kRegistrationInputDecoration
+                                        .copyWith(
+                                      labelText: 'Email',
+                                      labelStyle:
+                                      kDefaultTextStyle.copyWith(
+                                        color: kColorLightGray,
+                                      ),
+                                      icon: Icon(
+                                        FontAwesomeIcons.at,
+                                        color: kColorBlack71,
+                                      ),
+                                    ),
+                                  ),
+                                  buttons: [
+                                    DialogButton(
+                                      onPressed: () => forgotPassword(),
+                                      child: Text('Send It',
+                                          style: kDefaultTextStyle.copyWith(
+                                            color: Colors.white,
+                                          )),
+                                      color: kColorBlue,
+                                    ),
+                                  ],
+                                ).show();
+                              },
+                              splashColor: kColorOffWhite,
+                              highlightColor: Colors.transparent,
+                              child: Text(
+                                'Forgot Password?',
+                                textAlign: TextAlign.right,
+                                style: TextStyle(
+                                  color: kColorBlue,
+                                  fontFamily: 'Arimo',
+                                  fontSize: 14.0,
+                                ),
+                              ),
+                            ),
+                          ),
+                          Align(
+                            alignment: Alignment.topRight,
+                            child: FlatButton.icon(
+                              onPressed: _logIn,
+                              splashColor: _isButtonDisabled
+                                  ? Colors.transparent
+                                  : kColorOffWhite,
+                              highlightColor: Colors.transparent,
+                              icon: Icon(
+                                _isButtonDisabled
+                                    ? FontAwesomeIcons.arrowAltCircleUp
+                                    : FontAwesomeIcons
+                                    .arrowAltCircleRight,
+                                size: 30.0,
                                 color: _isButtonDisabled
                                     ? kColorLightGray
-                                    : kColorBlue),
+                                    : kColorBlue,
+                              ),
+                              label: Text(
+                                _isButtonDisabled ? 'Not Done' : 'Log In',
+                                style: kDefaultTextStyle.copyWith(
+                                    color: _isButtonDisabled
+                                        ? kColorLightGray
+                                        : kColorBlue),
+                              ),
+                            ),
                           ),
-                        ),
+                        ],
                       ),
                     ],
                   ),
-                ],
+                ),
               ),
             ),
           ),
@@ -304,7 +312,7 @@ class _LogInState extends State<LogIn> {
         if (user != null) {
           _saveUserSharedPref();
           Navigator.pushAndRemoveUntil(context,
-              MaterialPageRoute(builder: (BuildContext context) => Home()),
+              MaterialPageRoute(builder: (BuildContext context) => BottomBar()),
                   (Route<dynamic> route) => false);
         }
         setState(() {

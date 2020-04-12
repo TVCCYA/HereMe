@@ -4,7 +4,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:hereme_flutter/home/bottom_bar.dart';
-import 'package:hereme_flutter/home/home.dart';
 import 'package:hereme_flutter/constants.dart';
 import 'package:hereme_flutter/registration/initial_page.dart';
 import 'package:hereme_flutter/settings/blocked_profiles.dart';
@@ -58,13 +57,8 @@ class SupportPage extends StatelessWidget {
           onTap: () => _openTermsConditions(),
         ),
         SettingsTile(
-          label: 'Change First Name',
-          color: kColorBlue.withOpacity(0.7),
-          onTap: () => _nameChangeAlert(context),
-        ),
-        SettingsTile(
           label: 'Reset Password',
-          color: kColorBlue.withOpacity(0.6),
+          color: kColorBlue.withOpacity(0.7),
           onTap: () => showResetPasswordAlert(context),
         ),
         InkWell(
@@ -73,7 +67,7 @@ class SupportPage extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.start,
             children: <Widget>[
               Container(
-                color: kColorBlue.withOpacity(0.6),
+                color: kColorBlue.withOpacity(0.7),
                 width: MediaQuery.of(context).size.width,
                 height: 50.0,
                 child: Center(
@@ -108,87 +102,6 @@ class SupportPage extends StatelessWidget {
         text: 'Good work there bud',
         backgroundColor: kColorGreen,
       );
-    });
-  }
-
-  _nameChangeAlert(BuildContext context) async {
-    Alert(
-        context: context,
-        title: 'Change Name',
-        style: AlertStyle(
-          backgroundColor: kColorOffWhite,
-          overlayColor: Colors.black.withOpacity(0.75),
-          titleStyle: kDefaultTextStyle.copyWith(
-            color: kColorBlack71,
-            fontSize: 24.0,
-          ),
-          descStyle: kDefaultTextStyle.copyWith(
-            color: kColorBlack71,
-            fontSize: 16.0,
-          ),
-        ),
-        content: Column(
-          children: <Widget>[
-            TextField(
-              controller: _nameChangeController,
-              style: kDefaultTextStyle,
-              onSubmitted: (v) => _submitUpdateNameChange(context),
-              cursorColor: kColorLightGray,
-              decoration: kRegistrationInputDecoration.copyWith(
-                labelText: 'First Name',
-                labelStyle: kDefaultTextStyle.copyWith(
-                  color: kColorLightGray,
-                ),
-                icon: Icon(
-                  FontAwesomeIcons.signature,
-                  color: kColorBlack71,
-                ),
-              ),
-            ),
-          ],
-        ),
-        buttons: [
-          DialogButton(
-            onPressed: () => _submitUpdateNameChange(context),
-            child: Text(
-              'Update',
-              style: kDefaultTextStyle.copyWith(color: Colors.white),
-            ),
-            color: kColorBlue,
-          )
-        ]).show();
-  }
-
-  _submitUpdateNameChange(context) {
-    _nameChangeController.text.length > 0
-        ? _handleNameChange(context)
-        : kShowSnackbar(
-            key: _scaffoldKey,
-            text: 'Name cannot be empty',
-            backgroundColor: kColorRed);
-  }
-
-  _handleNameChange(BuildContext context) async {
-    final userReference = usersRef.document(currentUser.uid);
-    Map<String, String> nameData = <String, String>{
-      'username': _nameChangeController.text,
-    };
-    userReference.updateData(nameData).whenComplete(() {
-      _updatePreferences(context);
-      kShowSnackbar(
-        key: _scaffoldKey,
-        text: 'Successfully changed name',
-        backgroundColor: kColorGreen,
-      );
-    }).catchError((e) => print(e));
-  }
-
-  _updatePreferences(BuildContext context) async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs
-        .setString('username', _nameChangeController.text)
-        .whenComplete(() {
-      Navigator.pop(context);
     });
   }
 

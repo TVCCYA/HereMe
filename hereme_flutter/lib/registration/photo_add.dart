@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:hereme_flutter/home/home.dart';
+import 'package:hereme_flutter/home/bottom_bar.dart';
 import 'package:hereme_flutter/constants.dart';
+import 'package:hereme_flutter/registration/create_display_name.dart';
 import 'package:hereme_flutter/utils/reusable_profile_card.dart';
 import 'dart:io';
 import 'dart:async';
@@ -17,10 +18,6 @@ import 'package:hereme_flutter/utils/reusable_bottom_sheet.dart';
 final _firestore = Firestore.instance;
 
 class PhotoAdd extends StatefulWidget {
-  final String uid;
-
-  PhotoAdd({this.uid});
-
   @override
   _PhotoAddState createState() => _PhotoAddState();
 }
@@ -50,14 +47,21 @@ class _PhotoAddState extends State<PhotoAdd> {
   @override
   Widget build(BuildContext context) {
     double screenHeight = MediaQuery.of(context).size.height;
+    double screenWidth = MediaQuery.of(context).size.width;
+    double topProfileHeight = screenHeight / 4;
+    double topHalf = topProfileHeight * 0.75;
+    double profileImageSize = topHalf * 0.75;
 
     final polaroidPic = GestureDetector(
       onTap: () => _showPhotoActionSheet(context),
-      child: Image.asset(
-        'images/add-image.png',
-        height: (screenHeight / 5) / 1.75,
-        width: (screenHeight / 5) / 1.75,
-        color: Colors.white,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: <Widget>[
+          Icon(FontAwesomeIcons.solidUserCircle, size: (screenHeight / 5) / 1.75, color: Colors.white),
+          SizedBox(height: 16.0),
+          Text('Add Photo', style: kDefaultTextStyle.copyWith(color: kColorExtraLightGray),)
+        ],
       ),
     );
 
@@ -79,79 +83,58 @@ class _PhotoAddState extends State<PhotoAdd> {
       body: SafeArea(
         child: ModalProgressHUD(
           inAsyncCall: showSpinner,
-          progressIndicator: CircularProgressIndicator(
-            valueColor: AlwaysStoppedAnimation<Color>(kColorRed),
-          ),
-          child: Padding(
-            padding: EdgeInsets.all(24.0),
+          progressIndicator: circularProgress(),
+          child: Center(
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
               crossAxisAlignment: CrossAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.center,
               children: <Widget>[
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 24.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: <Widget>[
-                      Text(
-                        'Choose a\nProfile Image',
-                        textAlign: TextAlign.center,
-                        style: kAppBarTextStyle.copyWith(
-                          fontSize: 26.0,
-                          color: kColorOffWhite,
-                        ),
-                      ),
-                      SizedBox(
-                        height: 24.0,
-                      ),
-                      mediaFile != null
-                          ? ReusableCard(
-                              imageFile: mediaFile,
-                              cardSize: screenHeight / 4,
-                              onTap: () {
-                                _openPhotoLibrary();
-                              },
-                            )
-                          : polaroidPic,
-                      SizedBox(
-                        height: 24.0,
-                      ),
-                      Align(
-                        alignment: Alignment.topRight,
-                        child: FlatButton.icon(
-                          onPressed: () => _isButtonDisabled
-                              ? print('Disabled')
-                              : _uploadImageToFirebase(mediaFile),
-                          splashColor: _isButtonDisabled
-                              ? Colors.transparent
-                              : kColorOffWhite,
-                          highlightColor: Colors.transparent,
-                          icon: Icon(
-                            _isButtonDisabled
-                                ? FontAwesomeIcons.arrowAltCircleUp
-                                : FontAwesomeIcons.arrowAltCircleRight,
-                            size: 30.0,
-                            color: _isButtonDisabled
-                                ? Colors.white
-                                : Colors.white,
-                          ),
-                          label: Text(
-                            _isButtonDisabled
-                                ? 'Add Image'
-                                : 'Complete',
-                            style: kDefaultTextStyle.copyWith(
-                                color: _isButtonDisabled
-                                    ? Colors.white
-                                    : Colors.white),
-                          ),
-                        ),
-                      ),
-                    ],
+                Text(
+                  'Choose a\nProfile Image',
+                  textAlign: TextAlign.center,
+                  style: kAppBarTextStyle.copyWith(
+                    fontSize: 26.0,
+                    color: kColorOffWhite,
                   ),
                 ),
+                SizedBox(
+                  height: 20.0,
+                ),
+                mediaFile != null
+                    ? CircleCard(
+                        imageFile: mediaFile,
+                        size: profileImageSize,
+                        onTap: () {
+                          _openPhotoLibrary();
+                        },
+                      )
+                    : polaroidPic,
               ],
             ),
+          ),
+        ),
+      ),
+      bottomSheet: _isButtonDisabled ? SizedBox() : SafeArea(
+        child: Container(
+          height: 50,
+          width: screenWidth,
+          decoration: BoxDecoration(
+            border: Border(top: BorderSide(color: kColorExtraLightGray)),
+            color: kColorRed,
+          ),
+          child: Align(
+            alignment: Alignment.bottomRight,
+            child: ButtonTheme(
+              minWidth: 40,
+              child: FlatButton(
+                onPressed: () => _uploadImageToFirebase(mediaFile),
+                child: Text('Next',
+                    style: kAppBarTextStyle.copyWith(
+                        color: Colors.white, fontSize: 16)),
+                splashColor: kColorDarkRed,
+                highlightColor: Colors.transparent,
+              ),
+            )
           ),
         ),
       ),
@@ -159,7 +142,7 @@ class _PhotoAddState extends State<PhotoAdd> {
   }
 
   _openPhotoLibrary() async {
-    await ImagePicker.pickImage(source: ImageSource.gallery).then(
+    await ImagePicker.pickImage(source: ImageSource.gallery, imageQuality: 100).then(
       (profilePic) {
         _cropImage(profilePic);
         if (this.mounted) setState(() {
@@ -170,7 +153,7 @@ class _PhotoAddState extends State<PhotoAdd> {
   }
 
   _openCamera() async {
-    await ImagePicker.pickImage(source: ImageSource.camera).then(
+    await ImagePicker.pickImage(source: ImageSource.camera, imageQuality: 100).then(
       (profilePic) {
         if (profilePic != null) {
           _cropImage(profilePic);
@@ -186,6 +169,19 @@ class _PhotoAddState extends State<PhotoAdd> {
     );
   }
 
+  _cropImage(File imageFile) async {
+    mediaFile = await ImageCropper.cropImage(
+        sourcePath: imageFile.path,
+        compressQuality: 100,
+        cropStyle: CropStyle.circle
+    );
+    if (this.mounted) setState(() {
+      mediaFile = mediaFile;
+      showSpinner = false;
+      isValid();
+    });
+  }
+
   Future _uploadImageToFirebase(File mediaFile) async {
     final ref = _firestore.collection('users');
     final FirebaseStorage _storage = FirebaseStorage.instance;
@@ -194,7 +190,7 @@ class _PhotoAddState extends State<PhotoAdd> {
     if (this.mounted) setState(() {
       showSpinner = true;
     });
-    FirebaseUser user = await FirebaseAuth.instance.currentUser();
+    final user = await FirebaseAuth.instance.currentUser();
     final uid = user.uid;
     StorageUploadTask uploadFile =
     _storage.ref().child('profile_images_flutter/$uid').putFile(mediaFile);
@@ -216,21 +212,27 @@ class _PhotoAddState extends State<PhotoAdd> {
           Map<String, dynamic> photoUrl = <String, dynamic>{
             'profileImageUrl': downloadUrl,
           };
-          ref.document(uid)
-              .updateData(photoUrl).whenComplete(() {
+          ref.document(uid).updateData(photoUrl).whenComplete(() {
             print('Recent Upload Added');
             if (this.mounted) setState(() {
               showSpinner = false;
             });
-            Navigator.pushAndRemoveUntil(context,
-                MaterialPageRoute(builder: (BuildContext context) => Home()),
-            (Route<dynamic> route) => false);
+            print(user);
+            if (user.displayName == null) {
+              Navigator.pushAndRemoveUntil(context,
+                  MaterialPageRoute(builder: (BuildContext context) => BottomBar()),
+                      (Route<dynamic> route) => false);
+            } else {
+              Navigator.pushAndRemoveUntil(context,
+                  MaterialPageRoute(builder: (BuildContext context) => CreateDisplayName(showBackButton: false)),
+                      (Route<dynamic> route) => false);
+            }
           }).catchError(
                 (e) => kShowAlert(
               context: context,
               title: 'Upload Failed',
               desc:
-              'Unable to upload your thumbnail image, please try again later',
+              'Unable to upload your profile image, please try again later',
               buttonText: 'Try Again',
               onPressed: () => Navigator.pop(context),
                   color: kColorRed
@@ -244,23 +246,6 @@ class _PhotoAddState extends State<PhotoAdd> {
   _savePhotoSharedPref(String downloadUrl) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.setString('profileImageUrl', '$downloadUrl');
-  }
-
-  Future<Null> _cropImage(File imageFile) async {
-    mediaFile = await ImageCropper.cropImage(
-      sourcePath: imageFile.path,
-      aspectRatio: CropAspectRatio(
-        ratioX: 1.0,
-        ratioY: 1.0,
-      ),
-      maxWidth: 512,
-      maxHeight: 512,
-    );
-    if (this.mounted) setState(() {
-      mediaFile = mediaFile;
-      showSpinner = false;
-      isValid();
-    });
   }
 
   void _showPhotoActionSheet(context) {

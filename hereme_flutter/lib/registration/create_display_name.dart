@@ -1,27 +1,36 @@
 import 'dart:math';
+import 'package:animator/animator.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:hereme_flutter/home/bottom_bar.dart';
-import 'package:hereme_flutter/home/home.dart';
 import 'package:hereme_flutter/constants.dart';
+import 'package:hereme_flutter/models/user.dart';
 import 'package:modal_progress_hud/modal_progress_hud.dart';
 
 class CreateDisplayName extends StatefulWidget {
+  final bool showBackButton;
+  CreateDisplayName({this.showBackButton = true});
+
   @override
-  _CreateDisplayNameState createState() => _CreateDisplayNameState();
+  _CreateDisplayNameState createState() => _CreateDisplayNameState(
+      showBackButton: this.showBackButton
+  );
 }
 
 class _CreateDisplayNameState extends State<CreateDisplayName> {
+  final bool showBackButton;
+  _CreateDisplayNameState({this.showBackButton = true});
+
   final _scaffoldKey = GlobalKey<ScaffoldState>();
   String displayName;
   bool _isButtonDisabled = true;
   bool _isAvailable = false;
   bool showSpinner = false;
-  int red;
-  int green;
-  int blue;
+  int red = 0;
+  int green = 0;
+  int blue = 0;
 
   @override
   void initState() {
@@ -103,17 +112,17 @@ class _CreateDisplayNameState extends State<CreateDisplayName> {
           backgroundColor: kColorRed
       );
     }
-    if (!_isAvailable) {
-      kShowSnackbar(
-          key: _scaffoldKey,
-          text: '$displayName already taken',
-          backgroundColor: kColorRed
-      );
-    }
-    if (displayName.length < 3) {
+    else if (displayName.length < 3) {
       kShowSnackbar(
           key: _scaffoldKey,
           text: 'Username must be 3 characters or more',
+          backgroundColor: kColorRed
+      );
+    }
+    else if (_isAvailable) {
+      kShowSnackbar(
+          key: _scaffoldKey,
+          text: '$displayName already taken',
           backgroundColor: kColorRed
       );
     }
@@ -130,13 +139,11 @@ class _CreateDisplayNameState extends State<CreateDisplayName> {
         elevation: 2.0,
         backgroundColor: Colors.white,
         title: Text(
-          "Change Username",
+          showBackButton ? 'Username' : 'Create Username',
           textAlign: TextAlign.left,
-          style: kAppBarTextStyle.copyWith(
-            color: kColorRed,
-          ),
+          style: kAppBarTextStyle
         ),
-        leading: IconButton(
+        leading: showBackButton ? IconButton(
           icon: Icon(FontAwesomeIcons.chevronLeft),
           onPressed: () {
             Navigator.pop(context);
@@ -144,7 +151,20 @@ class _CreateDisplayNameState extends State<CreateDisplayName> {
           color: kColorBlack71,
           splashColor: kColorExtraLightGray,
           highlightColor: Colors.transparent,
-        ),
+        ) : SizedBox(),
+        actions: <Widget>[
+          Center(
+              child: FlatButton(
+                child: Text(
+                  'Done',
+                  style: kAppBarTextStyle.copyWith(color: _isButtonDisabled ? kColorLightGray : kColorBlue),
+                ),
+                onPressed: () => _isButtonDisabled ? _onSubmitErrors() : handleAddDisplayName(),
+                splashColor: kColorExtraLightGray,
+                highlightColor: Colors.transparent,
+              ),
+            ),
+        ],
       ),
       body: SafeArea(
         child: ModalProgressHUD(
@@ -171,9 +191,8 @@ class _CreateDisplayNameState extends State<CreateDisplayName> {
                     },
                     focusNode: null,
                     onSubmitted: (v) {
-                      _onSubmitErrors();
                       _isButtonDisabled
-                          ? print('disabled')
+                          ? _onSubmitErrors()
                           : handleAddDisplayName();
                     },
                     autocorrect: false,
@@ -211,37 +230,6 @@ class _CreateDisplayNameState extends State<CreateDisplayName> {
                     splashColor: kColorExtraLightGray,
                     highlightColor: Colors.transparent,
                   ),
-                  Align(
-                    alignment: Alignment.topRight,
-                    child: FlatButton.icon(
-                      onPressed: () {
-                        _onSubmitErrors();
-                        _isButtonDisabled
-                            ? print('disabled')
-                            : handleAddDisplayName();
-                      },
-                      splashColor: _isButtonDisabled
-                          ? Colors.transparent
-                          : kColorOffWhite,
-                      highlightColor: Colors.transparent,
-                      icon: Icon(
-                        _isButtonDisabled
-                            ? FontAwesomeIcons.arrowAltCircleUp
-                            : FontAwesomeIcons.arrowAltCircleRight,
-                        size: 30.0,
-                        color: _isButtonDisabled
-                            ? kColorLightGray
-                            : kColorBlue,
-                      ),
-                      label: Text(
-                        _isButtonDisabled ? 'Not Done' : 'Done',
-                        style: kDefaultTextStyle.copyWith(
-                            color: _isButtonDisabled
-                                ? kColorLightGray
-                                : kColorBlue),
-                      ),
-                    ),
-                  ),
                 ],
               ),
             ),
@@ -255,21 +243,39 @@ class _CreateDisplayNameState extends State<CreateDisplayName> {
     if (this.mounted) setState(() {
       showSpinner = true;
     });
-    usersRef.document(currentUser.uid).updateData({
+
+    Map<String, dynamic> data = <String, dynamic>{
       'displayName': displayName,
       'red': red,
       'green': green,
       'blue': blue,
-    }).whenComplete(() {
-      if (this.mounted) setState(() {
-        showSpinner = false;
+    };
+
+    final ref = usersRef.document(currentUser.uid);
+    ref.updateData(data).whenComplete(() {
+      ref.collection('updatedFields').document('displayName').setData({
+        'displayName': displayName,
+      }).whenComplete(() {
+        updateCurrentUserInfo();
+        if (this.mounted) setState(() {
+          showSpinner = false;
+        });
       });
       kShowSnackbar(
         key: _scaffoldKey,
         text: 'Successfully changed username to $displayName',
         backgroundColor: kColorGreen,
       );
-      Future.delayed(Duration(seconds: 2), () => Navigator.pop(context));
+      Future.delayed(Duration(seconds: 2), () => showBackButton ? Navigator.pop(context) :
+      Navigator.pushAndRemoveUntil(context,
+          MaterialPageRoute(builder: (BuildContext context) => BottomBar()),
+              (Route<dynamic> route) => false));
     });
+  }
+
+  updateCurrentUserInfo() async {
+    final user = await auth.currentUser();
+    DocumentSnapshot doc = await usersRef.document(user.uid).get();
+    currentUser = User.fromDocument(doc);
   }
 }

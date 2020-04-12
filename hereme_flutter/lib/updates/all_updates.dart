@@ -2,7 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:hereme_flutter/home/bottom_bar.dart';
-import 'package:hereme_flutter/home/home.dart';
+import 'package:hereme_flutter/user_profile/profile_image_full_screen.dart';
 import 'package:hereme_flutter/widgets/update_post.dart';
 
 import '../constants.dart';
@@ -10,13 +10,19 @@ import '../constants.dart';
 class AllUpdates extends StatefulWidget {
   final String uid;
   final String displayName;
+  final int red;
+  final int green;
+  final int blue;
 
-  AllUpdates({this.uid, this.displayName});
+  AllUpdates({this.uid, this.displayName, this.red, this.green, this.blue});
 
   @override
   _AllUpdatesState createState() => _AllUpdatesState(
     uid: this.uid,
     displayName: this.displayName,
+    red: this.red,
+    green: this.green,
+    blue: this.blue,
   );
 }
 
@@ -24,8 +30,11 @@ class _AllUpdatesState extends State<AllUpdates> {
   final String uid;
   final String displayName;
   String count;
+  final int red;
+  final int green;
+  final int blue;
 
-  _AllUpdatesState({this.uid, this.displayName});
+  _AllUpdatesState({this.uid, this.displayName, this.red, this.green, this.blue});
 
   @override
   void initState() {
@@ -42,7 +51,7 @@ class _AllUpdatesState extends State<AllUpdates> {
         elevation: 2.0,
         backgroundColor: Colors.white,
         title: Text(
-          count == null ? 'Updates' : '$count Updates',
+          count == null ? 'Latest' : '$count Latest',
           textAlign: TextAlign.left,
           style: kAppBarTextStyle,
         ),
@@ -56,54 +65,74 @@ class _AllUpdatesState extends State<AllUpdates> {
           highlightColor: Colors.transparent,
         ),
       ),
-      body: SafeArea(
-          child: Container(
-            height: screenHeight,
-            child: SingleChildScrollView(
-              physics: AlwaysScrollableScrollPhysics(),
-              child: Padding(
-                padding: EdgeInsets.only(right: 4.0, left: 4.0, top: 8.0, bottom: 8.0),
-                child: StreamBuilder<QuerySnapshot>(
-                  stream: updateRef
-                      .document(uid)
-                      .collection('posts')
-                      .orderBy('creationDate', descending: true)
-                      .snapshots(),
-                  builder: (context, snapshot) {
-                    if (!snapshot.hasData) {
-                      return circularProgress();
-                    }
-                    final updates = snapshot.data.documents;
-                    List<UpdatePost> displayedUpdates = [];
-                    for (var post in updates) {
+      body: Container(
+        height: screenHeight,
+        child: SingleChildScrollView(
+          physics: AlwaysScrollableScrollPhysics(),
+          child: Padding(
+            padding: EdgeInsets.only(top: 8.0, bottom: 12.0),
+            child: StreamBuilder<QuerySnapshot>(
+              stream: updateRef
+                  .document(uid)
+                  .collection('posts')
+                  .orderBy('creationDate', descending: true)
+                  .snapshots(),
+              builder: (context, snapshot) {
+                if (!snapshot.hasData) {
+                  return circularProgress();
+                }
+                final updates = snapshot.data.documents;
+                List<ProfileLatestPost> displayedUpdates = [];
+                List<ProfileLatestPost> displayedPhotos = [];
+                for (var post in updates) {
 
-                      final String photoUrl = post.data['photoUrl'];
-                      final String title = post.data['title'];
-                      final int creationDate = post.data['creationDate'];
-                      final String type = post.data['type'];
-                      final String id = post.data['id'];
-                      final dynamic likes = post.data['likes'];
+                  final String photoUrl = post.data['photoUrl'];
+                  final String title = post.data['title'];
+                  final int creationDate = post.data['creationDate'];
+                  final String type = post.data['type'];
+                  final String id = post.data['id'];
+                  final dynamic likes = post.data['likes'];
 
-                      final displayedPost = UpdatePost(
-                        photoUrl: photoUrl,
-                        title: title,
-                        creationDate: creationDate,
-                        type: type,
-                        uid: uid,
-                        id: id,
-                        displayName: displayName,
-                        likes: likes ?? {},
-                        width: 55,
+                  final displayedPost = ProfileLatestPost(
+                    photoUrl: photoUrl,
+                    title: title,
+                    creationDate: creationDate,
+                    type: type,
+                    uid: uid,
+                    id: id,
+                    displayName: displayName,
+                    likes: likes ?? {},
+                    red: red,
+                    green: green,
+                    blue: blue,
+                  );
+                  displayedUpdates
+                      .add(displayedPost);
+                  if (type == 'photo') {
+                    displayedPhotos.add(displayedPost);
+                  }
+                }
+                return ListView.builder(
+                    physics: NeverScrollableScrollPhysics(),
+                    shrinkWrap: true,
+                    itemCount: displayedUpdates.length,
+                    itemBuilder: (context, i) {
+                      return GestureDetector(
+                        onTap: () =>
+                            Navigator.push(
+                              context,
+                              FadeRoute(
+                                page: FullScreenLatestPhoto(index: i - 1, displayedUpdates: displayedPhotos),
+                              ),
+                            ),
+                        child: displayedUpdates[i],
                       );
-                      displayedUpdates
-                          .add(displayedPost);
-                    }
-                    return Column(children: displayedUpdates);
-                  },
-                ),
-              ),
+                    },
+                  );
+              },
             ),
-          )
+          ),
+        ),
       ),
     );
   }

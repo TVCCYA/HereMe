@@ -51,10 +51,10 @@ class _ChooseAccountState extends State<ChooseAccount> {
         platform: 'Venmo',
         icon: 'images/SocialMedias/venmo120.png',
         color: kColorVenmo),
-    SocialMedias(
-        platform: 'Cash App',
-        icon: 'images/SocialMedias/cashapp120.png',
-        color: kColorCashApp),
+//    SocialMedias(
+//        platform: 'Cash App',
+//        icon: 'images/SocialMedias/cashapp120.png',
+//        color: kColorCashApp),
     SocialMedias(
         platform: 'Tumblr',
         icon: 'images/SocialMedias/tumblr120.png',

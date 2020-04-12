@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:hereme_flutter/home/home.dart';
 
 import 'home/bottom_bar.dart';
 

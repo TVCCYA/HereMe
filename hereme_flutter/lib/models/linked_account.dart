@@ -15,43 +15,36 @@ class LinkedAccount extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: <Widget>[
-        // separator line
-        Padding(
-          padding: EdgeInsets.only(left: 12.0),
-          child: Container(height: 0.5, color: kColorExtraLightGray),
+    return Padding(
+      padding: const EdgeInsets.only(left: 4.0, right: 4.0),
+      child: ListTile(
+        dense: true,
+        title: Text(
+          accountUsername,
+          overflow: TextOverflow.fade,
+          softWrap: false,
+          style: kDefaultTextStyle,
         ),
-        ListTile(
-          dense: true,
-          contentPadding: EdgeInsets.only(left: 16.0, right: 16.0),
-          title: Text(
-            accountUsername,
-            overflow: TextOverflow.fade,
-            softWrap: false,
-            style: kDefaultTextStyle,
-          ),
-          subtitle: Text(
-            accountUrl,
-            overflow: TextOverflow.fade,
-            softWrap: false,
-            style: kDefaultTextStyle.copyWith(
-              fontSize: 12.0,
-              color: kColorBlue.withOpacity(0.75),
-            ),
-          ),
-          leading: Image.asset(
-            kIconPath(iconString),
-            scale: 3.5,
-          ),
-          onTap: onTap,
-          trailing: Icon(
-            Icons.chevron_right,
-            size: 24,
-            color: kColorLightGray,
+        subtitle: Text(
+          accountUrl,
+          overflow: TextOverflow.fade,
+          softWrap: false,
+          style: kDefaultTextStyle.copyWith(
+            fontSize: 12.0,
+            color: kColorBlue.withOpacity(0.75),
           ),
         ),
-      ],
+        leading: Image.asset(
+          kIconPath(iconString),
+          scale: 3.5,
+        ),
+        onTap: onTap,
+        trailing: Icon(
+          Icons.chevron_right,
+          size: 24,
+          color: kColorLightGray,
+        ),
+      ),
     );
   }
 }
