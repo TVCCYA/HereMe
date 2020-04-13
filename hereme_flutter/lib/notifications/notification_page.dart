@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:hereme_flutter/constants.dart';
@@ -5,6 +6,8 @@ import 'package:hereme_flutter/home/bottom_bar.dart';
 import 'package:hereme_flutter/models/user.dart';
 import 'package:hereme_flutter/user_profile/profile.dart';
 import 'package:hereme_flutter/utils/custom_image.dart';
+import 'package:hereme_flutter/utils/reusable_button.dart';
+import 'package:hereme_flutter/utils/reusable_header_label.dart';
 import 'package:hereme_flutter/widgets/user_result.dart';
 import 'package:intl/intl.dart';
 import 'package:time_ago_provider/time_ago_provider.dart';
@@ -52,7 +55,7 @@ class _NotificationPageState extends State<NotificationPage> {
                 ExpansionTile(
                   backgroundColor: Colors.transparent,
                   initiallyExpanded: true,
-                  title: ReusableSectionLabel('Knocks', left: 0.0),
+                  title: ReusableHeaderLabel('Knocks', left: 0.0, top: 0.0, bottom: 0.0),
                   children: <Widget>[
                     ReusableFetchFutureKnocks(
                       collection: 'receivedKnockFrom',
@@ -71,7 +74,7 @@ class _NotificationPageState extends State<NotificationPage> {
                 ExpansionTile(
                   backgroundColor: Colors.transparent,
                   initiallyExpanded: true,
-                  title: ReusableSectionLabel('Page Liked By', left: 0.0),
+                  title: ReusableHeaderLabel('Page Liked By', left: 0.0, top: 0.0, bottom: 0.0),
                   children: <Widget>[
                     FutureBuilder(
                       future: followersRef
@@ -107,13 +110,12 @@ class _NotificationPageState extends State<NotificationPage> {
                               Center(
                                 child: Container(
                                   height: 30,
-                                  child: TopProfileHeaderButton(
+                                  child: ReusableRoundedCornerButton(
                                     text: 'View All',
                                     onPressed: () => print('view all followers'),
                                     width: 40,
                                     backgroundColor: Colors.transparent,
                                     textColor: kColorLightGray,
-                                    splashColor: kColorExtraLightGray,
                                   ),
                                 ),
                               ),
@@ -129,46 +131,48 @@ class _NotificationPageState extends State<NotificationPage> {
                 ExpansionTile(
                   backgroundColor: Colors.transparent,
                   initiallyExpanded: true,
-                  title: ReusableSectionLabel('Posts Liked By', left: 0.0),
+                  title: ReusableHeaderLabel('Posts Liked By', left: 0.0, top: 0.0, bottom: 0.0),
                   children: <Widget>[
-//                    FutureBuilder(
-//                      future: updateRef
-//                          .document(currentUser.uid)
-//                          .collection('posts')
-//                          .getDocuments(),
-//                      builder: (context, snapshot) {
-//                        if (!snapshot.hasData) {
-//                          return circularProgress();
-//                        }
-//                        final posts = snapshot.data.documents;
-//                        if (posts.isNotEmpty) {
-//                          for (var post in posts) {
-//                            return FutureBuilder(
-//                              future: updateRef
-//                                  .document(currentUser.uid)
-//                                  .collection('posts')
-//                                  .document(post.documentID)
-//                                  .collection('likedBy')
-//                                  .getDocuments(),
-//                              builder: (context, snapshot) {
-//                                if (!snapshot.hasData) {
-//                                  return circularProgress();
-//                                }
-//
-//                              },
-//                            );
-//                          }
-//                          return SizedBox();
-//                        }
-//                        return SizedBox();
-//                      },
-//                    )
+                    FutureBuilder(
+                      future: updateRef
+                          .document(currentUser.uid)
+                          .collection('posts')
+                          .getDocuments(),
+                      builder: (context, snapshot) {
+                        if (!snapshot.hasData) {
+                          return circularProgress();
+                        }
+                        final posts = snapshot.data.documents;
+                        final List<PostLike> displayedPosts = [];
+                        if (posts.isNotEmpty) {
+                          for (var post in posts) {
+                            final id = post.documentID;
+                            final displayedPost = PostLike(
+                              postId: post.documentID,
+                            );
+                            displayedPosts.add(displayedPost);
+                            return FutureBuilder(
+                              future: updateRef
+                                  .document(currentUser.uid)
+                                  .collection('posts')
+                                  .document(id)
+                                  .collection('likedBy')
+                                  .getDocuments(),
+                              builder: (context, snapshot) {
+
+                              },
+                            );
+                          }
+                        }
+                        return SizedBox();
+                      },
+                    )
                   ],
                 ),
                 ExpansionTile(
                   backgroundColor: Colors.transparent,
                   initiallyExpanded: true,
-                  title: ReusableSectionLabel('Live Chat Invites', left: 0.0),
+                  title: ReusableHeaderLabel('Live Chat Invites', left: 0.0, top: 0.0, bottom: 0.0),
                 ),
               ],
             ),
@@ -327,32 +331,22 @@ class _FollowerTileState extends State<FollowerTile> {
 }
 
 class PostLike extends StatefulWidget {
-  final String uid;
-  final Function onTap;
-  final int creationDate;
-  PostLike({@required this.uid, this.onTap, this.creationDate});
+  final String postId;
+  PostLike({@required this.postId});
   @override
   _PostLikeState createState() => _PostLikeState(
-    uid: this.uid,
-    onTap: this.onTap,
-    creationDate: this.creationDate,
+    postId: this.postId,
   );
 }
 
 class _PostLikeState extends State<PostLike> {
-  final String uid;
-  final Function onTap;
-  final int creationDate;
-  _PostLikeState({@required this.uid, this.onTap, this.creationDate});
+  final String postId;
+  _PostLikeState({@required this.postId});
 
   String username = '';
   String profileImageUrl = '';
-
-  @override
-  void initState() {
-    super.initState();
-    _getUserPageData();
-  }
+  String uid = '';
+  int creationDate = 0;
 
   _getUserPageData() {
     usersRef.document(uid).get().then((doc) {
@@ -376,9 +370,64 @@ class _PostLikeState extends State<PostLike> {
     result.toProfile(context);
   }
 
+  fetchPostLikes() {
+      Future<QuerySnapshot> query = updateRef
+          .document(currentUser.uid)
+          .collection('posts')
+          .document(postId)
+          .collection('likedBy')
+          .getDocuments();
+      query.then((snapshot) {
+        for (var like in snapshot.documents) {
+          if (like.exists) {
+            print('this post: $postId was liked by this mf: ${like.documentID} @ ${like.data['creationDate']}');
+            if (like.documentID != null) {
+              if (this.mounted)
+                setState(() {
+                  uid = like.documentID;
+                  creationDate = like.data['creationDate'];
+                });
+              _getUserPageData();
+            }
+          }
+        }
+      });          buildTile();
+  }
+
+  buildTile() {
+    return Padding(
+      padding: EdgeInsets.only(left: 4.0),
+      child: ListTile(
+        dense: true,
+        title: Text(
+          username,
+          overflow: TextOverflow.fade,
+          softWrap: false,
+          style: kDefaultTextStyle,
+        ),
+        subtitle: Text(
+          creationDate != 0 ? date() : 'a long time ago',
+          overflow: TextOverflow.fade,
+          softWrap: false,
+          style: kDefaultTextStyle.copyWith(
+            fontSize: 12.0,
+            color: kColorLightGray,
+          ),
+        ),
+        leading: cachedUserResultImage(profileImageUrl, 45, true),
+        onTap: _goToProfile,
+        trailing: Icon(
+          Icons.chevron_right,
+          size: 24,
+          color: kColorLightGray,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Container();
+    return fetchPostLikes();
   }
 }
 

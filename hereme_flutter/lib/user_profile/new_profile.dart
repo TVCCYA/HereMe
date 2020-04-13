@@ -13,10 +13,11 @@ import 'package:hereme_flutter/settings/menu_list.dart';
 import 'package:hereme_flutter/updates/add_update.dart';
 import 'package:hereme_flutter/updates/all_updates.dart';
 import 'package:hereme_flutter/user_profile/edit_profile.dart';
-import 'package:hereme_flutter/user_profile/profile.dart';
 import 'package:hereme_flutter/user_profile/profile_image_full_screen.dart';
 import 'package:hereme_flutter/utils/custom_image.dart';
 import 'package:hereme_flutter/utils/reusable_bottom_sheet.dart';
+import 'package:hereme_flutter/utils/reusable_button.dart';
+import 'package:hereme_flutter/utils/reusable_header_label.dart';
 import 'package:hereme_flutter/widgets/update_post.dart';
 import 'package:icon_shadow/icon_shadow.dart';
 import 'package:intl/intl.dart';
@@ -516,7 +517,7 @@ class _NewProfileState extends State<NewProfile> {
               padding: EdgeInsets.only(top: 8.0, bottom: 8.0),
               child: Container(
                 height: 30,
-                child: TopProfileHeaderButton(
+                child: ReusableRoundedCornerButton(
                   text: _isCurrentUser
                       ? 'Edit Profile'
                       : _didKnock ? 'Knocked' : 'Knock',
@@ -535,7 +536,6 @@ class _NewProfileState extends State<NewProfile> {
                   width: 40,
                   backgroundColor: Colors.transparent,
                   textColor: kColorLightGray,
-                  splashColor: kColorExtraLightGray,
                 ),
               ),
             ),
@@ -561,7 +561,7 @@ class _NewProfileState extends State<NewProfile> {
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisAlignment: MainAxisAlignment.start,
         children: <Widget>[
-          ReusableSectionLabel('Links'),
+          ReusableHeaderLabel('Links'),
           _isCurrentUser
               ? StreamBuilder<QuerySnapshot>(
                   stream: socialMediasRef
@@ -701,7 +701,7 @@ class _NewProfileState extends State<NewProfile> {
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[
-          ReusableSectionLabel('Latest'),
+          ReusableHeaderLabel('Latest'),
           _isCurrentUser
               ? StreamBuilder<QuerySnapshot>(
                   stream: updateRef
@@ -771,7 +771,7 @@ class _NewProfileState extends State<NewProfile> {
                           Center(
                             child: Container(
                               height: 30,
-                              child: TopProfileHeaderButton(
+                              child: ReusableRoundedCornerButton(
                                 text: 'View All',
                                 onPressed: () => Navigator.push(
                                   context,
@@ -788,7 +788,6 @@ class _NewProfileState extends State<NewProfile> {
                                 width: 40,
                                 backgroundColor: Colors.transparent,
                                 textColor: kColorLightGray,
-                                splashColor: kColorExtraLightGray,
                               ),
                             ),
                           ),
@@ -870,7 +869,7 @@ class _NewProfileState extends State<NewProfile> {
                           Center(
                             child: Container(
                               height: 30,
-                              child: TopProfileHeaderButton(
+                              child: ReusableRoundedCornerButton(
                                 text: 'View All',
                                 onPressed: () => Navigator.push(
                                     context,
@@ -888,7 +887,6 @@ class _NewProfileState extends State<NewProfile> {
                                 width: 40,
                                 backgroundColor: Colors.transparent,
                                 textColor: kColorLightGray,
-                                splashColor: kColorExtraLightGray,
                               ),
                             ),
                           ),

@@ -19,6 +19,7 @@ import 'package:hereme_flutter/updates/all_updates.dart';
 import 'package:hereme_flutter/user_profile/profile_image_full_screen.dart';
 import 'package:hereme_flutter/utils/custom_image.dart';
 import 'package:hereme_flutter/utils/reusable_button.dart';
+import 'package:hereme_flutter/utils/reusable_header_label.dart';
 import 'package:hereme_flutter/utils/reusable_profile_card.dart';
 import 'package:hereme_flutter/widgets/activity_feed_item.dart';
 import 'package:hereme_flutter/widgets/update_post.dart';
@@ -319,7 +320,7 @@ class _ProfileState extends State<Profile> {
           Container(
             height: 40,
             child: _isCurrentUser
-                ? TopProfileHeaderButton(
+                ? ReusableRoundedCornerButton(
               text: 'Change Background',
               onPressed: () => _changeUserPhoto(false),
               width: screenWidth,
@@ -327,7 +328,7 @@ class _ProfileState extends State<Profile> {
                 : Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: <Widget>[
-                TopProfileHeaderButton(
+                ReusableRoundedCornerButton(
                   text: _isFollowing ? 'Liked' : 'Like',
                   onPressed: () =>
                   _isFollowing ? _unfollowUser() : _followUser(),
@@ -339,7 +340,7 @@ class _ProfileState extends State<Profile> {
                   splashColor:
                   _isFollowing ? Colors.white : kColorDarkBlue,
                 ),
-                TopProfileHeaderButton(
+                ReusableRoundedCornerButton(
                   text: 'Knock',
                   onPressed: () => {
                     kShowAlertMultiButtons(
@@ -652,7 +653,7 @@ class _ProfileState extends State<Profile> {
         child: ExpansionTile(
           backgroundColor: Colors.white.withOpacity(0.9),
           initiallyExpanded: true,
-          title: ReusableSectionLabel('Links'),
+          title: ReusableHeaderLabel('Links'),
           children: <Widget>[
             _isCurrentUser
                 ? StreamBuilder<QuerySnapshot>(
@@ -2060,47 +2061,6 @@ class _ProfileState extends State<Profile> {
 //  }
 }
 
-
-class TopProfileHeaderButton extends StatelessWidget {
-  const TopProfileHeaderButton({
-    @required this.text,
-    @required this.onPressed,
-    @required this.width,
-    this.backgroundColor,
-    this.textColor,
-    this.splashColor,
-  });
-
-  final String text;
-  final Function onPressed;
-  final double width;
-  final Color backgroundColor;
-  final Color textColor;
-  final Color splashColor;
-
-  @override
-  Widget build(BuildContext context) {
-    return ButtonTheme(
-      minWidth: width,
-      height: 40,
-      child: FlatButton(
-        child: Text(
-          text,
-          style: kDefaultTextStyle.copyWith(
-              fontSize: 16.0, color: textColor ?? kColorBlack71),
-        ),
-        color: backgroundColor ?? Colors.white,
-        onPressed: onPressed,
-        shape: RoundedRectangleBorder(
-          side: BorderSide(color: kColorExtraLightGray),
-        ),
-        splashColor: splashColor ?? kColorExtraLightGray,
-        highlightColor: Colors.transparent,
-      ),
-    );
-  }
-}
-
 class TopProfileHeaderContainer extends StatelessWidget {
   const TopProfileHeaderContainer({
     @required this.text,
@@ -2143,22 +2103,6 @@ class ReusableContentContainer extends StatelessWidget {
         borderRadius: BorderRadius.all(Radius.circular(10.0)),
       ),
       child: Column(children: content),
-    );
-  }
-}
-
-class ReusableSectionLabel extends StatelessWidget {
-  ReusableSectionLabel(this.title, {this.top = 20.0, this.left = 12.0});
-
-  final String title;
-  final double top;
-  final double left;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.only(top: top, left: left, bottom: 8.0),
-      child: Text(title, style: kAppBarTextStyle),
     );
   }
 }

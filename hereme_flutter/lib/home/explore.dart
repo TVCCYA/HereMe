@@ -9,6 +9,8 @@ import 'package:hereme_flutter/models/user.dart';
 import 'package:hereme_flutter/registration/photo_add.dart';
 import 'package:hereme_flutter/user_profile/profile.dart';
 import 'package:hereme_flutter/user_profile/profile_image_full_screen.dart';
+import 'package:hereme_flutter/utils/reusable_button.dart';
+import 'package:hereme_flutter/utils/reusable_header_label.dart';
 import 'package:hereme_flutter/widgets/update_post.dart';
 import 'package:hereme_flutter/widgets/user_result.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
@@ -179,7 +181,7 @@ class _ExploreState extends State<Explore>
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
-              ReusableSectionLabel('Most Viewed This Week', top: 12.0),
+              ReusableHeaderLabel('Most Viewed This Week', top: 12.0),
               Container(
                 height: 110,
                 child: GridView.count(
@@ -248,7 +250,7 @@ class _ExploreState extends State<Explore>
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
-              ReusableSectionLabel('Top Viewed All Time', top: 12.0),
+              ReusableHeaderLabel('Top Viewed All Time', top: 12.0),
               Container(
                 height: 120,
                 child: GridView.count(
@@ -517,7 +519,7 @@ class _ExploreState extends State<Explore>
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
-                      ReusableSectionLabel('Latest'),
+                      ReusableHeaderLabel('Latest'),
                       ListView.builder(
                         physics: NeverScrollableScrollPhysics(),
                         padding: EdgeInsets.only(top: 8.0, bottom: 20.0),
@@ -538,16 +540,12 @@ class _ExploreState extends State<Explore>
                       ),
                       allLatest.length > displayedPostCount
                           ? Center(
-                        child: Container(
-                          height: 30,
-                          child: TopProfileHeaderButton(
-                            text: 'View All',
-                            onPressed: () => print('go to view all'),
-                            width: 40,
-                            backgroundColor: Colors.transparent,
-                            textColor: kColorLightGray,
-                            splashColor: kColorExtraLightGray,
-                          ),
+                        child: ReusableRoundedCornerButton(
+                          text: 'View All',
+                          onPressed: () => print('go to view all'),
+                          width: 40,
+                          backgroundColor: Colors.transparent,
+                          textColor: kColorLightGray,
                         ),
                       ) : SizedBox(),
                     ],

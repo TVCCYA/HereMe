@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:hereme_flutter/utils/reusable_button.dart';
 import 'log_in.dart';
 import 'sign_up.dart';
 import 'package:hereme_flutter/constants.dart';
@@ -48,49 +49,29 @@ class _InitialPageState extends State<InitialPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: <Widget>[
-                  ButtonTheme(
-                    minWidth: 125.0,
-                    child: FlatButton(
-                      child: Text(
-                        'Sign Up',
-                        style: kAppBarTextStyle.copyWith(
-                            fontSize: 16.0, color: Colors.white),
-                      ),
-                      color: Colors.transparent,
-                      onPressed: () =>
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (context) => SignUp()),
-                          ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(5.0),
-                        side: BorderSide(color: Colors.white),
-                      ),
-                      splashColor: kColorDarkRed,
-                      highlightColor: Colors.transparent,
-                    ),
+                  ReusableRoundedCornerButton(
+                    height: 40.0,
+                    width: 125.0,
+                    text: 'Sign Up',
+                    textColor: Colors.white,
+                    splashColor: kColorDarkRed,
+                    onPressed: () =>
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => SignUp()),
+                        ),
                   ),
-                  ButtonTheme(
-                    minWidth: 125.0,
-                    child: FlatButton(
-                      child: Text(
-                        'Log In',
-                        style: kAppBarTextStyle.copyWith(
-                            fontSize: 16.0, color: Colors.white),
-                      ),
-                      color: Colors.transparent,
-                      onPressed: () =>
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (context) => LogIn()),
-                          ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(5.0),
-                        side: BorderSide(color: Colors.white),
-                      ),
-                      splashColor: kColorDarkRed,
-                      highlightColor: Colors.transparent,
-                    ),
+                  ReusableRoundedCornerButton(
+                    height: 40.0,
+                    width: 125.0,
+                    text: 'Log In',
+                    textColor: Colors.white,
+                    splashColor: kColorDarkRed,
+                    onPressed: () =>
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => LogIn()),
+                        ),
                   ),
                 ],
               ),

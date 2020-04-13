@@ -26,3 +26,45 @@ class ReusableButton extends StatelessWidget {
     );
   }
 }
+
+class ReusableRoundedCornerButton extends StatelessWidget {
+  const ReusableRoundedCornerButton({
+    @required this.text,
+    @required this.onPressed,
+    @required this.width,
+    this.height = 30.0,
+    this.backgroundColor = Colors.transparent,
+    this.textColor = kColorBlack71,
+    this.splashColor,
+  });
+
+  final String text;
+  final Function onPressed;
+  final double width;
+  final double height;
+  final Color backgroundColor;
+  final Color textColor;
+  final Color splashColor;
+
+  @override
+  Widget build(BuildContext context) {
+    return ButtonTheme(
+      minWidth: width,
+      height: height,
+      child: FlatButton(
+        child: Text(
+          text,
+          style: kDefaultTextStyle.copyWith(color: textColor),
+        ),
+        color: backgroundColor,
+        onPressed: onPressed,
+        shape: RoundedRectangleBorder(
+          side: BorderSide(color: textColor),
+          borderRadius: BorderRadius.circular(5.0),
+        ),
+        splashColor: splashColor ?? Colors.black.withOpacity(0.05),
+        highlightColor: Colors.transparent,
+      ),
+    );
+  }
+}

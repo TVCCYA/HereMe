@@ -20,6 +20,8 @@ import 'package:hereme_flutter/settings/choose_account.dart';
 import 'package:hereme_flutter/user_profile/profile.dart';
 import 'package:hereme_flutter/user_profile/profile_image_full_screen.dart';
 import 'package:hereme_flutter/utils/reusable_bottom_sheet.dart';
+import 'package:hereme_flutter/utils/reusable_button.dart';
+import 'package:hereme_flutter/utils/reusable_header_label.dart';
 import 'package:hereme_flutter/widgets/update_post.dart';
 import 'package:hereme_flutter/widgets/user_result.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -379,7 +381,7 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: <Widget>[
-                    ReusableSectionLabel('Around You', top: 12.0),
+                    ReusableHeaderLabel('Around You', top: 12.0),
                     users.length > displayedUserCount
                         ? GestureDetector(
                             child: Text('View All',
@@ -495,7 +497,7 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
-                      ReusableSectionLabel('Latest'),
+                      ReusableHeaderLabel('Latest'),
                       ListView.builder(
                         physics: NeverScrollableScrollPhysics(),
                         padding: EdgeInsets.only(top: 8.0, bottom: 20.0),
@@ -516,16 +518,12 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
                       ),
                       allLatest.length > displayedPostCount
                           ? Center(
-                        child: Container(
-                          height: 30,
-                          child: TopProfileHeaderButton(
-                            text: 'View All',
-                            onPressed: () => print('go to view all'),
-                            width: 40,
-                            backgroundColor: Colors.transparent,
-                            textColor: kColorLightGray,
-                            splashColor: kColorExtraLightGray,
-                          ),
+                        child: ReusableRoundedCornerButton(
+                          text: 'View All',
+                          onPressed: () => print('go to view all'),
+                          width: 40,
+                          backgroundColor: Colors.transparent,
+                          textColor: kColorLightGray,
                         ),
                       ) : SizedBox(),
                     ],

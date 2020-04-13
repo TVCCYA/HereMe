@@ -11,11 +11,11 @@ const kColorRed = Color.fromRGBO(201, 62, 62, 1.0);
 const kColorBlue = Color.fromRGBO(91, 117, 212, 1.0);
 const kColorGreen = Color.fromRGBO(62, 201, 62, 1.0);
 
-const kColorBlack71 = Color.fromRGBO(47, 47, 46, 1.0);
+const kColorBlack71 = Color.fromRGBO(62, 62, 62, 1.0);
 const kColorOffWhite = Color.fromRGBO(245, 245, 245, 1.0);
 const kColorOffBlack = Color.fromRGBO(11, 8, 19, 1.0);
-const kColorLightGray = Color.fromRGBO(171, 171, 171, 1.0);
-const kColorExtraLightGray = Color.fromRGBO(234, 234, 234, 1.0);
+const kColorLightGray = Color.fromRGBO(162, 162, 162, 1.0);
+const kColorExtraLightGray = Color.fromRGBO(201, 201, 201, 1.0);
 const kColorThistle = Color.fromRGBO(228, 162, 162, 1.0);
 const kColorDarkThistle = Color.fromRGBO(215, 115, 115, 1.0);
 const kColorDarkRed = Color.fromRGBO(120, 37, 37, 1.0);

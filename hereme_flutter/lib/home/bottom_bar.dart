@@ -34,6 +34,7 @@ final usersNearbyRef = Firestore.instance.collection('usersNearby');
 final topUsersRef = Firestore.instance.collection('topUsers');
 final timelineRef = Firestore.instance.collection('timeline');
 final exploreTimelineRef = Firestore.instance.collection('exploreTimeline');
+final reportedUsersRef = Firestore.instance.collection('reportedUsers');
 
 User currentUser;
 double currentLatitude;
