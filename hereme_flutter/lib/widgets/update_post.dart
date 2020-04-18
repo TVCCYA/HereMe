@@ -11,7 +11,6 @@ import 'package:hereme_flutter/utils/reusable_bottom_sheet.dart';
 import 'package:hereme_flutter/widgets/user_result.dart';
 import 'package:intl/intl.dart';
 import 'package:time_ago_provider/time_ago_provider.dart';
-import 'package:video_player/video_player.dart';
 
 import '../constants.dart';
 
@@ -263,24 +262,8 @@ class _LatestPostState extends State<LatestPost> {
           .collection('posts')
           .document(id)
           .updateData({'likes.$currentUserUid': false});
-
-      DocumentReference timeline = timelineRef
-          .document(currentUserUid)
-          .collection('timelinePosts')
-          .document(id);
-      timeline.get().then((doc) {
-        if (doc.exists) {
-          timeline.updateData({'likes.$currentUserUid': false});
-        }
-      });
-
-      DocumentReference exploreRef = exploreTimelineRef.document(id);
-      exploreRef.get().then((doc) {
-        if (doc.exists) {
-          exploreRef.updateData({'likes.$currentUserUid': false});
-        }
-      });
-      removeLikeFromPosts();
+      
+      removeLikeFromActivityFeed();
       setState(() {
         likeCount -= 1;
         isLiked = false;
@@ -293,23 +276,7 @@ class _LatestPostState extends State<LatestPost> {
           .document(id)
           .updateData({'likes.$currentUserUid': true});
 
-      DocumentReference timeline = timelineRef
-          .document(currentUserUid)
-          .collection('timelinePosts')
-          .document(id);
-      timeline.get().then((doc) {
-        if (doc.exists) {
-          timeline.updateData({'likes.$currentUserUid': true});
-        }
-      });
-
-      DocumentReference exploreRef = exploreTimelineRef.document(id);
-      exploreRef.get().then((doc) {
-        if (doc.exists) {
-          exploreRef.updateData({'likes.$currentUserUid': true});
-        }
-      });
-      addLikeToPosts();
+      addLikeToActivityFeed();
       setState(() {
         likeCount += 1;
         isLiked = true;
@@ -318,31 +285,96 @@ class _LatestPostState extends State<LatestPost> {
     }
   }
 
-  addLikeToPosts() {
+  addLikeToActivityFeed() {
     bool isNotPostOwner = currentUserUid != uid;
     if (isNotPostOwner) {
-      updateRef
+      activityRef
           .document(uid)
-          .collection('posts')
-          .document(id)
-          .collection('likedBy')
-          .document(currentUserUid)
+          .collection('feedItems')
+          .document()
           .setData({
         'creationDate': DateTime.now().millisecondsSinceEpoch,
+        'postId': id,
+        'postType': type,
+        'type': 'like',
+        'uid': currentUserUid,
       });
+      removeFifthSameLikedPost();
+      removeEleventhLikedPost();
     }
   }
 
-  removeLikeFromPosts() {
-    updateRef
-        .document(uid)
-        .collection('posts')
-        .document(id)
-        .collection('likedBy')
-        .document(currentUserUid).get().then((doc) {
-          if (doc.exists) {
-            doc.reference.delete();
+  removeFifthSameLikedPost() {
+    List<int> creationDates = [];
+    final ref = activityRef.document(uid).collection('feedItems');
+
+    ref
+        .where('postId', isEqualTo: id)
+        .getDocuments()
+        .then((snapshot) {
+          if (snapshot.documents.length > 4) {
+            snapshot.documents.forEach((doc) {
+              final int creationDate = doc.data['creationDate'];
+              creationDates.add(creationDate);
+            });
+            creationDates.sort((p1, p2) {
+              return p2.compareTo(p1);
+            });
+            ref
+                .where('creationDate', isEqualTo: creationDates.last)
+                .getDocuments()
+                .then((snapshot) {
+              snapshot.documents.forEach((doc) {
+                if (doc.exists) {
+                  doc.reference.delete();
+                }
+              });
+            });
           }
+    });
+  }
+
+  removeEleventhLikedPost() {
+    List<int> creationDates = [];
+    final ref = activityRef.document(uid).collection('feedItems');
+    ref
+        .getDocuments()
+        .then((snapshot) {
+      if (snapshot.documents.length > 10) {
+        snapshot.documents.forEach((doc) {
+          final int creationDate = doc.data['creationDate'];
+          creationDates.add(creationDate);
+        });
+        creationDates.sort((p1, p2) {
+          return p2.compareTo(p1);
+        });
+        ref
+            .where('creationDate', isEqualTo: creationDates.last)
+            .getDocuments()
+            .then((snapshot) {
+          snapshot.documents.forEach((doc) {
+            if (doc.exists) {
+              doc.reference.delete();
+            }
+          });
+        });
+      }
+    });
+  }
+
+  removeLikeFromActivityFeed()  {
+    activityRef
+        .document(uid)
+        .collection('feedItems')
+        .where('postId', isEqualTo: id)
+        .where('uid', isEqualTo: currentUserUid)
+        .getDocuments()
+        .then((snapshot) {
+      snapshot.documents.forEach((doc) {
+        if (doc.exists) {
+          doc.reference.delete();
+        }
+      });
     });
   }
 
@@ -858,25 +890,9 @@ class ProfileLatestPost extends StatelessWidget {
           .document(uid)
           .collection('posts')
           .document(id)
-          .updateData({'likes.$currentUserUid': false});
-
-      DocumentReference timeline = timelineRef
-          .document(currentUserUid)
-          .collection('timelinePosts')
-          .document(id);
-      timeline.get().then((doc) {
-        if (doc.exists) {
-          timeline.updateData({'likes.$currentUserUid': false});
-        }
-      });
-
-      DocumentReference exploreRef = exploreTimelineRef.document(id);
-      exploreRef.get().then((doc) {
-        if (doc.exists) {
-          exploreRef.updateData({'likes.$currentUserUid': false});
-        }
-      });
-      removeLikeFromPosts();
+          .updateData({'likes.$currentUserUid': false}); 
+      
+      removeLikeFromActivityFeed();
       isLiked = false;
       likes[currentUserUid] = false;
     } else if (!_isLiked) {
@@ -885,54 +901,103 @@ class ProfileLatestPost extends StatelessWidget {
           .collection('posts')
           .document(id)
           .updateData({'likes.$currentUserUid': true});
-
-      DocumentReference timeline = timelineRef
-          .document(currentUserUid)
-          .collection('timelinePosts')
-          .document(id);
-      timeline.get().then((doc) {
-        if (doc.exists) {
-          timeline.updateData({'likes.$currentUserUid': true});
-        }
-      });
-
-      DocumentReference exploreRef = exploreTimelineRef.document(id);
-      exploreRef.get().then((doc) {
-        if (doc.exists) {
-          exploreRef.updateData({'likes.$currentUserUid': true});
-        }
-      });
-      addLikeToPosts();
+      
+      addLikeToActivityFeed();
       isLiked = true;
       likes[currentUserUid] = true;
     }
   }
 
-  addLikeToPosts() {
+  addLikeToActivityFeed() {
     bool isNotPostOwner = currentUserUid != uid;
     if (isNotPostOwner) {
-      updateRef
+      activityRef
           .document(uid)
-          .collection('posts')
-          .document(id)
-          .collection('likedBy')
-          .document(currentUserUid)
+          .collection('feedItems')
+          .document()
           .setData({
         'creationDate': DateTime.now().millisecondsSinceEpoch,
+        'postId': id,
+        'postType': type,
+        'type': 'like',
+        'uid': currentUserUid,
       });
+      removeFifthSameLikedPost();
+      removeEleventhLikedPost();
     }
   }
 
-  removeLikeFromPosts() {
-    updateRef
-        .document(uid)
-        .collection('posts')
-        .document(id)
-        .collection('likedBy')
-        .document(currentUserUid).get().then((doc) {
-      if (doc.exists) {
-        doc.reference.delete();
+  removeFifthSameLikedPost() {
+    List<int> creationDates = [];
+    final ref = activityRef.document(uid).collection('feedItems');
+
+    ref
+        .where('postId', isEqualTo: id)
+        .getDocuments()
+        .then((snapshot) {
+      if (snapshot.documents.length > 4) {
+        snapshot.documents.forEach((doc) {
+          final int creationDate = doc.data['creationDate'];
+          creationDates.add(creationDate);
+        });
+        creationDates.sort((p1, p2) {
+          return p2.compareTo(p1);
+        });
+        ref
+            .where('creationDate', isEqualTo: creationDates.last)
+            .getDocuments()
+            .then((snapshot) {
+          snapshot.documents.forEach((doc) {
+            if (doc.exists) {
+              doc.reference.delete();
+            }
+          });
+        });
       }
+    });
+  }
+
+  removeEleventhLikedPost() {
+    List<int> creationDates = [];
+    final ref = activityRef.document(uid).collection('feedItems');
+    ref
+        .getDocuments()
+        .then((snapshot) {
+      if (snapshot.documents.length > 10) {
+        snapshot.documents.forEach((doc) {
+          final int creationDate = doc.data['creationDate'];
+          creationDates.add(creationDate);
+        });
+        creationDates.sort((p1, p2) {
+          return p2.compareTo(p1);
+        });
+        ref
+            .where('creationDate', isEqualTo: creationDates.last)
+            .getDocuments()
+            .then((snapshot) {
+          snapshot.documents.forEach((doc) {
+            if (doc.exists) {
+              doc.reference.delete();
+            }
+          });
+        });
+      }
+    });
+  }
+
+  removeLikeFromActivityFeed()  {
+    activityRef
+        .document(uid)
+        .collection('feedItems')
+        .where('postId', isEqualTo: id)
+          .where('uid', isEqualTo: currentUserUid)
+          .getDocuments()
+          .then((snapshot) {
+        snapshot.documents.forEach((doc) {
+          if (doc.exists) {
+            doc.reference.delete();
+          }
+        });
     });
   }
 

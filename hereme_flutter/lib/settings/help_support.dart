@@ -8,13 +8,10 @@ import 'package:hereme_flutter/constants.dart';
 import 'package:hereme_flutter/registration/initial_page.dart';
 import 'package:hereme_flutter/settings/blocked_profiles.dart';
 import 'package:hereme_flutter/utils/settings_tile.dart';
-import 'package:rflutter_alert/rflutter_alert.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class SupportPage extends StatelessWidget {
   final _scaffoldKey = GlobalKey<ScaffoldState>();
-  final TextEditingController _nameChangeController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
@@ -30,7 +27,7 @@ class SupportPage extends StatelessWidget {
           style: kAppBarTextStyle,
         ),
         leading: IconButton(
-          icon: Icon(FontAwesomeIcons.chevronLeft),
+          icon: Icon(FontAwesomeIcons.chevronLeft, size: 20),
           onPressed: () {
             Navigator.pop(context);
           },
@@ -62,7 +59,7 @@ class SupportPage extends StatelessWidget {
           onTap: () => showResetPasswordAlert(context),
         ),
         InkWell(
-          onTap: () => isAdmin ? _resetWeeklyViews() : _deleteAlert(context),
+          onTap: () => !isAdmin ? _resetWeeklyViews() : _deleteAlert(context),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.start,
             children: <Widget>[
@@ -84,6 +81,23 @@ class SupportPage extends StatelessWidget {
         ),
       ]),
     );
+  }
+
+  addCreationDate() {
+    followersRef.getDocuments().then((snapshot) {
+      snapshot.documents.forEach((doc) {
+        if (doc.exists) {
+          final ref = followersRef.document(doc.documentID).collection('users');
+          ref.getDocuments().then((snaps) {
+            snaps.documents.forEach((docu) {
+              if (docu.exists) {
+                ref.document(docu.documentID).setData({'creationDate': 0}, merge: true);
+              }
+            });
+          });
+        }
+      });
+    });
   }
 
   _resetWeeklyViews() {

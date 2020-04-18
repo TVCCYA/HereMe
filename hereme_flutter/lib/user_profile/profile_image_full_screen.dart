@@ -81,12 +81,6 @@ class _FullScreenLatestPhotoState extends State<FullScreenLatestPhoto> {
   _FullScreenLatestPhotoState({this.index, this.displayedUpdates});
   bool showTitle = true;
 
-  @override
-  void initState() {
-    super.initState();
-    print(index);
-  }
-
   _imageTapped() {
     if (showTitle) {
       if (this.mounted)
@@ -237,9 +231,8 @@ class _FullScreenLatestPhotoState extends State<FullScreenLatestPhoto> {
     return timeAgo;
   }
 
-  handleLikePost(
-      {String currentUserUid, Map likes, String uid, String id, bool isLiked,
-      String type, String photoUrl, String title}) {
+  handleLikePost({Map likes, String uid, String id, String type}) {
+    final String currentUserUid = currentUser.uid;
     bool _isLiked = likes[currentUserUid] == true;
     if (_isLiked) {
       updateRef
@@ -248,24 +241,8 @@ class _FullScreenLatestPhotoState extends State<FullScreenLatestPhoto> {
           .document(id)
           .updateData({'likes.$currentUserUid': false});
 
-      DocumentReference timeline = timelineRef
-          .document(currentUserUid)
-          .collection('timelinePosts')
-          .document(id);
-      timeline.get().then((doc) {
-        if (doc.exists) {
-          timeline.updateData({'likes.$currentUserUid': false});
-        }
-      });
-
-      DocumentReference exploreRef = exploreTimelineRef.document(id);
-      exploreRef.get().then((doc) {
-        if (doc.exists) {
-          exploreRef.updateData({'likes.$currentUserUid': false});
-        }
-      });
+      removeLikeFromActivityFeed(uid, id);
       setState(() {
-        isLiked = false;
         likes[currentUserUid] = false;
       });
     } else if (!_isLiked) {
@@ -275,56 +252,112 @@ class _FullScreenLatestPhotoState extends State<FullScreenLatestPhoto> {
           .document(id)
           .updateData({'likes.$currentUserUid': true});
 
-      DocumentReference timeline = timelineRef
-          .document(currentUserUid)
-          .collection('timelinePosts')
-          .document(id);
-      timeline.get().then((doc) {
-        if (doc.exists) {
-          timeline.updateData({'likes.$currentUserUid': true});
-        }
-      });
-
-      DocumentReference exploreRef = exploreTimelineRef.document(id);
-      exploreRef.get().then((doc) {
-        if (doc.exists) {
-          exploreRef.updateData({'likes.$currentUserUid': true});
-        }
-      });
-      addLikeToActivityFeed(uid, id, type, photoUrl, title);
+      addLikeToActivityFeed(uid, id, type);
       setState(() {
-        isLiked = true;
         likes[currentUserUid] = true;
       });
     }
   }
 
-  addLikeToActivityFeed(String uid, String id, String type, String photoUrl, String title) {
+  removeLikeFromActivityFeed(String uid, String id)  {
+    activityRef
+        .document(uid)
+        .collection('feedItems')
+        .where('postId', isEqualTo: id)
+        .where('uid', isEqualTo: currentUser.uid)
+        .getDocuments()
+        .then((snapshot) {
+      snapshot.documents.forEach((doc) {
+        if (doc.exists) {
+          doc.reference.delete();
+        }
+      });
+    });
+  }
+
+  addLikeToActivityFeed(String uid, String id, String type) {
     bool isNotPostOwner = currentUser.uid != uid;
     if (isNotPostOwner) {
       activityRef
           .document(uid)
           .collection('feedItems')
-          .document(id)
+          .document()
           .setData({
-        'type': 'like',
-        'postType': type,
-        'username': currentUser.username,
-        'uid': currentUser.uid,
-        'profileImageUrl': currentUser.profileImageUrl,
-        'id': id,
-        'photoUrl': photoUrl,
-        'title': title,
         'creationDate': DateTime.now().millisecondsSinceEpoch,
+        'postId': id,
+        'postType': type,
+        'type': 'like',
+        'uid': currentUser.uid,
       });
+      removeFifthSameLikedPost(uid, id);
+      removeEleventhLikedPost(uid, id);
     }
+  }
+
+  removeFifthSameLikedPost(String uid, String id) {
+    List<int> creationDates = [];
+    final ref = activityRef.document(uid).collection('feedItems');
+
+    ref
+        .where('postId', isEqualTo: id)
+        .getDocuments()
+        .then((snapshot) {
+      if (snapshot.documents.length > 4) {
+        snapshot.documents.forEach((doc) {
+          final int creationDate = doc.data['creationDate'];
+          creationDates.add(creationDate);
+        });
+        creationDates.sort((p1, p2) {
+          return p2.compareTo(p1);
+        });
+        ref
+            .where('creationDate', isEqualTo: creationDates.last)
+            .getDocuments()
+            .then((snapshot) {
+          snapshot.documents.forEach((doc) {
+            if (doc.exists) {
+              doc.reference.delete();
+            }
+          });
+        });
+      }
+    });
+  }
+
+  removeEleventhLikedPost(String uid, String id) {
+    List<int> creationDates = [];
+    final ref = activityRef.document(uid).collection('feedItems');
+    ref
+        .getDocuments()
+        .then((snapshot) {
+      if (snapshot.documents.length > 10) {
+        snapshot.documents.forEach((doc) {
+          final int creationDate = doc.data['creationDate'];
+          creationDates.add(creationDate);
+        });
+        creationDates.sort((p1, p2) {
+          return p2.compareTo(p1);
+        });
+        ref
+            .where('creationDate', isEqualTo: creationDates.last)
+            .getDocuments()
+            .then((snapshot) {
+          snapshot.documents.forEach((doc) {
+            if (doc.exists) {
+              doc.reference.delete();
+            }
+          });
+        });
+      }
+    });
   }
 
   buildPost(BuildContext context, int i) {
     final double screenHeight = MediaQuery.of(context).size.height;
     final double screenWidth = MediaQuery.of(context).size.height;
-    var post = displayedUpdates[i];
+    LatestPost post = displayedUpdates[i];
     bool isLiked = post.likes[post.currentUserUid] == true;
+    bool isCurrentUser = currentUser.uid == post.uid;
     return GestureDetector(
       onTap: () => _imageTapped(),
       child: Dismissible(
@@ -393,16 +426,12 @@ class _FullScreenLatestPhotoState extends State<FullScreenLatestPhoto> {
                                       ),
                                     ],
                                   ),
-                                  GestureDetector(
+                                  !isCurrentUser ? GestureDetector(
                                     onTap: () => handleLikePost(
-                                      currentUserUid: post.currentUserUid,
                                       likes: post.likes,
                                       uid: post.uid,
                                       id: post.id,
-                                      isLiked: post.isLiked,
                                       type: post.type,
-                                      photoUrl: post.photoUrl,
-                                      title: post.title,
                                     ),
                                     child: Icon(
                                         !isLiked
@@ -411,7 +440,7 @@ class _FullScreenLatestPhotoState extends State<FullScreenLatestPhoto> {
                                         color: !isLiked ? kColorLightGray : kColorRed,
                                         size: 15.0,
                                     ),
-                                  ),
+                                  ) : SizedBox(),
                                 ],
                               ),
                             ),

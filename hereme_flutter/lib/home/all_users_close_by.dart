@@ -5,6 +5,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:geoflutterfire/geoflutterfire.dart';
 import 'package:hereme_flutter/constants.dart';
 import 'package:hereme_flutter/models/user.dart';
+import 'package:hereme_flutter/utils/reusable_header_label.dart';
 import 'package:hereme_flutter/widgets/user_result.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'bottom_bar.dart';
@@ -91,12 +92,7 @@ class AllUsersCloseBy extends StatefulWidget {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
-              Padding(
-                padding: EdgeInsets.only(
-                    left: 8.0, top: 12.0, bottom: 8.0, right: 8.0),
-                child: Text('Everyone Within 1/4 Mile',
-                    style: kAppBarTextStyle.copyWith(fontSize: 16.0)),
-              ),
+              ReusableHeaderLabel('Everyone Within 1/4 Mile'),
               Padding(
                 padding: EdgeInsets.only(bottom: 40.0),
                 child: GridView.count(
@@ -139,7 +135,7 @@ class AllUsersCloseBy extends StatefulWidget {
         elevation: 2.0,
         title: Text('Close By', style: kAppBarTextStyle),
         leading: IconButton(
-          icon: Icon(FontAwesomeIcons.chevronLeft),
+          icon: Icon(FontAwesomeIcons.chevronLeft, size: 20),
           onPressed: () {
             Navigator.pop(context);
           },
@@ -158,8 +154,8 @@ class AllUsersCloseBy extends StatefulWidget {
             size: 18.0,
           ),
           complete: Icon(
-            FontAwesomeIcons. arrowDown,
-            color: kColorLightGray,
+            FontAwesomeIcons.check,
+            color: kColorGreen,
             size: 20.0,
           ),
           failed: Icon(

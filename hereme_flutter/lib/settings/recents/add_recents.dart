@@ -68,7 +68,7 @@ class _AddRecentState extends State<AddRecent> {
           centerTitle: true,
           brightness: Brightness.light,
           leading: IconButton(
-            icon: Icon(FontAwesomeIcons.chevronLeft),
+            icon: Icon(FontAwesomeIcons.chevronLeft, size: 20),
             onPressed: () {
               Navigator.pop(context);
             },

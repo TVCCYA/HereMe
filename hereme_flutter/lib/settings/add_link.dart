@@ -90,7 +90,7 @@ class _AddLinkState extends State<AddLink> {
           style: kAppBarTextStyle,
         ),
         leading: IconButton(
-          icon: Icon(FontAwesomeIcons.chevronLeft),
+          icon: Icon(FontAwesomeIcons.chevronLeft, size: 20),
           onPressed: () {
             Navigator.pop(context);
           },

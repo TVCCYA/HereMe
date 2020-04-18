@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:hereme_flutter/constants.dart';
 import 'package:hereme_flutter/home/bottom_bar.dart';
+import 'package:hereme_flutter/live_chat/add_live_chat.dart';
 import 'package:hereme_flutter/models/linked_account.dart';
 import 'package:hereme_flutter/models/user.dart';
 import 'package:hereme_flutter/notifications/notification_page.dart';
@@ -187,7 +188,6 @@ class _NewProfileState extends State<NewProfile> {
     });
     await _getPaletteColor(backgroundImageUrl);
 //    if(videoUrl != null) initializeFavVid();
-//    _recentProfileVisitUpdate();
   }
 
   _followUser() {
@@ -353,6 +353,7 @@ class _NewProfileState extends State<NewProfile> {
                                       width: screenWidth,
                                       height: screenHeight / 2,
                                       fit: BoxFit.cover,
+                                      fadeInDuration: Duration(seconds: 1),
                                     )
                                   : Image.asset(
                                       defaultBackground,
@@ -515,24 +516,50 @@ class _NewProfileState extends State<NewProfile> {
                 : SizedBox(),
             Padding(
               padding: EdgeInsets.only(top: 8.0, bottom: 8.0),
-              child: Container(
+              child: _isCurrentUser ? Row(
+                children: <Widget>[
+                  Container(
+                    height: 30,
+                    child: ReusableRoundedCornerButton(
+                      text: 'Edit Profile',
+                      onPressed: () async {
+                        final result = await Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => EditProfile()),
+                        );
+                        result != null ? await _getCurrentUserData() : print('nothing happened');
+                      },
+                      width: 40,
+                      backgroundColor: Colors.transparent,
+                      textColor: kColorLightGray,
+                    ),
+                  ),
+                  SizedBox(width: 8.0),
+                  Container(
+                    height: 30,
+                    child: ReusableRoundedCornerButton(
+                      text: 'Host Chat',
+                      onPressed: () async {
+                        final result = await Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => AddLiveChat()),
+                        );
+                        result != null ? await _getCurrentUserData() : print('nothing happened');
+                      },
+                      width: 40,
+                      backgroundColor: Colors.transparent,
+                      textColor: kColorRed,
+                    ),
+                  ),
+                ],
+              )
+                  : Container(
                 height: 30,
                 child: ReusableRoundedCornerButton(
-                  text: _isCurrentUser
-                      ? 'Edit Profile'
-                      : _didKnock ? 'Knocked' : 'Knock',
-                  onPressed: () async {
-                    if (_isCurrentUser) {
-                      final result = await Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => EditProfile()),
-                      );
-                      result != null ? await _getCurrentUserData() : print('nothing happened');
-                    } else {
-                      _handleKnock();
-                    }
-                  },
+                  text: _didKnock ? 'Knocked' : 'Knock',
+                  onPressed: () =>_handleKnock(),
                   width: 40,
                   backgroundColor: Colors.transparent,
                   textColor: kColorLightGray,
@@ -760,7 +787,7 @@ class _NewProfileState extends State<NewProfile> {
                                   context,
                                   FadeRoute(
                                     page: FullScreenLatestPhoto(
-                                        index: i - 1,
+                                        index: displayedPhotos.indexOf(displayedUpdates[i]),
                                         displayedUpdates: displayedPhotos),
                                   ),
                                 ),
@@ -858,7 +885,7 @@ class _NewProfileState extends State<NewProfile> {
                                   context,
                                   FadeRoute(
                                     page: FullScreenLatestPhoto(
-                                        index: i - 1,
+                                        index: displayedPhotos.indexOf(displayedUpdates[i]),
                                         displayedUpdates: displayedPhotos),
                                   ),
                                 ),
@@ -933,9 +960,6 @@ class _NewProfileState extends State<NewProfile> {
   _sendKnock(DocumentReference ref) {
     int creationDate = DateTime.now().millisecondsSinceEpoch;
     Map<String, dynamic> knockData = <String, dynamic>{
-      'uid': currentUser.uid,
-      'profileImageUrl': currentUser.profileImageUrl,
-      'username': currentUser.username,
       'creationDate': creationDate,
     };
     ref.setData(knockData).whenComplete(() {
@@ -961,16 +985,9 @@ class _NewProfileState extends State<NewProfile> {
         .collection('sentKnockTo')
         .document(user.uid)
         .setData({
-      'uid': user.uid,
       'creationDate': creationDate,
-      'username': username,
-      'profileImageUrl': profileImageUrl,
-    }).whenComplete(() {
-      _setPendingKnockActivityFeed(creationDate);
     }).whenComplete(() {
       _removeSentKnockTo(user.uid, currentUser.uid);
-    }).whenComplete(() {
-      _removePendingKnockActivityFeed(user.uid, currentUser.uid);
     }).whenComplete(() {
       _removeKnock(user.uid);
     });
@@ -1002,38 +1019,11 @@ class _NewProfileState extends State<NewProfile> {
     });
   }
 
-  _setPendingKnockActivityFeed(int creationDate) {
-    activityRef
-        .document(currentUser.uid)
-        .collection('feedItems')
-        .document(user.uid)
-        .setData({
-      'type': 'pendingKnock',
-      'uid': user.uid,
-      'username': username,
-      'profileImageUrl': profileImageUrl,
-      'creationDate': creationDate,
-    });
-  }
-
   _updateFirestoreHasAccountLinked() {
     usersRef.document(currentUser.uid).updateData({
       'hasAccountLinked': false,
     });
     currentUser.hasAccountLinked = false;
-  }
-
-  _removePendingKnockActivityFeed(String uid1, String uid2) {
-    DocumentReference ref =
-        activityRef.document(uid1).collection('feedItems').document(uid2);
-    ref.get().then((snapshot) {
-      if (snapshot.exists) {
-        final type = snapshot.data['type'];
-        if (type == 'pendingKnock') {
-          snapshot.reference.delete();
-        }
-      }
-    });
   }
 
   _linksActionSheet(BuildContext context, String accountUsername,

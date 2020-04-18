@@ -56,7 +56,7 @@ class _AllUpdatesState extends State<AllUpdates> {
           style: kAppBarTextStyle,
         ),
         leading: IconButton(
-          icon: Icon(FontAwesomeIcons.chevronLeft),
+          icon: Icon(FontAwesomeIcons.chevronLeft, size: 20),
           onPressed: () {
             Navigator.pop(context);
           },
@@ -122,7 +122,7 @@ class _AllUpdatesState extends State<AllUpdates> {
                             Navigator.push(
                               context,
                               FadeRoute(
-                                page: FullScreenLatestPhoto(index: i - 1, displayedUpdates: displayedPhotos),
+                                page: FullScreenLatestPhoto(index: displayedPhotos.indexOf(displayedUpdates[i]), displayedUpdates: displayedPhotos),
                               ),
                             ),
                         child: displayedUpdates[i],

@@ -144,7 +144,7 @@ class _CreateDisplayNameState extends State<CreateDisplayName> {
           style: kAppBarTextStyle
         ),
         leading: showBackButton ? IconButton(
-          icon: Icon(FontAwesomeIcons.chevronLeft),
+          icon: Icon(FontAwesomeIcons.chevronLeft, size: 20),
           onPressed: () {
             Navigator.pop(context);
           },

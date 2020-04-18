@@ -9,7 +9,6 @@ import 'package:hereme_flutter/utils/custom_image.dart';
 import 'package:hereme_flutter/utils/reusable_bottom_sheet.dart';
 import 'package:time_ago_provider/time_ago_provider.dart';
 import '../constants.dart';
-import 'package:hereme_flutter/home/home.dart';
 
 class ActivityFeedItem extends StatelessWidget {
 // for pending knocks/last profile visited

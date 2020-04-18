@@ -152,6 +152,12 @@
       <excludeFolder url="file://$MODULE_DIR$/hereme_flutter/ios/.symlinks/plugins/permission_handler/example/.dart_tool" />
       <excludeFolder url="file://$MODULE_DIR$/hereme_flutter/ios/.symlinks/plugins/permission_handler/example/.pub" />
       <excludeFolder url="file://$MODULE_DIR$/hereme_flutter/ios/.symlinks/plugins/permission_handler/example/build" />
+      <excludeFolder url="file://$MODULE_DIR$/hereme_flutter/ios/.symlinks/plugins/pinch_zoom_image/.dart_tool" />
+      <excludeFolder url="file://$MODULE_DIR$/hereme_flutter/ios/.symlinks/plugins/pinch_zoom_image/.pub" />
+      <excludeFolder url="file://$MODULE_DIR$/hereme_flutter/ios/.symlinks/plugins/pinch_zoom_image/build" />
+      <excludeFolder url="file://$MODULE_DIR$/hereme_flutter/ios/.symlinks/plugins/pinch_zoom_image/example/.dart_tool" />
+      <excludeFolder url="file://$MODULE_DIR$/hereme_flutter/ios/.symlinks/plugins/pinch_zoom_image/example/.pub" />
+      <excludeFolder url="file://$MODULE_DIR$/hereme_flutter/ios/.symlinks/plugins/pinch_zoom_image/example/build" />
       <excludeFolder url="file://$MODULE_DIR$/hereme_flutter/ios/.symlinks/plugins/pinch_zoom_image_updated/.dart_tool" />
       <excludeFolder url="file://$MODULE_DIR$/hereme_flutter/ios/.symlinks/plugins/pinch_zoom_image_updated/.pub" />
       <excludeFolder url="file://$MODULE_DIR$/hereme_flutter/ios/.symlinks/plugins/pinch_zoom_image_updated/build" />

@@ -29,8 +29,6 @@ Widget cachedUserResultImage(String imageUrl, double size, bool hasBorder) {
         image: DecorationImage(
           image: imageProvider,
           fit: BoxFit.cover,
-//                colorFilter: ColorFilter.mode(
-//                    kColorBlack71.withOpacity(0.05), BlendMode.multiply),
         ),
       ),
     ),
@@ -39,12 +37,12 @@ Widget cachedUserResultImage(String imageUrl, double size, bool hasBorder) {
   );
 }
 
-Widget cachedRoundedCornerImage(String imageUrl, double size) {
+Widget cachedRoundedCornerImage(String imageUrl, double size, {double radius = 15.0}) {
   return Card(
     clipBehavior: Clip.hardEdge,
     elevation: 2.0,
     shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(15.0),
+      borderRadius: BorderRadius.circular(radius),
     ),
     child: CachedNetworkImage(
       imageUrl: imageUrl,

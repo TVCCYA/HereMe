@@ -123,7 +123,7 @@ class _AddLiveChatState extends State<AddLiveChat> {
             style: kAppBarTextStyle,
           ),
           leading: IconButton(
-            icon: Icon(FontAwesomeIcons.chevronLeft),
+            icon: Icon(FontAwesomeIcons.chevronLeft, size: 20),
             onPressed: () {
               Navigator.pop(context);
             },

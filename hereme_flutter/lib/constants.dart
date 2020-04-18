@@ -15,7 +15,7 @@ const kColorBlack71 = Color.fromRGBO(62, 62, 62, 1.0);
 const kColorOffWhite = Color.fromRGBO(245, 245, 245, 1.0);
 const kColorOffBlack = Color.fromRGBO(11, 8, 19, 1.0);
 const kColorLightGray = Color.fromRGBO(162, 162, 162, 1.0);
-const kColorExtraLightGray = Color.fromRGBO(201, 201, 201, 1.0);
+const kColorExtraLightGray = Color.fromRGBO(234, 234, 234, 1.0);
 const kColorThistle = Color.fromRGBO(228, 162, 162, 1.0);
 const kColorDarkThistle = Color.fromRGBO(215, 115, 115, 1.0);
 const kColorDarkRed = Color.fromRGBO(120, 37, 37, 1.0);
@@ -181,14 +181,11 @@ void kShowAlertMultiButtons(
     style: AlertStyle(
       backgroundColor: kColorOffWhite,
       overlayColor: Colors.black.withOpacity(0.75),
-      titleStyle: kDefaultTextStyle.copyWith(
+      titleStyle: kAppBarTextStyle.copyWith(
         color: kColorBlack71,
-        fontSize: 24.0,
+        fontSize: 20.0,
       ),
-      descStyle: kDefaultTextStyle.copyWith(
-        color: kColorBlack71,
-        fontSize: 16.0,
-      ),
+      descStyle: kDefaultTextStyle,
     ),
     type: null,
     title: title,
@@ -601,43 +598,4 @@ Route createRoute(Widget page) {
       );
     },
   );
-}
-
-String timeAgoDisplay(int creationDate) {
-  final now = (DateTime.now().millisecondsSinceEpoch);
-  final secondsAgo = now - creationDate;
-
-  final minute = 60;
-  final hour = 60 * minute;
-  final day = 24 * hour;
-  final week = 7 * day;
-  final month = 4 * week;
-  final year = 12 * month;
-
-  double quotient;
-  String unit;
-  if (secondsAgo < minute) {
-    quotient = secondsAgo as double;
-    unit = "s";
-  } else if (secondsAgo < hour) {
-    quotient = secondsAgo / minute;
-    unit = "m";
-  } else if (secondsAgo < day) {
-    quotient = secondsAgo / hour;
-    unit = "h";
-  } else if (secondsAgo < week) {
-    quotient = secondsAgo / day;
-    unit = "d";
-  } else if (secondsAgo < month) {
-    quotient = secondsAgo / week;
-    unit = "w";
-  } else if (secondsAgo < year) {
-    quotient = secondsAgo / month;
-    unit = "mo";
-  } else {
-    quotient = secondsAgo / year;
-    unit = "y";
-  }
-
-  return '${quotient.round()}$unit';
 }

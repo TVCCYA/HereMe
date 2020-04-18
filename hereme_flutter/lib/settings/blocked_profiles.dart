@@ -140,7 +140,7 @@ class _BlockedProfilesState extends State<BlockedProfiles> {
           style: kAppBarTextStyle,
         ),
         leading: IconButton(
-          icon: Icon(FontAwesomeIcons.chevronLeft),
+          icon: Icon(FontAwesomeIcons.chevronLeft, size: 20),
           onPressed: () {
             Navigator.pop(context);
           },

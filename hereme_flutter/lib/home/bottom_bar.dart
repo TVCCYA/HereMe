@@ -60,19 +60,13 @@ class _BottomBarState extends State<BottomBar>
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-
-    handleLoggedIn();
   }
 
   @override
   void initState() {
     super.initState();
+    handleLoggedIn();
     _tabController = new TabController(vsync: this, length: 2);
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
   }
 
   handleLoggedIn() async {
@@ -141,12 +135,8 @@ class _BottomBarState extends State<BottomBar>
     fetchBlockedUsers();
 
     if (currentUser.profileImageUrl == null) {
-      Navigator.pushAndRemoveUntil(
-          context,
-          MaterialPageRoute(
-              builder: (BuildContext context) =>
-                  PhotoAdd()),
-          (Route<dynamic> route) => false);
+      Navigator.of(context).pushAndRemoveUntil(createRoute(PhotoAdd()),
+              (Route<dynamic> route) => false);
 
       if (currentUser.displayName == null) {
         Navigator.of(context).pushAndRemoveUntil(createRoute(CreateDisplayName(showBackButton: false)),
@@ -202,8 +192,8 @@ class _BottomBarState extends State<BottomBar>
             unselectedLabelColor: kColorLightGray,
             labelStyle: kAppBarTextStyle.copyWith(fontSize: 16.0),
             tabs: [
-              Tab(text: 'Explore'),
               Tab(text: 'Nearby'),
+              Tab(text: 'Explore'),
             ],
           ),
         ),
@@ -228,8 +218,8 @@ class _BottomBarState extends State<BottomBar>
       body: pageLoading ? circularProgress() : TabBarView(
         controller: _tabController,
         children: <Widget>[
-          Explore(blockedUids: blockedUids,),
           Home(blockedUids: blockedUids),
+          Explore(blockedUids: blockedUids),
         ],
       ),
     );

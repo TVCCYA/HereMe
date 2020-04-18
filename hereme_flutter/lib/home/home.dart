@@ -55,20 +55,22 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
       RefreshController(initialRefresh: false);
 
   bool hideMe = false;
-  bool pageLoading = true;
+  bool isPageLoading = true;
+  bool isLatestLoading = true;
   bool _hasAccountLinked = currentUser.hasAccountLinked;
 
   double latitude;
   double longitude;
   bool _locationEnabled = false;
-  bool _locationLoading = true;
+  bool isLocationLoading = true;
 
   var geolocator = Geolocator();
   StreamSubscription<Position> positionStream;
   Position position;
 
   List<User> usersNearby = [];
-  bool isPostsLoading = true;
+  List<LatestPost> latestPosts = [];
+  List<LatestPost> latestPhotoPosts = [];
 
   @override
   void initState() {
@@ -88,10 +90,10 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
 
   @override
   void dispose() {
+    super.dispose();
     if (positionStream != null) {
       positionStream.cancel();
     }
-    super.dispose();
   }
 
   @override
@@ -111,12 +113,10 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
         setState(() {
           _hasAccountLinked = false;
         });
-      removeNearbyUsersFromFirestore();
     }
   }
 
   getNearbyUsers() async {
-    int count = 0;
     Geoflutterfire geo = Geoflutterfire();
     Stream<List<DocumentSnapshot>> stream =
         geo.collection(collectionRef: userLocationsRef).within(
@@ -130,63 +130,67 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
     stream.listen((documents) {
       users = documents.map((doc) => User.fromDocument(doc)).toList();
       if (users.isNotEmpty) {
-        for (var user in users) {
-          usersNearbyRef
-              .document(currentUser.uid)
-              .collection('users')
-              .document(user.uid)
-              .setData({}).whenComplete(() {
-            print('adding nearby ${count++}');
-          });
-        }
         if (this.mounted)
           setState(() {
             this.usersNearby = users;
           });
+        getTimeline();
       }
       if (this.mounted)
         setState(() {
-          isPostsLoading = false;
+          isPageLoading = false;
         });
     });
-    await getNearbyUsersFromFirestore();
   }
+  
+  getTimeline() async {
+    List<LatestPost> posts = [];
+    List<LatestPost> photoPosts = [];
+    for (var user in usersNearby) {
+      QuerySnapshot snapshot =
+      await updateRef.document(user.uid).collection('posts').limit(10).getDocuments();
+      if (snapshot.documents.length > 0) {
+        for (var doc in snapshot.documents) {
+          final String postId = doc.data['id'];
+          final String uid = doc.data['uid'];
+          final String title = doc.data['title'];
+          final String photoUrl = doc.data['photoUrl'];
+          final int creationDate = doc.data['creationDate'];
+          final String type = doc.data['type'];
+          final dynamic likes = doc.data['likes'];
 
-  removeNearbyUsersFromFirestore() {
-    usersNearbyRef
-        .document(currentUser.uid)
-        .collection('users')
-        .getDocuments()
-        .then((snapshot) {
-      for (var doc in snapshot.documents) {
-        if (doc.exists) {
-          doc.reference.delete();
-        }
-      }
-    });
-  }
+          LatestPost post = LatestPost(
+            id: postId,
+            uid: uid,
+            title: title,
+            displayName: user.displayName ?? user.username,
+            photoUrl: photoUrl,
+            creationDate: creationDate,
+            type: type,
+            profileImageUrl: user.profileImageUrl,
+            likes: likes ?? {},
+            isHome: true,
+          );
 
-  getNearbyUsersFromFirestore() async {
-    List<String> uids = [];
-    List<String> uidOnFeed = [];
-    final ref = usersNearbyRef.document(currentUser.uid).collection('users');
-    ref.getDocuments().then((snapshot) {
-      for (var doc in snapshot.documents) {
-        if (doc.exists) {
-          uids.add(doc.documentID);
-        }
-      }
-      for (var uid in uids) {
-        for (var user in usersNearby) {
-          if (uid == user.uid) {
-            uidOnFeed.add(uid);
+          posts.add(post);
+          if (type == 'photo') {
+            photoPosts.add(post);
+            photoPosts.sort((p1, p2) {
+              return p2.creationDate.compareTo(p1.creationDate);
+            });
           }
-        }
-        if (!uidOnFeed.contains(uid)) {
-          ref.document(uid).delete();
+          posts.sort((p1, p2) {
+            return p2.creationDate.compareTo(p1.creationDate);
+          });
         }
       }
-    });
+    }
+    if (this.mounted)
+      setState(() {
+        latestPosts = posts;
+        latestPhotoPosts = photoPosts;
+        isLatestLoading = false;
+      });
   }
 
   isHideMe() async {
@@ -200,7 +204,7 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
   getCurrentLocation() async {
     if (this.mounted)
       setState(() {
-        _locationLoading = true;
+        isLocationLoading = true;
         _locationEnabled = false;
       });
     GeolocationStatus geolocationStatus =
@@ -209,7 +213,7 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
     if (geolocationStatus != GeolocationStatus.granted || hideMe) {
       if (this.mounted)
         setState(() {
-          _locationLoading = false;
+          isLocationLoading = false;
           _locationEnabled = false;
         });
     } else {
@@ -217,7 +221,7 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
           .getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
       if (this.mounted)
         setState(() {
-          _locationLoading = false;
+          isLocationLoading = false;
           _locationEnabled = true;
           latitude = position.latitude;
           longitude = position.longitude;
@@ -235,7 +239,7 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
     if (geolocationStatus != GeolocationStatus.granted) {
       if (this.mounted)
         setState(() {
-          _locationLoading = false;
+          isLocationLoading = false;
           _locationEnabled = false;
         });
     } else {
@@ -248,7 +252,7 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
           .listen((Position newPosition) async {
         if (this.mounted)
           setState(() {
-            _locationLoading = false;
+            isLocationLoading = false;
             _locationEnabled = true;
             latitude = newPosition.latitude;
             longitude = newPosition.longitude;
@@ -435,226 +439,10 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
     );
   }
 
-  buildNewLatestPosts() {
-    int displayedPostCount = 10;
-    return FutureBuilder(
-      future: timelineRef
-          .document(currentUser.uid)
-          .collection('timelinePosts')
-          .orderBy('creationDate', descending: true)
-          .getDocuments(),
-      builder: (context, snapshot) {
-        switch (snapshot.connectionState) {
-          case ConnectionState.none:
-          case ConnectionState.waiting:
-            return circularProgress();
-          default:
-            if (snapshot.hasError) {
-              return Center(child: Text('Error: ${snapshot.error}'));
-            } else {
-              final updates = snapshot.data.documents;
-              List<LatestPost> displayedLatest = [];
-              List<LatestPost> displayedPhotos = [];
-              List<LatestPost> allLatest = [];
-              for (var post in updates) {
-                final String photoUrl = post.data['photoUrl'];
-                final String title = post.data['title'];
-                final int creationDate = post.data['creationDate'];
-                final String type = post.data['type'];
-                final String id = post.data['id'];
-                final dynamic likes = post.data['likes'];
-                final String uid = post.data['uid'];
-                final String displayName = post.data['displayName'];
-                final String profileImageUrl = post.data['profileImageUrl'];
-                final String videoUrl = post.data['videoUrl'];
-
-                final displayedPost = LatestPost(
-                  photoUrl: photoUrl,
-                  title: title,
-                  creationDate: creationDate,
-                  type: type,
-                  uid: uid,
-                  id: id,
-                  displayName: displayName ?? '?',
-                  likes: likes ?? {},
-                  profileImageUrl: profileImageUrl,
-                  videoUrl: videoUrl,
-                );
-
-                if (!blockedUids.contains(uid)) {
-                  allLatest.add(displayedPost);
-                  if (displayedLatest.length < displayedPostCount) {
-                    displayedLatest.add(displayedPost);
-                    if (type == 'photo') {
-                      displayedPhotos.add(displayedPost);
-                    }
-                  }
-                }
-              }
-              if (displayedLatest.isNotEmpty) {
-                return Padding(
-                  padding: EdgeInsets.only(bottom: 20.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      ReusableHeaderLabel('Latest'),
-                      ListView.builder(
-                        physics: NeverScrollableScrollPhysics(),
-                        padding: EdgeInsets.only(top: 8.0, bottom: 20.0),
-                        shrinkWrap: true,
-                        itemCount: displayedLatest.length,
-                        itemBuilder: (context, i) {
-                          return GestureDetector(
-                            onTap: () =>
-                                Navigator.push(
-                                  context,
-                                  FadeRoute(
-                                    page: FullScreenLatestPhoto(index: i - 1, displayedUpdates: displayedPhotos),
-                                  ),
-                                ),
-                            child: displayedLatest[i],
-                          );
-                        },
-                      ),
-                      allLatest.length > displayedPostCount
-                          ? Center(
-                        child: ReusableRoundedCornerButton(
-                          text: 'View All',
-                          onPressed: () => print('go to view all'),
-                          width: 40,
-                          backgroundColor: Colors.transparent,
-                          textColor: kColorLightGray,
-                        ),
-                      ) : SizedBox(),
-                    ],
-                  ),
-                );
-              } else {
-                return Center(
-                  child: Text(
-                    'No Posts Yet',
-                    style: kDefaultTextStyle,
-                  ),
-                );
-              }
-            }
-        }
-      },
-    );
-  }
-
-  buildNearbyLatestPosts(
-      String postType, String headerLabel, Function pushTo, bool showNoPosts) {
-    int displayedPostCount = 5;
-    return FutureBuilder(
-      future: timelineRef
-          .document(currentUser.uid)
-          .collection('timelinePosts')
-          .orderBy('creationDate', descending: true)
-          .getDocuments(),
-      builder: (context, snapshot) {
-        if (!snapshot.hasData) {
-          return showNoPosts ? circularProgress() : SizedBox();
-        }
-        final updates = snapshot.data.documents;
-        List<LatestPost> displayedUpdates = [];
-        List<LatestPost> allPostType = [];
-        for (var post in updates) {
-          final String photoUrl = post.data['photoUrl'];
-          final String title = post.data['title'];
-          final int creationDate = post.data['creationDate'];
-          final String type = post.data['type'];
-          final String id = post.data['id'];
-          final dynamic likes = post.data['likes'];
-          final String uid = post.data['uid'];
-          final String displayName = post.data['displayName'];
-          final String profileImageUrl = post.data['profileImageUrl'];
-
-          final displayedPost = LatestPost(
-            photoUrl: photoUrl,
-            title: title,
-            creationDate: creationDate,
-            type: type,
-            uid: uid,
-            id: id,
-            displayName: displayName ?? '?',
-            likes: likes ?? {},
-            profileImageUrl: profileImageUrl,
-          );
-          if (!blockedUids.contains(uid) && type == postType) {
-            allPostType.add(displayedPost);
-            if (displayedUpdates.length < displayedPostCount) {
-              displayedUpdates.add(displayedPost);
-            }
-          }
-        }
-        if (displayedUpdates.isNotEmpty) {
-          final double screenHeight = MediaQuery.of(context).size.height;
-          return Column(
-            children: <Widget>[
-              Padding(
-                padding: EdgeInsets.only(
-                    left: 8.0, top: 12.0, bottom: 8.0, right: 8.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: <Widget>[
-                    Text(headerLabel,
-                        style: kAppBarTextStyle.copyWith(fontSize: 16.0)),
-                    allPostType.length > displayedPostCount
-                        ? GestureDetector(
-                            child: Text('View All',
-                                style: kAppBarTextStyle.copyWith(
-                                    fontSize: 16.0, color: kColorRed)),
-                            onTap: pushTo,
-                          )
-                        : SizedBox(),
-                  ],
-                ),
-              ),
-              postType == 'text'
-                  ? Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: displayedUpdates)
-                  : CarouselSlider.builder(
-                      itemCount: displayedUpdates.length,
-                      itemBuilder: (context, i) {
-                        return GestureDetector(
-                          onTap: () => Navigator.push(
-                            context,
-                            FadeRoute(
-                              page: FullScreenLatestPhoto(
-                                  index: i, displayedUpdates: displayedUpdates),
-                            ),
-                          ),
-                          child: displayedUpdates[i],
-                        );
-                      },
-                      height: screenHeight / 3,
-                      viewportFraction: 0.9,
-                      enableInfiniteScroll:
-                          allPostType.length > 1 ? true : false,
-                      enlargeCenterPage: true,
-                    ),
-            ],
-          );
-        } else {
-          return showNoPosts
-              ? Center(
-                  child: Text(
-                    'No Posts Yet',
-                    style: kDefaultTextStyle,
-                  ),
-                )
-              : SizedBox();
-        }
-      },
-    );
-  }
-
   enabledLocationFetchUsers() {
     if (hideMe) {
       return _disableHideMe();
-    } else if (_locationLoading) {
+    } else if (isLocationLoading) {
       getCurrentLocation();
       return circularProgress();
     }
@@ -667,174 +455,52 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
     }
   }
 
-  enabledLocationFetchChats() {
-    if (hideMe) {
-      return SizedBox();
-    } else if (_locationLoading) {
-      getCurrentLocation();
-      return circularProgress();
-    }
-    if (_locationEnabled) {
-      return showStreamedCloseByChats();
-    } else {
-      return SizedBox();
-    }
-  }
-
-  showStreamedCloseByChats() {
-    return _hasAccountLinked ? streamCloseByChats() : SizedBox();
-  }
-
-  streamCloseByChats() {
-    Geoflutterfire geo = Geoflutterfire();
-    Query collectionRef = liveChatLocationsRef;
-    Stream<List<DocumentSnapshot>> stream =
-        geo.collection(collectionRef: collectionRef).within(
-              center: geo.point(latitude: latitude, longitude: longitude),
-              radius: 0.4,
-              field: 'position',
-              strictMode: true,
-            );
-
-    return StreamBuilder(
-        stream: stream,
-        builder: (context, snapshot) {
-          if (!snapshot.hasData ||
-              snapshot.connectionState == ConnectionState.waiting) {
-            return circularProgress();
-          }
-          List<LiveChatResult> chatsAround = [];
-          List<DocumentSnapshot> chats = [];
-          for (var data in snapshot.data) {
-            chats.add(data);
-          }
-          for (var chat in chats) {
-            final title = chat.data['title'];
-            final creationDate = chat.data['creationDate'];
-            final chatId = chat.data['chatId'];
-            final hostDisplayName = chat.data['hostDisplayName'] ?? '';
-            final hostUid = chat.data['uid'];
-            final hostRed = chat.data['hostRed'] ?? 91;
-            final hostGreen = chat.data['hostGreen'] ?? 71;
-            final hostBlue = chat.data['hostBlue'] ?? 188;
-            final endDate = chat.data['endDate'];
-
-            GeoPoint point = chat.data['position']['geopoint'];
-            double distance = geo
-                .point(latitude: point.latitude, longitude: point.longitude)
-                .distance(lat: latitude, lng: longitude);
-            double distanceFromChat = distance / 1.609;
-
-            int timeLeft = endDate - DateTime.now().millisecondsSinceEpoch;
-            bool hasChatEnded = timeLeft <= 0;
-
-            if (hasChatEnded) {
-              kHandleRemoveAllLiveChatData(chatId, hostUid);
-            }
-
-            final displayedChat = LiveChatResult(
-              title: title,
-              creationDate: creationDate,
-              chatId: chatId,
-              chatHostUid: hostUid,
-              chatHostDisplayName: hostDisplayName,
-              hostRed: hostRed,
-              hostGreen: hostGreen,
-              hostBlue: hostBlue,
-              duration: kTimeRemaining(timeLeft),
-              distanceFromChat: distanceFromChat,
-            );
-            if (!blockedUids.contains(hostUid) && chatsAround.length < 3) {
-              chatsAround.add(displayedChat);
-            }
-          }
-          if (chatsAround.isNotEmpty) {
-            return Container(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  Padding(
-                    padding: EdgeInsets.only(
-                        left: 8.0, top: 12.0, bottom: 8.0, right: 8.0),
-                    child: Text('Live Chats Nearby',
-                        style: kAppBarTextStyle.copyWith(fontSize: 16.0)),
-                  ),
-                  Column(children: chatsAround),
-                  chats.length > 3
-                      ? Align(
-                          alignment: Alignment.bottomRight,
-                          child: FlatButton.icon(
-                            icon: Icon(
-                              FontAwesomeIcons.chevronCircleRight,
-                              color: kColorBlack71,
-                              size: 20.0,
-                            ),
-                            // use
-                            onPressed: () => Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (context) => AllLiveChatsCloseBy(
-                                          latitude: latitude,
-                                          longitude: longitude,
-                                        ))),
-                            label: Text(
-                              'Within 1 mile',
-                              style: kDefaultTextStyle.copyWith(
-                                  fontWeight: FontWeight.w300, fontSize: 16.0),
-                            ),
-                            splashColor: Colors.transparent,
-                            highlightColor: kColorExtraLightGray,
-                          ),
-                        )
-                      : SizedBox(),
-                ],
+  buildLatestPosts() {
+    return isLatestLoading
+        ? circularProgress()
+        : latestPosts.isNotEmpty
+        ? Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        ReusableHeaderLabel('Latest'),
+        ListView.builder(
+          physics: NeverScrollableScrollPhysics(),
+          padding: EdgeInsets.only(top: 8.0, bottom: 20.0),
+          shrinkWrap: true,
+          itemCount: latestPosts.length,
+          itemBuilder: (context, i) {
+            return GestureDetector(
+              onTap: () => Navigator.push(
+                context,
+                FadeRoute(
+                  page: FullScreenLatestPhoto(
+                      index: latestPhotoPosts.indexOf(latestPosts[i]),
+                      displayedUpdates: latestPhotoPosts),
+                ),
               ),
+              child: latestPosts[i],
             );
-          } else {
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                Padding(
-                  padding: EdgeInsets.only(
-                      left: 8.0, top: 12.0, bottom: 8.0, right: 8.0),
-                  child: Text('No Live Chats',
-                      style: kAppBarTextStyle.copyWith(
-                          fontSize: 16.0, color: kColorRed)),
-                ),
-                Container(
-                  height: 75.0,
-                  child: Center(
-                    child: ReusableBottomActionSheetListTile(
-                      iconData: FontAwesomeIcons.comments,
-                      title: 'Create Live Chat',
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) =>
-                                  currentUser.displayName != null
-                                      ? AddLiveChat()
-                                      : CreateDisplayName()),
-                        );
-                      },
-                    ),
-                  ),
-                ),
-              ],
-            );
-          }
-        });
+          },
+        ),
+      ],
+    )
+        : Center(
+      child: Text(
+        'No Posts Yet',
+        style: kDefaultTextStyle,
+      ),
+    );
   }
 
   showContent() {
-    if (_locationLoading) {
+    if (isLocationLoading) {
       return circularProgress();
     } else {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
           enabledLocationFetchUsers(),
-          buildNewLatestPosts()
+          buildLatestPosts(),
         ],
       );
     }
@@ -848,9 +514,7 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
       backgroundColor: kColorOffWhite,
       body: Theme(
         data: kTheme(context),
-        child: _locationLoading
-            ? circularProgress()
-            : SmartRefresher(
+        child: SmartRefresher(
                 enablePullDown: true,
                 header: WaterDropHeader(
                   waterDropColor: kColorExtraLightGray,
@@ -884,6 +548,10 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
   }
 
   _onRefresh() async {
+    setState(() {
+      isLatestLoading = true;
+      latestPosts = [];
+    });
     kSelectionClick();
     await getCurrentLocation();
     await getNearbyUsers();
@@ -902,7 +570,7 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
           if (this.mounted)
             setState(() {
               hideMe = false;
-              _locationLoading = true;
+              isLocationLoading = true;
             });
           getCurrentLocation();
         },

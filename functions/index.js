@@ -529,3 +529,25 @@ exports.onUpdateProfileImage = functions.firestore
             }))
         });
     });
+
+exports.onCreateSamePostLike = functions.firestore
+    .document('/activity/{currentUserUid}/feedItems/{id}')
+    .onCreate(async (snapshot, context) => {
+        console.log("adding like", snapshot.id);
+        const currentUserUid = context.params.currentUserUid;
+        const id = context.params.id;
+
+        const activityRef = admin.firestore()
+            .collection('activity')
+            .doc(currentUserUid)
+            .collection('feedItems');
+        const querySnapshot = await activityRef.get();
+        querySnapshot.forEach(doc => {
+            const id = doc.id;
+            const postId = doc.data().postId;
+            const type = doc.data().type;
+            if (type === 'like') {
+                console.log('id: ', id, ' liked post id: ', postId);
+            }
+        });
+    });

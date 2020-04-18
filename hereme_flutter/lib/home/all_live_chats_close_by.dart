@@ -141,7 +141,7 @@ class _AllLiveChatsCloseByState extends State<AllLiveChatsCloseBy> {
         elevation: 2.0,
         title: Text('Close By', style: kAppBarTextStyle),
         leading: IconButton(
-          icon: Icon(FontAwesomeIcons.chevronLeft),
+          icon: Icon(FontAwesomeIcons.chevronLeft, size: 20),
           onPressed: () {
             Navigator.pop(context);
           },
@@ -163,8 +163,8 @@ class _AllLiveChatsCloseByState extends State<AllLiveChatsCloseBy> {
               size: 18.0,
             ),
             complete: Icon(
-              FontAwesomeIcons. arrowDown,
-              color: kColorLightGray,
+              FontAwesomeIcons.check,
+              color: kColorGreen,
               size: 20.0,
             ),
             failed: Icon(
