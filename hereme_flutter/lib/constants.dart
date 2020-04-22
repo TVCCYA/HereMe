@@ -11,7 +11,7 @@ const kColorRed = Color.fromRGBO(201, 62, 62, 1.0);
 const kColorBlue = Color.fromRGBO(91, 117, 212, 1.0);
 const kColorGreen = Color.fromRGBO(62, 201, 62, 1.0);
 
-const kColorBlack71 = Color.fromRGBO(62, 62, 62, 1.0);
+const kColorBlack62 = Color.fromRGBO(62, 62, 62, 1.0);
 const kColorOffWhite = Color.fromRGBO(245, 245, 245, 1.0);
 const kColorOffBlack = Color.fromRGBO(11, 8, 19, 1.0);
 const kColorLightGray = Color.fromRGBO(162, 162, 162, 1.0);
@@ -40,7 +40,7 @@ const kColorCashApp = Color.fromRGBO(40, 188, 0, 1.0);
 
 ThemeData kTheme(BuildContext context) {
   return Theme.of(context).copyWith(
-    accentColor: kColorBlack71,
+    accentColor: kColorBlack62,
     unselectedWidgetColor: kColorLightGray,
     dividerColor: Colors.transparent,
     highlightColor: Colors.transparent,
@@ -51,12 +51,12 @@ ThemeData kTheme(BuildContext context) {
 const kAppBarTextStyle = TextStyle(
   fontFamily: 'Avenir',
   fontSize: 18.0,
-  color: kColorBlack71,
+  color: kColorBlack62,
   fontWeight: FontWeight.w800,
 );
 
 const kDefaultTextStyle = TextStyle(
-  color: kColorBlack71,
+  color: kColorBlack62,
   fontFamily: 'Avenir',
   fontWeight: FontWeight.w300,
   fontSize: 16.0,
@@ -70,7 +70,7 @@ const kUsernameTextStyle = TextStyle(
   shadows: <Shadow>[
     Shadow(
       blurRadius: 3.0,
-      color: kColorBlack71,
+      color: kColorBlack62,
     ),
   ],
 );
@@ -138,11 +138,11 @@ void kShowAlert({
       backgroundColor: kColorOffWhite,
       overlayColor: Colors.black.withOpacity(0.75),
       titleStyle: kDefaultTextStyle.copyWith(
-        color: kColorBlack71,
+        color: kColorBlack62,
         fontSize: 24.0,
       ),
       descStyle: kDefaultTextStyle.copyWith(
-        color: kColorBlack71,
+        color: kColorBlack62,
         fontSize: 16.0,
       ),
     ),
@@ -182,7 +182,7 @@ void kShowAlertMultiButtons(
       backgroundColor: kColorOffWhite,
       overlayColor: Colors.black.withOpacity(0.75),
       titleStyle: kAppBarTextStyle.copyWith(
-        color: kColorBlack71,
+        color: kColorBlack62,
         fontSize: 20.0,
       ),
       descStyle: kDefaultTextStyle,

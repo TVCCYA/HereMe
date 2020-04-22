@@ -163,14 +163,7 @@ class ActivityFeedItem extends StatelessWidget {
             MaterialPageRoute(
                 builder: (context) => currentUser.displayName != null
                     ? LiveChatScreen(
-                        title: title ?? '',
                         chatId: chatId,
-                        chatHostDisplayName: chatHostDisplayName ?? '',
-                        chatHostUid: uid ?? '',
-                        hostRed: hostRed ?? 95,
-                        hostGreen: hostGreen ?? 71,
-                        hostBlue: hostBlue ?? 188,
-                        duration: duration,
                       )
                     : CreateDisplayName()));
       },
@@ -304,14 +297,7 @@ class ActivityFeedItem extends StatelessWidget {
               MaterialPageRoute(
                   builder: (context) => currentUser.displayName != null
                       ? LiveChatScreen(
-                          title: title ?? '',
                           chatId: chatId,
-                          chatHostDisplayName: chatHostDisplayName ?? '',
-                          chatHostUid: uid ?? '',
-                          hostRed: hostRed ?? 95,
-                          hostGreen: hostGreen ?? 71,
-                          hostBlue: hostBlue ?? 188,
-                          duration: duration,
                         )
                       : CreateDisplayName()));
         },

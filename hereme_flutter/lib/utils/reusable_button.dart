@@ -34,7 +34,7 @@ class ReusableRoundedCornerButton extends StatelessWidget {
     @required this.width,
     this.height = 30.0,
     this.backgroundColor = Colors.transparent,
-    this.textColor = kColorBlack71,
+    this.textColor = kColorBlack62,
     this.splashColor,
   });
 

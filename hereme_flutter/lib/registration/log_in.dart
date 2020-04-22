@@ -70,7 +70,7 @@ class _LogInState extends State<LogIn> {
           onPressed: () {
             Navigator.pop(context);
           },
-          color: kColorBlack71,
+          color: kColorBlack62,
           splashColor: kColorExtraLightGray,
           highlightColor: Colors.transparent,
         ),
@@ -122,7 +122,7 @@ class _LogInState extends State<LogIn> {
                               labelStyle: kAppBarTextStyle.copyWith(fontSize: 16.0),
                               icon: Icon(
                                 FontAwesomeIcons.envelope,
-                                color: kColorBlack71,
+                                color: kColorBlack62,
                                 size: 20.0,
                               ),
                             ),
@@ -155,7 +155,7 @@ class _LogInState extends State<LogIn> {
                               labelStyle: kAppBarTextStyle.copyWith(fontSize: 16.0),
                               icon: Icon(
                                 FontAwesomeIcons.lockOpen,
-                                color: kColorBlack71,
+                                color: kColorBlack62,
                                 size: 20.0,
                               ),
                             ),
@@ -172,11 +172,11 @@ class _LogInState extends State<LogIn> {
                                     overlayColor:
                                     Colors.black.withOpacity(0.75),
                                     titleStyle: kDefaultTextStyle.copyWith(
-                                      color: kColorBlack71,
+                                      color: kColorBlack62,
                                       fontSize: 24.0,
                                     ),
                                     descStyle: kDefaultTextStyle.copyWith(
-                                      color: kColorBlack71,
+                                      color: kColorBlack62,
                                       fontSize: 16.0,
                                     ),
                                   ),
@@ -206,7 +206,7 @@ class _LogInState extends State<LogIn> {
                                       ),
                                       icon: Icon(
                                         FontAwesomeIcons.at,
-                                        color: kColorBlack71,
+                                        color: kColorBlack62,
                                       ),
                                     ),
                                   ),

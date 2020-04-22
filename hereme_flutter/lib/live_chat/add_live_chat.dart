@@ -127,7 +127,7 @@ class _AddLiveChatState extends State<AddLiveChat> {
             onPressed: () {
               Navigator.pop(context);
             },
-            color: kColorBlack71,
+            color: kColorBlack62,
             splashColor: kColorExtraLightGray,
             highlightColor: Colors.transparent,
           ),
@@ -195,7 +195,7 @@ class _AddLiveChatState extends State<AddLiveChat> {
                         labelStyle: kAppBarTextStyle.copyWith(fontSize: 16.0),
                         icon: Icon(
                           FontAwesomeIcons.penFancy,
-                          color: kColorBlack71,
+                          color: kColorBlack62,
                           size: 20.0,
                         ),
                       ),
@@ -247,7 +247,7 @@ class _AddLiveChatState extends State<AddLiveChat> {
                         labelStyle: kAppBarTextStyle.copyWith(fontSize: 16.0),
                         icon: Icon(
                           FontAwesomeIcons.hourglassHalf,
-                          color: kColorBlack71,
+                          color: kColorBlack62,
                           size: 20.0,
                         ),
                       ),

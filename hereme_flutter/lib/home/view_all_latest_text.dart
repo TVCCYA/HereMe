@@ -93,7 +93,7 @@ class _ViewAllLatestTextState extends State<ViewAllLatestText> {
           onPressed: () {
             Navigator.pop(context);
           },
-          color: kColorBlack71,
+          color: kColorBlack62,
           splashColor: kColorExtraLightGray,
           highlightColor: Colors.transparent,
         ),

@@ -59,7 +59,7 @@ class _AddLatestState extends State<AddLatest> {
             onPressed: () {
               Navigator.pop(context);
             },
-            color: kColorBlack71,
+            color: kColorBlack62,
             splashColor: kColorExtraLightGray,
             highlightColor: Colors.transparent,
           ),
@@ -159,7 +159,7 @@ class _AddLatestState extends State<AddLatest> {
                     child: FlatButton(
                       onPressed: () => _openPhotoLibrary(),
                       child:
-                          Icon(FontAwesomeIcons.solidImages, color: kColorBlack71),
+                          Icon(FontAwesomeIcons.solidImages, color: kColorBlack62),
                       splashColor: kColorExtraLightGray,
                       highlightColor: Colors.transparent,
                     ),
@@ -246,7 +246,7 @@ class _AddLatestState extends State<AddLatest> {
             .child(id)
             .getDownloadURL();
 
-        updateRef
+        latestRef
             .document(currentUserUid)
             .collection('posts')
             .document(id)
@@ -286,7 +286,7 @@ class _AddLatestState extends State<AddLatest> {
       setState(() {
         showSpinner = true;
       });
-    updateRef
+    latestRef
         .document(currentUserUid)
         .collection('posts')
         .document(id)

@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
@@ -8,19 +7,13 @@ import 'package:flutter_google_ad_manager/flutter_google_ad_manager.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:geoflutterfire/geoflutterfire.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:hereme_flutter/home/all_live_chats_close_by.dart';
 import 'package:hereme_flutter/home/all_users_close_by.dart';
-import 'package:hereme_flutter/home/view_all_latest_photos.dart';
-import 'package:hereme_flutter/home/view_all_latest_text.dart';
-import 'package:hereme_flutter/live_chat/add_live_chat.dart';
-import 'package:hereme_flutter/live_chat/live_chat_result.dart';
+import 'package:hereme_flutter/live_chat/live_chat.dart';
+import 'package:hereme_flutter/live_chat/live_chat_screen.dart';
 import 'package:hereme_flutter/models/user.dart';
-import 'package:hereme_flutter/registration/create_display_name.dart';
 import 'package:hereme_flutter/settings/choose_account.dart';
-import 'package:hereme_flutter/user_profile/profile.dart';
 import 'package:hereme_flutter/user_profile/profile_image_full_screen.dart';
 import 'package:hereme_flutter/utils/reusable_bottom_sheet.dart';
-import 'package:hereme_flutter/utils/reusable_button.dart';
 import 'package:hereme_flutter/utils/reusable_header_label.dart';
 import 'package:hereme_flutter/widgets/update_post.dart';
 import 'package:hereme_flutter/widgets/user_result.dart';
@@ -30,6 +23,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:hereme_flutter/constants.dart';
 import 'package:flushbar/flushbar.dart';
+import 'package:uuid/uuid.dart';
 import 'bottom_bar.dart';
 
 class Home extends StatefulWidget {
@@ -61,6 +55,7 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
 
   double latitude;
   double longitude;
+  String city;
   bool _locationEnabled = false;
   bool isLocationLoading = true;
 
@@ -142,56 +137,6 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
         });
     });
   }
-  
-  getTimeline() async {
-    List<LatestPost> posts = [];
-    List<LatestPost> photoPosts = [];
-    for (var user in usersNearby) {
-      QuerySnapshot snapshot =
-      await updateRef.document(user.uid).collection('posts').limit(10).getDocuments();
-      if (snapshot.documents.length > 0) {
-        for (var doc in snapshot.documents) {
-          final String postId = doc.data['id'];
-          final String uid = doc.data['uid'];
-          final String title = doc.data['title'];
-          final String photoUrl = doc.data['photoUrl'];
-          final int creationDate = doc.data['creationDate'];
-          final String type = doc.data['type'];
-          final dynamic likes = doc.data['likes'];
-
-          LatestPost post = LatestPost(
-            id: postId,
-            uid: uid,
-            title: title,
-            displayName: user.displayName ?? user.username,
-            photoUrl: photoUrl,
-            creationDate: creationDate,
-            type: type,
-            profileImageUrl: user.profileImageUrl,
-            likes: likes ?? {},
-            isHome: true,
-          );
-
-          posts.add(post);
-          if (type == 'photo') {
-            photoPosts.add(post);
-            photoPosts.sort((p1, p2) {
-              return p2.creationDate.compareTo(p1.creationDate);
-            });
-          }
-          posts.sort((p1, p2) {
-            return p2.creationDate.compareTo(p1.creationDate);
-          });
-        }
-      }
-    }
-    if (this.mounted)
-      setState(() {
-        latestPosts = posts;
-        latestPhotoPosts = photoPosts;
-        isLatestLoading = false;
-      });
-  }
 
   isHideMe() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -244,8 +189,8 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
         });
     } else {
       LocationOptions locationOptions = LocationOptions(
-        accuracy: LocationAccuracy.high,
-        distanceFilter: 175, //updates every 0.1 miles
+        accuracy: LocationAccuracy.medium,
+        distanceFilter: 350, //updates every 0.2 miles
       );
       positionStream = geolocator
           .getPositionStream(locationOptions)
@@ -275,6 +220,11 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
       usersRef.document(currentUser.uid).updateData({
         'city': mark.locality,
       });
+      if (this.mounted) {
+        setState(() {
+          city = mark.locality;
+        });
+      }
     });
   }
 
@@ -439,24 +389,58 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
     );
   }
 
-  enabledLocationFetchUsers() {
-    if (hideMe) {
-      return _disableHideMe();
-    } else if (isLocationLoading) {
-      getCurrentLocation();
-      return circularProgress();
+  getTimeline() async {
+    List<LatestPost> posts = [];
+    List<LatestPost> photoPosts = [];
+    for (var user in usersNearby) {
+      QuerySnapshot snapshot =
+      await latestRef.document(user.uid).collection('posts').limit(10).getDocuments();
+      if (snapshot.documents.length > 0) {
+        for (var doc in snapshot.documents) {
+          final String postId = doc.data['id'];
+          final String uid = doc.data['uid'];
+          final String title = doc.data['title'];
+          final String photoUrl = doc.data['photoUrl'];
+          final int creationDate = doc.data['creationDate'];
+          final String type = doc.data['type'];
+          final dynamic likes = doc.data['likes'];
+
+          LatestPost post = LatestPost(
+            id: postId,
+            uid: uid,
+            title: title,
+            displayName: user.displayName ?? user.username,
+            photoUrl: photoUrl,
+            creationDate: creationDate,
+            type: type,
+            profileImageUrl: user.profileImageUrl,
+            likes: likes ?? {},
+            isHome: true,
+          );
+
+          posts.add(post);
+          if (type == 'photo') {
+            photoPosts.add(post);
+            photoPosts.sort((p1, p2) {
+              return p2.creationDate.compareTo(p1.creationDate);
+            });
+          }
+          posts.sort((p1, p2) {
+            return p2.creationDate.compareTo(p1.creationDate);
+          });
+        }
+      }
     }
-    if (_locationEnabled) {
-      return showStreamedCloseByUsers();
-    } else if (!_locationEnabled) {
-      return _showNoLocationFlushBar();
-    } else {
-      return SizedBox();
-    }
+    if (this.mounted)
+      setState(() {
+        latestPosts = posts;
+        latestPhotoPosts = photoPosts;
+        isLatestLoading = false;
+      });
   }
 
   buildLatestPosts() {
-    return isLatestLoading
+    return isLatestLoading || isLocationLoading
         ? circularProgress()
         : latestPosts.isNotEmpty
         ? Column(
@@ -492,6 +476,90 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
     );
   }
 
+  showLiveChat() {
+    if (usersNearby.length > 2) {
+      return GestureDetector(
+        onTap: () => createNearbyLiveChat(),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: <Widget>[
+            ReusableHeaderLabel('Live Chat in $city', textColor: kColorRed),
+            Padding(
+              padding: EdgeInsets.only(top: 20.0, bottom: 8.0, left: 4.0),
+              child: Icon(FontAwesomeIcons.chevronRight, size: 16.0, color: kColorRed),
+            )
+          ],
+        ),
+      );
+    } else {
+       return SizedBox();
+    }
+  }
+
+  createNearbyLiveChat() async {
+    Geoflutterfire geo = Geoflutterfire();
+    Query queryRef = liveChatLocationsRef;
+    Future<List<DocumentSnapshot>> stream = geo.collection(collectionRef: queryRef).within(
+      center: geo.point(latitude: latitude, longitude: longitude),
+      radius: 16, // ~ 10 miles
+      field: 'position',
+      strictMode: true,
+    ).first;
+    await stream.then((List<DocumentSnapshot> documentList) {
+      if (documentList.isNotEmpty) {
+        documentList.forEach((doc) {
+          if (doc.exists) {
+            final String chatId = doc.documentID;
+            final int creationDate = doc.data['creationDate'];
+            goToLiveChatNearby(chatId: chatId, creationDate: creationDate);
+          }
+        });
+      } else {
+        _createLiveChatFirestore();
+      }
+    });
+  }
+
+  _createLiveChatFirestore() async {
+    final chatId = Uuid().v4();
+    Geoflutterfire geo = Geoflutterfire();
+    GeoFirePoint location = geo.point(latitude: latitude, longitude: longitude);
+    final creationDate =  DateTime.now().millisecondsSinceEpoch;
+    await liveChatLocationsRef.document(chatId).setData({
+      'position': location.data,
+      'chatId': chatId,
+      'creationDate': creationDate,
+      'city': city,
+//      'inChatCount': 0,
+      'lastActive': creationDate,
+    }).whenComplete(() {
+      goToLiveChatNearby(chatId: chatId, creationDate: creationDate);
+    });
+  }
+
+  _uploadChatToFirebase() async {
+    final chatId = Uuid().v4();
+    final ref = liveChatsRef.document(chatId);
+    final creationDate =  DateTime.now().millisecondsSinceEpoch;
+
+    Map<String, dynamic> liveChatData = <String, dynamic>{
+      'chatId': chatId,
+      'creationDate': DateTime.now().millisecondsSinceEpoch,
+      'city': city,
+      'inChatCount': 0,
+      'lastActive': DateTime.now().millisecondsSinceEpoch,
+    };
+
+    ref.setData(liveChatData).whenComplete(() {
+//      _setChatLocation(chatId);
+      goToLiveChatNearby(chatId: chatId, creationDate: creationDate);
+    });
+  }
+
+  goToLiveChatNearby({String chatId, int creationDate}) {
+    Navigator.push(context, MaterialPageRoute(builder: (context) => LiveChatScreen(chatId: chatId, city: city,)));
+  }
+
   showContent() {
     if (isLocationLoading) {
       return circularProgress();
@@ -499,10 +567,27 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          enabledLocationFetchUsers(),
+          showStreamedCloseByUsers(),
+          showLiveChat(),
           buildLatestPosts(),
         ],
       );
+    }
+  }
+
+  buildFeed() {
+    if (hideMe) {
+      return _disableHideMe();
+    } else if (isLocationLoading) {
+      getCurrentLocation();
+      return circularProgress();
+    }
+    if (_locationEnabled) {
+      return showContent();
+    } else if (!_locationEnabled) {
+      return _showNoLocationFlushBar();
+    } else {
+      return SizedBox();
     }
   }
 
@@ -539,7 +624,7 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
                 child: SingleChildScrollView(
                   child: Padding(
                     padding: EdgeInsets.only(bottom: 24.0),
-                    child: showContent(),
+                    child: buildFeed(),
                   ),
                 ),
               ),

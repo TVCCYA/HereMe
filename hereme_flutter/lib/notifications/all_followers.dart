@@ -29,7 +29,7 @@ class _AllFollowsState extends State<AllFollows>
         appBar: AppBar(
           leading: IconButton(
             icon: Icon(FontAwesomeIcons.chevronLeft,
-                color: kColorBlack71, size: 20),
+                color: kColorBlack62, size: 20),
             onPressed: () {
               Navigator.pop(context);
             },

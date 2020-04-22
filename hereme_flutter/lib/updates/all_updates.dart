@@ -60,7 +60,7 @@ class _AllUpdatesState extends State<AllUpdates> {
           onPressed: () {
             Navigator.pop(context);
           },
-          color: kColorBlack71,
+          color: kColorBlack62,
           splashColor: kColorExtraLightGray,
           highlightColor: Colors.transparent,
         ),
@@ -72,7 +72,7 @@ class _AllUpdatesState extends State<AllUpdates> {
           child: Padding(
             padding: EdgeInsets.only(top: 8.0, bottom: 12.0),
             child: StreamBuilder<QuerySnapshot>(
-              stream: updateRef
+              stream: latestRef
                   .document(uid)
                   .collection('posts')
                   .orderBy('creationDate', descending: true)

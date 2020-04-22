@@ -103,7 +103,7 @@ class _TimelinePostState extends State<TimelinePost> {
   handleLikePost() {
     bool _isLiked = likes[currentUserId] == true;
     if (_isLiked) {
-      updateRef
+      latestRef
           .document(uid)
           .collection('posts')
           .document(id)
@@ -118,7 +118,7 @@ class _TimelinePostState extends State<TimelinePost> {
         likes[currentUserId] = false;
       });
     } else if (!_isLiked) {
-      updateRef
+      latestRef
           .document(uid)
           .collection('posts')
           .document(id)

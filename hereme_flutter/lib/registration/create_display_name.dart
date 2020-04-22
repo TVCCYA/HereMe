@@ -148,7 +148,7 @@ class _CreateDisplayNameState extends State<CreateDisplayName> {
           onPressed: () {
             Navigator.pop(context);
           },
-          color: kColorBlack71,
+          color: kColorBlack62,
           splashColor: kColorExtraLightGray,
           highlightColor: Colors.transparent,
         ) : SizedBox(),
@@ -214,7 +214,7 @@ class _CreateDisplayNameState extends State<CreateDisplayName> {
                       ),
                       icon: Icon(
                         FontAwesomeIcons.at,
-                        color: kColorBlack71,
+                        color: kColorBlack62,
                         size: 20.0,
                       ),
                     ),

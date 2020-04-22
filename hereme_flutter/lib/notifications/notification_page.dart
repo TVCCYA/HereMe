@@ -8,8 +8,6 @@ import 'package:hereme_flutter/models/user.dart';
 import 'package:hereme_flutter/notifications/all_followers.dart';
 import 'package:hereme_flutter/notifications/knocks/received_knocks.dart';
 import 'package:hereme_flutter/updates/post_full_screen.dart';
-import 'package:hereme_flutter/user_profile/profile.dart';
-import 'package:hereme_flutter/user_profile/profile_image_full_screen.dart';
 import 'package:hereme_flutter/utils/custom_image.dart';
 import 'package:hereme_flutter/utils/reusable_button.dart';
 import 'package:hereme_flutter/utils/reusable_header_label.dart';
@@ -42,7 +40,7 @@ class _NotificationPageState extends State<NotificationPage> {
           ),
           leading: IconButton(
             icon: Icon(FontAwesomeIcons.chevronLeft,
-                color: kColorBlack71, size: 20),
+                color: kColorBlack62, size: 20),
             onPressed: () {
               Navigator.pop(context);
             },
@@ -563,7 +561,7 @@ class _PostLikeState extends State<PostLike> {
   }
 
   _getLatestPostData() {
-    updateRef
+    latestRef
         .document(currentUser.uid)
         .collection('posts')
         .document(postId)

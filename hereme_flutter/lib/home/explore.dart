@@ -6,7 +6,6 @@ import 'package:hereme_flutter/user_profile/profile_image_full_screen.dart';
 import 'package:hereme_flutter/utils/reusable_header_label.dart';
 import 'package:hereme_flutter/widgets/update_post.dart';
 import 'package:hereme_flutter/widgets/user_result.dart';
-import 'package:loadmore/loadmore.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 import '../constants.dart';
 import 'bottom_bar.dart';
@@ -239,7 +238,7 @@ class _ExploreState extends State<Explore>
     List<LatestPost> photoPosts = [];
     for (var user in users) {
       QuerySnapshot snapshot =
-          await updateRef.document(user.uid).collection('posts').limit(10).getDocuments();
+          await latestRef.document(user.uid).collection('posts').limit(10).getDocuments();
       if (snapshot.documents.length > 0) {
         for (var doc in snapshot.documents) {
 //          LatestPost post = LatestPost.fromDocument(doc);

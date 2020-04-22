@@ -144,7 +144,7 @@ class _BlockedProfilesState extends State<BlockedProfiles> {
           onPressed: () {
             Navigator.pop(context);
           },
-          color: kColorBlack71,
+          color: kColorBlack62,
           splashColor: kColorExtraLightGray,
           highlightColor: Colors.transparent,
         ),

@@ -235,7 +235,7 @@ class _FullScreenLatestPhotoState extends State<FullScreenLatestPhoto> {
     final String currentUserUid = currentUser.uid;
     bool _isLiked = likes[currentUserUid] == true;
     if (_isLiked) {
-      updateRef
+      latestRef
           .document(uid)
           .collection('posts')
           .document(id)
@@ -246,7 +246,7 @@ class _FullScreenLatestPhotoState extends State<FullScreenLatestPhoto> {
         likes[currentUserUid] = false;
       });
     } else if (!_isLiked) {
-      updateRef
+      latestRef
           .document(uid)
           .collection('posts')
           .document(id)
@@ -406,7 +406,7 @@ class _FullScreenLatestPhotoState extends State<FullScreenLatestPhoto> {
                                           shadows: <Shadow>[
                                             Shadow(
                                               blurRadius: 3.0,
-                                              color: kColorBlack71,
+                                              color: kColorBlack62,
                                             ),
                                           ],
                                         ),
@@ -419,7 +419,7 @@ class _FullScreenLatestPhotoState extends State<FullScreenLatestPhoto> {
                                           shadows: <Shadow>[
                                             Shadow(
                                               blurRadius: 3.0,
-                                              color: kColorBlack71,
+                                              color: kColorBlack62,
                                             ),
                                           ],
                                         ),
@@ -485,7 +485,7 @@ class _FullScreenLatestPhotoState extends State<FullScreenLatestPhoto> {
                                     shadows: <Shadow>[
                                       Shadow(
                                         blurRadius: 5.0,
-                                        color: kColorBlack71,
+                                        color: kColorBlack62,
                                       ),
                                     ],
                                   ),

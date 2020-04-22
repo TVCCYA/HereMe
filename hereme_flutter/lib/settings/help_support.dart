@@ -31,7 +31,7 @@ class SupportPage extends StatelessWidget {
           onPressed: () {
             Navigator.pop(context);
           },
-          color: kColorBlack71,
+          color: kColorBlack62,
           splashColor: kColorExtraLightGray,
           highlightColor: Colors.transparent,
         ),
@@ -235,9 +235,8 @@ class SupportPage extends StatelessWidget {
 
     final socialMedias = socialMediasRef.document(uid);
     final knocks = knocksRef.document(uid);
-    final recentUploads = recentUploadsRef.document(uid);
     final activityFeed = activityRef.document(uid);
-    final liveChats = liveChatsRef.document(uid);
+    final latestPost = liveChatsRef.document(uid);
 
     _storage.ref().child('profile_images/$uid').delete().whenComplete(() {
       _storage.ref().child('recent_upload_thumbnail/$uid').delete();
@@ -247,10 +246,8 @@ class SupportPage extends StatelessWidget {
       _handleRemoveCollection(socialMedias, 'socials');
       _handleRemoveCollection(activityFeed, 'feedItems');
       _handleRemoveCollection(knocks, 'receivedKnockFrom');
-      _handleRemoveCollection(recentUploads, 'recents');
+      _handleRemoveCollection(latestPost, 'posts');
       kDeleteSentKnocks(uid);
-      _retrieveAndDeleteLiveChat(uid);
-      _handleRemoveCollection(liveChats, 'chats');
 
       user.delete().whenComplete(() {
         print('all deleted');

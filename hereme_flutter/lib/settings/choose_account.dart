@@ -128,7 +128,7 @@ class _ChooseAccountState extends State<ChooseAccount> {
           onPressed: () {
             Navigator.pop(context);
           },
-          color: kColorBlack71,
+          color: kColorBlack62,
           splashColor: kColorExtraLightGray,
           highlightColor: Colors.transparent,
         ),
@@ -197,7 +197,7 @@ class SocialMediaTile extends StatelessWidget {
                         socialMedia.platform != 'Your Website' &&
                         socialMedia.platform != 'TikTok'
                     ? Colors.white
-                    : kColorBlack71,
+                    : kColorBlack62,
                 fontWeight: FontWeight.bold,
               ),
             ),

@@ -77,7 +77,7 @@ class _ReceivedKnocksState extends State<ReceivedKnocks> {
           ),
           leading: IconButton(
             icon: Icon(FontAwesomeIcons.chevronLeft,
-                color: kColorBlack71, size: 20),
+                color: kColorBlack62, size: 20),
             onPressed: () {
               Navigator.pop(context);
             },
@@ -195,7 +195,7 @@ class _ReceivedKnockState extends State<ReceivedKnock> {
                   splashColor: Colors.transparent,
                   iconSize: 16,
                   padding: EdgeInsets.all(0.0),
-                  icon: Icon(FontAwesomeIcons.times, color: kColorBlack71),
+                  icon: Icon(FontAwesomeIcons.times, color: kColorBlack62),
                   onPressed: () => _removeKnock(uid),
                 ),
               ],

@@ -94,7 +94,7 @@ class _AddLinkState extends State<AddLink> {
           onPressed: () {
             Navigator.pop(context);
           },
-          color: kColorBlack71,
+          color: kColorBlack62,
           splashColor: kColorExtraLightGray,
           highlightColor: Colors.transparent,
         ),
@@ -167,7 +167,7 @@ class _AddLinkState extends State<AddLink> {
                     labelStyle: kAppBarTextStyle.copyWith(fontSize: 16.0),
                     icon: Icon(
                       FontAwesomeIcons.at,
-                      color: kColorBlack71,
+                      color: kColorBlack62,
                       size: 20.0,
                     ),
                   ),
@@ -362,7 +362,7 @@ class _AddLinkState extends State<AddLink> {
         'hasAccountLinked': true,
       });
       currentUser.hasAccountLinked = true;
-      updateRef.document(uid).collection('posts').document(linkId).setData({
+      latestRef.document(uid).collection('posts').document(linkId).setData({
         'creationDate': creationDate,
         'id': linkId,
         'type': 'link',

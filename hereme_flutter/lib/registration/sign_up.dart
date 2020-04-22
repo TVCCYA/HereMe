@@ -76,7 +76,7 @@ class _SignUpState extends State<SignUp> {
           onPressed: () {
             Navigator.pop(context);
           },
-          color: kColorBlack71,
+          color: kColorBlack62,
           splashColor: kColorExtraLightGray,
           highlightColor: Colors.transparent,
         ),
@@ -129,7 +129,7 @@ class _SignUpState extends State<SignUp> {
                           labelStyle: kAppBarTextStyle.copyWith(fontSize: 16.0),
                           icon: Icon(
                             FontAwesomeIcons.envelope,
-                            color: kColorBlack71,
+                            color: kColorBlack62,
                             size: 20.0,
                           ),
                         ),
@@ -161,7 +161,7 @@ class _SignUpState extends State<SignUp> {
                           labelStyle: kAppBarTextStyle.copyWith(fontSize: 16.0),
                           icon: Icon(
                             FontAwesomeIcons.signature,
-                            color: kColorBlack71,
+                            color: kColorBlack62,
                             size: 20.0,
                           ),
                         ),
@@ -195,7 +195,7 @@ class _SignUpState extends State<SignUp> {
                           labelStyle: kAppBarTextStyle.copyWith(fontSize: 16.0),
                           icon: Icon(
                             FontAwesomeIcons.lock,
-                            color: kColorBlack71,
+                            color: kColorBlack62,
                             size: 20.0,
                           ),
                         ),

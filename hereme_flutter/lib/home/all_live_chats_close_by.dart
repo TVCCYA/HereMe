@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:geoflutterfire/geoflutterfire.dart';
 import 'package:hereme_flutter/constants.dart';
-import 'package:hereme_flutter/live_chat/live_chat_result.dart';
+import 'package:hereme_flutter/live_chat/live_chat.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'bottom_bar.dart';
 import 'home.dart';
@@ -83,16 +83,8 @@ class _AllLiveChatsCloseByState extends State<AllLiveChatsCloseBy> {
             }
 
             final displayedChat = LiveChatResult(
-              title: title,
               creationDate: creationDate,
               chatId: chatId,
-              chatHostUid: hostUid,
-              chatHostDisplayName: hostDisplayName,
-              hostRed: hostRed,
-              hostGreen: hostGreen,
-              hostBlue: hostBlue,
-              duration: kTimeRemaining(timeLeft),
-              distanceFromChat: distanceFromChat,
             );
             if(!currentUser.blockedUids.contains(hostUid)) {
               chatsAround.add(displayedChat);
@@ -145,7 +137,7 @@ class _AllLiveChatsCloseByState extends State<AllLiveChatsCloseBy> {
           onPressed: () {
             Navigator.pop(context);
           },
-          color: kColorBlack71,
+          color: kColorBlack62,
           splashColor: kColorExtraLightGray,
           highlightColor: Colors.transparent,
         ),

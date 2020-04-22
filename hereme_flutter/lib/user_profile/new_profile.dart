@@ -302,7 +302,7 @@ class _NewProfileState extends State<NewProfile> {
                       icon: IconShadowWidget(
                         Icon(FontAwesomeIcons.chevronLeft,
                             color: kColorOffWhite, size: 20),
-                        shadowColor: kColorBlack71,
+                        shadowColor: kColorBlack62,
                       ),
                       onPressed: () {
                         Navigator.pop(context);
@@ -319,7 +319,7 @@ class _NewProfileState extends State<NewProfile> {
                                   color: kColorOffWhite,
                                   size: 20,
                                 ),
-                                shadowColor: kColorBlack71.withOpacity(0.5),
+                                shadowColor: kColorBlack62.withOpacity(0.5),
                               ),
                               onPressed: () => _isFollowing
                                   ? _unfollowUser()
@@ -332,7 +332,7 @@ class _NewProfileState extends State<NewProfile> {
                                   color: kColorOffWhite,
                                   size: 20,
                                 ),
-                                shadowColor: kColorBlack71,
+                                shadowColor: kColorBlack62,
                               ),
                               onPressed: () => Navigator.push(
                                   context,
@@ -421,7 +421,7 @@ class _NewProfileState extends State<NewProfile> {
                                                   shadows: <Shadow>[
                                                     Shadow(
                                                       blurRadius: 3.0,
-                                                      color: kColorBlack71,
+                                                      color: kColorBlack62,
                                                     ),
                                                   ],
                                                 ),
@@ -474,7 +474,7 @@ class _NewProfileState extends State<NewProfile> {
         shadows: <Shadow>[
           Shadow(
             blurRadius: 3.0,
-            color: kColorBlack71,
+            color: kColorBlack62,
           ),
         ],
       ),
@@ -535,24 +535,24 @@ class _NewProfileState extends State<NewProfile> {
                       textColor: kColorLightGray,
                     ),
                   ),
-                  SizedBox(width: 8.0),
-                  Container(
-                    height: 30,
-                    child: ReusableRoundedCornerButton(
-                      text: 'Host Chat',
-                      onPressed: () async {
-                        final result = await Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) => AddLiveChat()),
-                        );
-                        result != null ? await _getCurrentUserData() : print('nothing happened');
-                      },
-                      width: 40,
-                      backgroundColor: Colors.transparent,
-                      textColor: kColorRed,
-                    ),
-                  ),
+//                  SizedBox(width: 8.0),
+//                  Container(
+//                    height: 30,
+//                    child: ReusableRoundedCornerButton(
+//                      text: 'Host Chat',
+//                      onPressed: () async {
+//                        final result = await Navigator.push(
+//                          context,
+//                          MaterialPageRoute(
+//                              builder: (context) => AddLiveChat()),
+//                        );
+//                        result != null ? await _getCurrentUserData() : print('nothing happened');
+//                      },
+//                      width: 40,
+//                      backgroundColor: Colors.transparent,
+//                      textColor: kColorRed,
+//                    ),
+//                  ),
                 ],
               )
                   : Container(
@@ -731,7 +731,7 @@ class _NewProfileState extends State<NewProfile> {
           ReusableHeaderLabel('Latest'),
           _isCurrentUser
               ? StreamBuilder<QuerySnapshot>(
-                  stream: updateRef
+                  stream: latestRef
                       .document(currentUser.uid)
                       .collection('posts')
                       .orderBy('creationDate', descending: true)
@@ -832,7 +832,7 @@ class _NewProfileState extends State<NewProfile> {
                   },
                 )
               : StreamBuilder<QuerySnapshot>(
-                  stream: updateRef
+                  stream: latestRef
                       .document(user.uid)
                       .collection('posts')
                       .orderBy('creationDate', descending: true)

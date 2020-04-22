@@ -10,9 +10,7 @@ import 'package:hereme_flutter/registration/create_display_name.dart';
 import 'package:hereme_flutter/registration/initial_page.dart';
 import 'package:hereme_flutter/registration/photo_add.dart';
 import 'package:hereme_flutter/user_profile/new_profile.dart';
-import 'package:hereme_flutter/user_profile/profile.dart';
 import 'package:hereme_flutter/utils/custom_image.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'home.dart';
@@ -29,7 +27,7 @@ final activityRef = Firestore.instance.collection('activity');
 final usersInChatRef = Firestore.instance.collection('usersInChat');
 final followersRef = Firestore.instance.collection('followers');
 final followingRef = Firestore.instance.collection('following');
-final updateRef = Firestore.instance.collection('update');
+final latestRef = Firestore.instance.collection('update');
 final usersNearbyRef = Firestore.instance.collection('usersNearby');
 final topUsersRef = Firestore.instance.collection('topUsers');
 final timelineRef = Firestore.instance.collection('timeline');

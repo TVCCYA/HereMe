@@ -156,7 +156,7 @@ class _ProfileState extends State<Profile> {
                 image: DecorationImage(
                     image: CachedNetworkImageProvider(backgroundImageUrl),
                     fit: BoxFit.cover,
-                    colorFilter: ColorFilter.mode(kColorBlack71.withOpacity(0.35), BlendMode.multiply)
+                    colorFilter: ColorFilter.mode(kColorBlack62.withOpacity(0.35), BlendMode.multiply)
                 ),
                 color: Colors.white
             ) : BoxDecoration(
@@ -178,14 +178,14 @@ class _ProfileState extends State<Profile> {
               highlightColor: Colors.transparent,
             ) : appBarTitle(),
             leading: IconButton(
-              icon: Icon(FontAwesomeIcons.chevronLeft, color: kColorBlack71),
+              icon: Icon(FontAwesomeIcons.chevronLeft, color: kColorBlack62),
               onPressed: () {
                 Navigator.pop(context);
               },
             ),
             actions: <Widget>[
               IconButton(
-                icon: Icon(FontAwesomeIcons.ellipsisV, color: kColorBlack71),
+                icon: Icon(FontAwesomeIcons.ellipsisV, color: kColorBlack62),
                 onPressed: () {
                   _isCurrentUser ? _quickSettings() : _reportBlockSettings();
                 },
@@ -334,7 +334,7 @@ class _ProfileState extends State<Profile> {
                   _isFollowing ? _unfollowUser() : _followUser(),
                   width: screenWidth / 2.5,
                   textColor:
-                  _isFollowing ? kColorBlack71 : Colors.white,
+                  _isFollowing ? kColorBlack62 : Colors.white,
                   backgroundColor:
                   _isFollowing ? Colors.white : kColorBlue,
                   splashColor:
@@ -447,7 +447,7 @@ class _ProfileState extends State<Profile> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
           StreamBuilder<QuerySnapshot>(
-            stream: updateRef
+            stream: latestRef
                 .document(currentUserUid)
                 .collection('posts')
                 .orderBy('creationDate', descending: true)
@@ -555,7 +555,7 @@ class _ProfileState extends State<Profile> {
       );
     } else {
       return StreamBuilder<QuerySnapshot>(
-        stream: updateRef
+        stream: latestRef
             .document(userUid)
             .collection('posts')
             .orderBy('creationDate', descending: true)
@@ -1422,14 +1422,7 @@ class _ProfileState extends State<Profile> {
               MaterialPageRoute(
                   builder: (context) => currentUser.displayName != null
                       ? LiveChatScreen(
-                    title: title ?? '',
                     chatId: chatId,
-                    chatHostDisplayName: hostDisplayName,
-                    chatHostUid: chatHostUid,
-                    hostRed: hostRed,
-                    hostGreen: hostGreen,
-                    hostBlue: hostBlue,
-                    duration: duration,
                   )
                       : CreateDisplayName()));
         },
@@ -2175,7 +2168,7 @@ class FlexibleProfileAppBar extends StatelessWidget {
                       side: BorderSide(
                           color: !isFollowing
                               ? Colors.transparent
-                              : kColorBlack71),
+                              : kColorBlack62),
                     ),
                     splashColor: !isFollowing ? kColorDarkBlue : kColorRed,
                     highlightColor: Colors.transparent,

@@ -257,7 +257,7 @@ class _LatestPostState extends State<LatestPost> {
   handleLikePost() {
     bool _isLiked = likes[currentUserUid] == true;
     if (_isLiked) {
-      updateRef
+      latestRef
           .document(uid)
           .collection('posts')
           .document(id)
@@ -270,7 +270,7 @@ class _LatestPostState extends State<LatestPost> {
         likes[currentUserUid] = false;
       });
     } else if (!_isLiked) {
-      updateRef
+      latestRef
           .document(uid)
           .collection('posts')
           .document(id)
@@ -648,7 +648,7 @@ class _LatestPostState extends State<LatestPost> {
                     shadows: <Shadow>[
                       Shadow(
                         blurRadius: 3.0,
-                        color: kColorBlack71,
+                        color: kColorBlack62,
                       ),
                     ],
                   ),
@@ -661,7 +661,7 @@ class _LatestPostState extends State<LatestPost> {
                     shadows: <Shadow>[
                       Shadow(
                         blurRadius: 3.0,
-                        color: kColorBlack71,
+                        color: kColorBlack62,
                       ),
                     ],
                   ),
@@ -886,7 +886,7 @@ class ProfileLatestPost extends StatelessWidget {
   handleLikePost() {
     bool _isLiked = likes[currentUserUid] == true;
     if (_isLiked) {
-      updateRef
+      latestRef
           .document(uid)
           .collection('posts')
           .document(id)
@@ -896,7 +896,7 @@ class ProfileLatestPost extends StatelessWidget {
       isLiked = false;
       likes[currentUserUid] = false;
     } else if (!_isLiked) {
-      updateRef
+      latestRef
           .document(uid)
           .collection('posts')
           .document(id)

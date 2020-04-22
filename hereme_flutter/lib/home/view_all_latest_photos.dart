@@ -128,7 +128,7 @@ class _ViewAllLatestPhotosState extends State<ViewAllLatestPhotos> {
           onPressed: () {
             Navigator.pop(context);
           },
-          color: kColorBlack71,
+          color: kColorBlack62,
           splashColor: kColorExtraLightGray,
           highlightColor: Colors.transparent,
         ),

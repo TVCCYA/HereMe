@@ -36,7 +36,7 @@ class ReusableRegistrationTextField extends StatelessWidget {
       onSubmitted: onSubmitted,
       cursorColor: kColorLightGray,
       keyboardType: keyboardType,
-      style: kDefaultTextStyle.copyWith(color: color ?? kColorBlack71),
+      style: kDefaultTextStyle.copyWith(color: color ?? kColorBlack62),
       autocorrect: false,
       textInputAction: textInputAction,
       obscureText: obscureText ?? false,

@@ -19,7 +19,7 @@ class ReusableBottomActionSheetListTile extends StatelessWidget {
         leading: Icon(iconData, color: color ?? kColorLightGray),
         title: Text(
           title,
-          style: kDefaultTextStyle.copyWith(color: color ?? kColorBlack71),
+          style: kDefaultTextStyle.copyWith(color: color ?? kColorBlack62),
         ),
         onTap: onTap,
       ),

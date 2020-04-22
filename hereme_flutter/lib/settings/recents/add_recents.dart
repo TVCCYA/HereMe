@@ -72,7 +72,7 @@ class _AddRecentState extends State<AddRecent> {
             onPressed: () {
               Navigator.pop(context);
             },
-            color: kColorBlack71,
+            color: kColorBlack62,
             splashColor: kColorExtraLightGray,
             highlightColor: Colors.transparent,
           ),
