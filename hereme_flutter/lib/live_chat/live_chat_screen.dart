@@ -141,6 +141,7 @@ class _LiveChatScreenState extends State<LiveChatScreen> {
         .updateData({
       'lastActive': DateTime.now().millisecondsSinceEpoch,
     });
+    activityRef.document(currentUser.uid).collection('liveChatsJoined').document(chatId).setData({});
   }
 
   streamUserCountInChat() {
@@ -304,7 +305,7 @@ class _LiveChatScreenState extends State<LiveChatScreen> {
                   FocusScope.of(context).unfocus();
                 },
                 child: Padding(
-                  padding: EdgeInsets.only(top: 40.0),
+                  padding: EdgeInsets.only(top: 25.0),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -314,7 +315,7 @@ class _LiveChatScreenState extends State<LiveChatScreen> {
                               decoration: BoxDecoration(
                                 border: Border(
                                   top: BorderSide(
-                                      color: kColorExtraLightGray, width: 2.0),
+                                      color: kColorExtraLightGray, width: 1.0),
                                 ),
                               ),
                               child: Row(
@@ -370,7 +371,7 @@ class _LiveChatScreenState extends State<LiveChatScreen> {
                                               child: GestureDetector(
                                                 onTap: () => addMessage(),
                                                 child: Icon(FontAwesomeIcons.chevronCircleUp,
-                                                    color: kColorThistle, size: 16.0),
+                                                    color: kColorDarkThistle, size: 16.0),
                                               ),
                                             ),
                                           )

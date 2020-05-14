@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'dart:io';
 import 'package:flutter/services.dart';
 import 'package:hereme_flutter/constants.dart';
 import 'package:hereme_flutter/registration/photo_add.dart';
+import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -58,40 +60,38 @@ class _SignUpState extends State<SignUp> {
   Widget build(BuildContext context) {
     final double screenHeight = (MediaQuery.of(context).size.height);
     final double screenWidth = (MediaQuery.of(context).size.width);
-    return Scaffold(
-      appBar: AppBar(
-        centerTitle: true,
-        brightness: Brightness.light,
-        elevation: 2.0,
-        backgroundColor: Colors.white,
-        title: Text(
-          "Create Account",
-          textAlign: TextAlign.left,
-          style: kAppBarTextStyle.copyWith(
-            color: kColorRed,
+    return ModalProgressHUD(
+      inAsyncCall: showSpinner,
+      progressIndicator: circularProgress(),
+      child: Scaffold(
+        appBar: AppBar(
+          centerTitle: true,
+          brightness: Brightness.light,
+          elevation: 2.0,
+          backgroundColor: Colors.white,
+          title: Text(
+            "Create Account",
+            textAlign: TextAlign.left,
+            style: kAppBarTextStyle.copyWith(
+              color: kColorRed,
+            ),
+          ),
+          leading: IconButton(
+            icon: Icon(FontAwesomeIcons.chevronLeft, size: 20),
+            onPressed: () {
+              Navigator.pop(context);
+            },
+            color: kColorBlack62,
+            splashColor: kColorExtraLightGray,
+            highlightColor: Colors.transparent,
           ),
         ),
-        leading: IconButton(
-          icon: Icon(FontAwesomeIcons.chevronLeft, size: 20),
-          onPressed: () {
-            Navigator.pop(context);
-          },
-          color: kColorBlack62,
-          splashColor: kColorExtraLightGray,
-          highlightColor: Colors.transparent,
-        ),
-      ),
-      body: Container(
-        height: screenHeight,
-        width: screenWidth,
-        child: SingleChildScrollView(
-          physics: AlwaysScrollableScrollPhysics(),
-          child: SafeArea(
-            child: ModalProgressHUD(
-              inAsyncCall: showSpinner,
-              progressIndicator: CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(kColorRed),
-              ),
+        body: Container(
+          height: screenHeight,
+          width: screenWidth,
+          child: SingleChildScrollView(
+            physics: AlwaysScrollableScrollPhysics(),
+            child: SafeArea(
               child: GestureDetector(
                 behavior: HitTestBehavior.translucent,
                 onPanDown: (_) {
@@ -201,6 +201,25 @@ class _SignUpState extends State<SignUp> {
                         ),
                       ),
                       SizedBox(height: 8.0),
+//                      Platform.isIOS ? Container(
+//                        height: 40,
+//                        width: screenWidth,
+//                        child: SignInWithAppleButton(
+//                          onPressed: () async {
+//                            final credential = await SignInWithApple.getAppleIDCredential(
+//                              scopes: [
+//                                AppleIDAuthorizationScopes.email,
+//                                AppleIDAuthorizationScopes.fullName,
+//                              ],
+//                            );
+//
+//                            print(credential);
+//
+//                            // Now send the credential (especially `credential.authorizationCode`) to your server to create a session
+//                            // after they have been validated with Apple (see `Integration` section for more information on how to do this)
+//                          },
+//                        ),
+//                      ) : SizedBox(),
                       _termsHidden ? SizedBox() : Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: <Widget>[
@@ -227,40 +246,34 @@ class _SignUpState extends State<SignUp> {
                           ),
                         ],
                       ),
-                      Align(
-                        alignment: Alignment.topRight,
-                        child: FlatButton.icon(
-                          onPressed: _signUp,
-                          splashColor: _isButtonDisabled
-                              ? Colors.transparent
-                              : kColorOffWhite,
-                          highlightColor: Colors.transparent,
-                          icon: Icon(
-                            _isButtonDisabled
-                                ? FontAwesomeIcons
-                                    .arrowAltCircleUp
-                                : FontAwesomeIcons
-                                    .arrowAltCircleRight,
-                            size: 30.0,
-                            color: _isButtonDisabled
-                                ? kColorLightGray
-                                : kColorBlue,
-                          ),
-                          label: Text(
-                            _isButtonDisabled
-                                ? 'Not Done'
-                                : 'Add Photo',
-                            style: kDefaultTextStyle.copyWith(
-                                color: _isButtonDisabled
-                                    ? kColorLightGray
-                                    : kColorBlue),
-                          ),
-                        ),
-                      ),
                     ],
                   ),
                 ),
               ),
+            ),
+          ),
+        ),
+        bottomSheet: _isButtonDisabled ? SizedBox() : SafeArea(
+          child: Container(
+            height: 50,
+            width: screenWidth,
+            decoration: BoxDecoration(
+              border: Border(top: BorderSide(color: kColorExtraLightGray)),
+              color: kColorRed,
+            ),
+            child: Align(
+                alignment: Alignment.bottomRight,
+                child: ButtonTheme(
+                  minWidth: 40,
+                  child: FlatButton(
+                    onPressed: () => _signUp(),
+                    child: Text('Next',
+                        style: kAppBarTextStyle.copyWith(
+                            color: Colors.white, fontSize: 16)),
+                    splashColor: kColorDarkRed,
+                    highlightColor: Colors.transparent,
+                  ),
+                )
             ),
           ),
         ),

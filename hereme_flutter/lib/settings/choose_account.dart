@@ -133,15 +133,9 @@ class _ChooseAccountState extends State<ChooseAccount> {
           highlightColor: Colors.transparent,
         ),
       ),
-      body: SafeArea(
-        child: Container(
-          height: screenHeight,
-          width: screenWidth,
-          child: SingleChildScrollView(
-            physics: AlwaysScrollableScrollPhysics(),
-            child: buildTiles(),
-          ),
-        ),
+      body: SingleChildScrollView(
+        physics: AlwaysScrollableScrollPhysics(),
+        child: buildTiles(),
       ),
     );
   }

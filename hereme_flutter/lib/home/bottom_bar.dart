@@ -27,7 +27,7 @@ final activityRef = Firestore.instance.collection('activity');
 final usersInChatRef = Firestore.instance.collection('usersInChat');
 final followersRef = Firestore.instance.collection('followers');
 final followingRef = Firestore.instance.collection('following');
-final latestRef = Firestore.instance.collection('update');
+final latestRef = Firestore.instance.collection('latest');
 final usersNearbyRef = Firestore.instance.collection('usersNearby');
 final topUsersRef = Firestore.instance.collection('topUsers');
 final timelineRef = Firestore.instance.collection('timeline');
@@ -135,11 +135,11 @@ class _BottomBarState extends State<BottomBar>
     if (currentUser.profileImageUrl == null) {
       Navigator.of(context).pushAndRemoveUntil(createRoute(PhotoAdd()),
               (Route<dynamic> route) => false);
+    }
 
-      if (currentUser.displayName == null) {
-        Navigator.of(context).pushAndRemoveUntil(createRoute(CreateDisplayName(showBackButton: false)),
-                (Route<dynamic> route) => false);
-      }
+    if (currentUser.displayName == null) {
+      Navigator.of(context).pushAndRemoveUntil(createRoute(CreateDisplayName(showBackButton: false)),
+              (Route<dynamic> route) => false);
     }
 
     SharedPreferences prefs = await SharedPreferences.getInstance();

@@ -8,14 +8,13 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:geoflutterfire/geoflutterfire.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:hereme_flutter/home/all_users_close_by.dart';
-import 'package:hereme_flutter/live_chat/live_chat.dart';
 import 'package:hereme_flutter/live_chat/live_chat_screen.dart';
 import 'package:hereme_flutter/models/user.dart';
 import 'package:hereme_flutter/settings/choose_account.dart';
 import 'package:hereme_flutter/user_profile/profile_image_full_screen.dart';
 import 'package:hereme_flutter/utils/reusable_bottom_sheet.dart';
 import 'package:hereme_flutter/utils/reusable_header_label.dart';
-import 'package:hereme_flutter/widgets/update_post.dart';
+import 'package:hereme_flutter/widgets/latest_post.dart';
 import 'package:hereme_flutter/widgets/user_result.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
@@ -129,7 +128,7 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
           setState(() {
             this.usersNearby = users;
           });
-        getTimeline();
+        getLatestPosts();
       }
       if (this.mounted)
         setState(() {
@@ -206,9 +205,7 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
           });
         await setGeoFireData();
         await setUserCityInFirestore();
-        if (currentUser.hasAccountLinked) {
-          await getNearbyUsers();
-        }
+        await getNearbyUsers();
       });
     }
   }
@@ -239,6 +236,7 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
       'hasAccountLinked': _hasAccountLinked,
       'hideMe': hideMe,
       'username': currentUser.username,
+      'displayName': currentUser.displayName
     });
   }
 
@@ -389,12 +387,15 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
     );
   }
 
-  getTimeline() async {
+  getLatestPosts() async {
     List<LatestPost> posts = [];
     List<LatestPost> photoPosts = [];
     for (var user in usersNearby) {
-      QuerySnapshot snapshot =
-      await latestRef.document(user.uid).collection('posts').limit(10).getDocuments();
+      QuerySnapshot snapshot = await latestRef
+          .document(user.uid)
+          .collection('posts')
+          .limit(10)
+          .getDocuments();
       if (snapshot.documents.length > 0) {
         for (var doc in snapshot.documents) {
           final String postId = doc.data['id'];
@@ -418,7 +419,9 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
             isHome: true,
           );
 
-          posts.add(post);
+          if (post.type != 'link') {
+            posts.add(post);
+          }
           if (type == 'photo') {
             photoPosts.add(post);
             photoPosts.sort((p1, p2) {
@@ -439,14 +442,18 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
       });
   }
 
+  showLatestPosts() {
+    return _hasAccountLinked ? buildLatestPosts() : SizedBox();
+  }
+
   buildLatestPosts() {
-    return isLatestLoading || isLocationLoading
+    return isLatestLoading
         ? circularProgress()
-        : latestPosts.isNotEmpty
-        ? Column(
+        : Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
         ReusableHeaderLabel('Latest'),
+        latestPosts.isNotEmpty ?
         ListView.builder(
           physics: NeverScrollableScrollPhysics(),
           padding: EdgeInsets.only(top: 8.0, bottom: 20.0),
@@ -459,52 +466,56 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
                 FadeRoute(
                   page: FullScreenLatestPhoto(
                       index: latestPhotoPosts.indexOf(latestPosts[i]),
-                      displayedUpdates: latestPhotoPosts),
+                      displayedLatest: latestPhotoPosts),
                 ),
               ),
               child: latestPosts[i],
             );
           },
-        ),
+        ) : Padding(
+          padding: const EdgeInsets.only(top: 20.0),
+          child: Center(
+            child: Text(
+              'No Posts Yet',
+              style: kDefaultTextStyle,
+            ),
+          ),
+        )
       ],
-    )
-        : Center(
-      child: Text(
-        'No Posts Yet',
-        style: kDefaultTextStyle,
-      ),
     );
   }
 
   showLiveChat() {
-    if (usersNearby.length > 2) {
-      return GestureDetector(
-        onTap: () => createNearbyLiveChat(),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: <Widget>[
-            ReusableHeaderLabel('Live Chat in $city', textColor: kColorRed),
-            Padding(
-              padding: EdgeInsets.only(top: 20.0, bottom: 8.0, left: 4.0),
-              child: Icon(FontAwesomeIcons.chevronRight, size: 16.0, color: kColorRed),
-            )
-          ],
+    Color color = kColorRed;
+    if (usersNearby.length > 2 && _hasAccountLinked) {
+      return Padding(
+        padding: EdgeInsets.only(top: 12.0),
+        child: ListTile(
+          dense: true,
+          contentPadding: EdgeInsets.only(right: 12.0),
+          title: ReusableHeaderLabel('Live Chat in $city', textColor: color, top: 0.0, bottom: 0.0,),
+          onTap: () => createNearbyLiveChat(),
+          trailing: Icon(FontAwesomeIcons.chevronRight,
+              size: 16.0, color: color),
         ),
       );
     } else {
-       return SizedBox();
+      return SizedBox();
     }
   }
 
   createNearbyLiveChat() async {
     Geoflutterfire geo = Geoflutterfire();
     Query queryRef = liveChatLocationsRef;
-    Future<List<DocumentSnapshot>> stream = geo.collection(collectionRef: queryRef).within(
-      center: geo.point(latitude: latitude, longitude: longitude),
-      radius: 16, // ~ 10 miles
-      field: 'position',
-      strictMode: true,
-    ).first;
+    Future<List<DocumentSnapshot>> stream = geo
+        .collection(collectionRef: queryRef)
+        .within(
+          center: geo.point(latitude: latitude, longitude: longitude),
+          radius: 16, // ~ 10 miles
+          field: 'position',
+          strictMode: true,
+        )
+        .first;
     await stream.then((List<DocumentSnapshot> documentList) {
       if (documentList.isNotEmpty) {
         documentList.forEach((doc) {
@@ -524,7 +535,7 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
     final chatId = Uuid().v4();
     Geoflutterfire geo = Geoflutterfire();
     GeoFirePoint location = geo.point(latitude: latitude, longitude: longitude);
-    final creationDate =  DateTime.now().millisecondsSinceEpoch;
+    final creationDate = DateTime.now().millisecondsSinceEpoch;
     await liveChatLocationsRef.document(chatId).setData({
       'position': location.data,
       'chatId': chatId,
@@ -540,7 +551,7 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
   _uploadChatToFirebase() async {
     final chatId = Uuid().v4();
     final ref = liveChatsRef.document(chatId);
-    final creationDate =  DateTime.now().millisecondsSinceEpoch;
+    final creationDate = DateTime.now().millisecondsSinceEpoch;
 
     Map<String, dynamic> liveChatData = <String, dynamic>{
       'chatId': chatId,
@@ -557,7 +568,13 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
   }
 
   goToLiveChatNearby({String chatId, int creationDate}) {
-    Navigator.push(context, MaterialPageRoute(builder: (context) => LiveChatScreen(chatId: chatId, city: city,)));
+    Navigator.push(
+        context,
+        MaterialPageRoute(
+            builder: (context) => LiveChatScreen(
+                  chatId: chatId,
+                  city: city,
+                )));
   }
 
   showContent() {
@@ -569,7 +586,7 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
         children: <Widget>[
           showStreamedCloseByUsers(),
           showLiveChat(),
-          buildLatestPosts(),
+          showLatestPosts(),
         ],
       );
     }
@@ -593,41 +610,41 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
 
   Widget build(BuildContext context) {
     super.build(context);
-    SystemChrome.setEnabledSystemUIOverlays([SystemUiOverlay.top]);
+//    SystemChrome.setEnabledSystemUIOverlays([SystemUiOverlay.top]);
     return Scaffold(
       key: _scaffoldKey,
       backgroundColor: kColorOffWhite,
       body: Theme(
         data: kTheme(context),
         child: SmartRefresher(
-                enablePullDown: true,
-                header: WaterDropHeader(
-                  waterDropColor: kColorExtraLightGray,
-                  idleIcon: Icon(
-                    FontAwesomeIcons.mapMarkerAlt,
-                    color: kColorRed,
-                    size: 18.0,
-                  ),
-                  complete: Icon(
-                    FontAwesomeIcons.check,
-                    color: kColorGreen,
-                    size: 20.0,
-                  ),
-                  failed: Icon(
-                    FontAwesomeIcons.times,
-                    color: kColorRed,
-                    size: 20.0,
-                  ),
-                ),
-                controller: _refreshController,
-                onRefresh: _onRefresh,
-                child: SingleChildScrollView(
-                  child: Padding(
-                    padding: EdgeInsets.only(bottom: 24.0),
-                    child: buildFeed(),
-                  ),
-                ),
-              ),
+          enablePullDown: true,
+          header: WaterDropHeader(
+            waterDropColor: kColorExtraLightGray,
+            idleIcon: Icon(
+              FontAwesomeIcons.mapMarkerAlt,
+              color: kColorRed,
+              size: 18.0,
+            ),
+            complete: Icon(
+              FontAwesomeIcons.check,
+              color: kColorGreen,
+              size: 20.0,
+            ),
+            failed: Icon(
+              FontAwesomeIcons.times,
+              color: kColorRed,
+              size: 20.0,
+            ),
+          ),
+          controller: _refreshController,
+          onRefresh: _onRefresh,
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: EdgeInsets.only(bottom: 24.0),
+              child: buildFeed(),
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -646,9 +663,9 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
   _disableHideMe() {
     return Container(
       height: 50.0,
-      color: kColorBlue.withOpacity(0.75),
+      color: kColorBlue,
       child: FlatButton(
-        splashColor: kColorExtraLightGray,
+        splashColor: kColorDarkBlue,
         highlightColor: Colors.transparent,
         onPressed: () {
           kHandleHideMe(_scaffoldKey);

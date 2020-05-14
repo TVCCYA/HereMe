@@ -1,6 +1,5 @@
 import 'dart:io';
 import 'dart:async';
-import 'package:animator/animator.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -16,20 +15,24 @@ import 'package:hereme_flutter/utils/reusable_bottom_sheet.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:modal_progress_hud/modal_progress_hud.dart';
+import 'package:palette_generator/palette_generator.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class EditProfile extends StatefulWidget {
   final Color color;
-  EditProfile({this.color});
+  final Color color2;
+  EditProfile({this.color, this.color2});
   @override
   _EditProfileState createState() => _EditProfileState(
         color: this.color,
+        color2: this.color2
       );
 }
 
 class _EditProfileState extends State<EditProfile> {
-  final Color color;
-  _EditProfileState({this.color});
+  Color color;
+  Color color2;
+  _EditProfileState({this.color, this.color2});
 
   final _scaffoldKey = GlobalKey<ScaffoldState>();
 
@@ -44,6 +47,21 @@ class _EditProfileState extends State<EditProfile> {
   bool changedProfileImage = false;
   bool changedBackgroundImage = false;
   bool changedUsername = false;
+
+  _getPaletteColor() async {
+    final PaletteGenerator generator = await PaletteGenerator.fromImageProvider(
+      CachedNetworkImageProvider(profileImageUrl),
+    );
+    final muted = generator.mutedColor.color;
+    final dominant = generator.dominantColor.color;
+    final first = generator.colors.first;
+    final last = generator.colors.last;
+    if (this.mounted)
+      setState(() {
+        color = muted != null ? muted : dominant != null ? dominant : first;
+        color2 = dominant != null ? dominant : muted != null ? muted : last;
+      });
+  }
 
   @override
   void deactivate() {
@@ -78,6 +96,7 @@ class _EditProfileState extends State<EditProfile> {
           key: _scaffoldKey,
           backgroundColor: Colors.white,
           appBar: AppBar(
+            centerTitle: true,
             brightness: Brightness.light,
             backgroundColor: Colors.white,
             title: Text(
@@ -126,11 +145,18 @@ class _EditProfileState extends State<EditProfile> {
                                   height: screenHeight / 2,
                                   width: screenWidth,
                                 )
-                              : Image.asset(
-                                  defaultBackground,
-                                  width: screenWidth,
-                                  fit: BoxFit.cover,
-                                ),
+                              : Container(
+                              decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomLeft,
+                                colors: [
+                                  color,
+                                  color2,
+                                ],
+                              ),
+                            ),
+                          ),
                           Align(
                             alignment: Alignment.bottomCenter,
                             child: Padding(
@@ -217,7 +243,7 @@ class _EditProfileState extends State<EditProfile> {
                               padding:
                                   const EdgeInsets.only(top: 12.0, bottom: 16.0),
                               child: Text(
-                                currentUser.displayName,
+                                currentUser.displayName ?? '',
                                 style: kDefaultTextStyle.copyWith(
                                     color: Color.fromRGBO(
                                         currentUser.red ?? 71,
@@ -447,19 +473,14 @@ class _EditProfileState extends State<EditProfile> {
         };
         final ref = usersRef.document(currentUser.uid);
         ref.updateData(photoUrl).whenComplete(() {
-          ref
-              .collection('updatedFields')
-              .document('profileImageUrl')
-              .setData(photoUrl)
-              .whenComplete(() {
-            updateUserInfo();
-            if (this.mounted)
-              setState(() {
-                profileImageUrl = downloadUrl;
-                showSpinner = false;
-                changedProfileImage = true;
-              });
-          });
+          updateUserInfo();
+          if (this.mounted)
+            setState(() {
+              profileImageUrl = downloadUrl;
+              showSpinner = false;
+              changedProfileImage = true;
+            });
+          _getPaletteColor();
           userLocationsRef.document(currentUser.uid).updateData(photoUrl);
         }).catchError(
           (e) => kShowAlert(

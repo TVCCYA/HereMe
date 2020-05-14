@@ -146,10 +146,10 @@ class _LatestPostState extends State<LatestPost> {
                 if (isPhotoPost) {
                   FirebaseStorage.instance
                       .ref()
-                      .child('update_images/$uid/$id')
+                      .child('latest_images/$uid/$id')
                       .delete();
                 }
-                kHandleRemoveDataAtId(id, uid, 'update', 'posts');
+                kHandleRemoveDataAtId(id, uid, 'latest', 'posts');
                 Navigator.pop(context);
               },
               onPressed2: () {
@@ -285,6 +285,10 @@ class _LatestPostState extends State<LatestPost> {
     }
   }
 
+  createLikedPostsOnActivity() {
+    activityRef.document(currentUserUid).collection('likedPosts').document(id).setData({'uid': uid});
+  }
+
   addLikeToActivityFeed() {
     bool isNotPostOwner = currentUserUid != uid;
     if (isNotPostOwner) {
@@ -301,6 +305,7 @@ class _LatestPostState extends State<LatestPost> {
       });
       removeFifthSameLikedPost();
       removeEleventhLikedPost();
+      createLikedPostsOnActivity();
     }
   }
 
@@ -376,6 +381,11 @@ class _LatestPostState extends State<LatestPost> {
         }
       });
     });
+    removeLikedPostFromActivity();
+  }
+
+  removeLikedPostFromActivity() {
+    activityRef.document(currentUserUid).collection('likedPosts').document(id).delete();
   }
 
   buildTextPost() {
@@ -785,10 +795,10 @@ class ProfileLatestPost extends StatelessWidget {
                 if (isPhotoPost) {
                   FirebaseStorage.instance
                       .ref()
-                      .child('update_images/$uid/$id')
+                      .child('latest_images/$uid/$id')
                       .delete();
                 }
-                kHandleRemoveDataAtId(id, uid, 'update', 'posts');
+                kHandleRemoveDataAtId(id, uid, 'latest', 'posts');
                 Navigator.pop(context);
               },
               onPressed2: () {
@@ -924,7 +934,12 @@ class ProfileLatestPost extends StatelessWidget {
       });
       removeFifthSameLikedPost();
       removeEleventhLikedPost();
+      createLikedPostsOnActivity();
     }
+  }
+
+  createLikedPostsOnActivity() {
+    activityRef.document(currentUserUid).collection('likedPosts').document(id).setData({'uid': uid});
   }
 
   removeFifthSameLikedPost() {
@@ -999,6 +1014,11 @@ class ProfileLatestPost extends StatelessWidget {
           }
         });
     });
+    removeLikedPostFromActivity();
+  }
+
+  removeLikedPostFromActivity() {
+    activityRef.document(currentUserUid).collection('likedPosts').document(id).delete();
   }
 
   buildTextPost(BuildContext context, double screenWidth) {

@@ -68,6 +68,7 @@ class _ReceivedKnocksState extends State<ReceivedKnocks> {
       child: Scaffold(
         backgroundColor: kColorOffWhite,
         appBar: AppBar(
+          centerTitle: true,
           brightness: Brightness.light,
           elevation: 2.0,
           backgroundColor: kColorOffWhite,
@@ -139,6 +140,7 @@ class _ReceivedKnockState extends State<ReceivedKnock> {
   }
 
   bool knockedBack = false;
+  bool removedKnock = false;
   String username = '';
   String profileImageUrl = '';
 
@@ -187,8 +189,8 @@ class _ReceivedKnockState extends State<ReceivedKnock> {
                 ReusableRoundedCornerButton(
                   width: 10,
                   height: 30,
-                  text: knockedBack ? 'Knocked' : 'Knock',
-                  onPressed: () => _handleKnock(uid),
+                  text: knockedBack ? 'Knocked' : removedKnock ? 'Removed' : 'Knock',
+                  onPressed: () => removedKnock ? print('do nothing') : _handleKnock(uid),
                   textColor: kColorLightGray,
                 ),
                 IconButton(
@@ -196,7 +198,7 @@ class _ReceivedKnockState extends State<ReceivedKnock> {
                   iconSize: 16,
                   padding: EdgeInsets.all(0.0),
                   icon: Icon(FontAwesomeIcons.times, color: kColorBlack62),
-                  onPressed: () => _removeKnock(uid),
+                  onPressed: () => knockedBack ? print('do nothing') : _removeKnock(uid),
                 ),
               ],
             )
@@ -254,8 +256,6 @@ class _ReceivedKnockState extends State<ReceivedKnock> {
         .setData({
       'creationDate': creationDate,
     }).whenComplete(() {
-      _removeSentKnockTo(uid, currentUser.uid);
-    }).whenComplete(() {
       _removeKnock(uid);
     });
   }
@@ -282,7 +282,13 @@ class _ReceivedKnockState extends State<ReceivedKnock> {
         .then((doc) {
       if (doc.exists) {
         doc.reference.delete();
+        if (this.mounted)
+          setState(() {
+            removedKnock = true;
+          });
       }
+    }).whenComplete(() {
+      _removeSentKnockTo(uid, currentUser.uid);
     });
   }
 

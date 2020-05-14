@@ -52,19 +52,21 @@ exports.onCreateActivityFeedItem = functions.firestore
     });
 
 exports.onCreateKnock = functions.firestore
-    .document('/knocks/{userId}/receivedKnockFrom/{currentUserUid}')
+    .document('/knocks/{currentUserUid}/receivedKnockFrom/{userId}')
     .onCreate(async  (snapshot, context) => {
 
         // 1) Get user connected to the feed
         const userId = context.params.userId;
+        const currentUserUid = context.params.currentUserUid;
+        const currentUserRef = admin.firestore().doc(`users/${currentUserUid}`);
+        const currentUserDoc = await currentUserRef.get();
         const userRef = admin.firestore().doc(`users/${userId}`);
-        const doc = await userRef.get();
+        const knockUserDoc = await userRef.get();
 
         // 2) Once we have user, check if they have a notification token;
         // send notification if they have a token
-        const androidNotificationToken = doc.data().androidNotificationToken;
+        const androidNotificationToken = currentUserDoc.data().androidNotificationToken;
         const knockData = snapshot.data();
-        const username = doc.data().username;
 
         if (androidNotificationToken) {
             // send notification
@@ -74,18 +76,18 @@ exports.onCreateKnock = functions.firestore
         }
 
         function sendNotification(androidNotificationToken, knockData) {
-            let body = `${knockData.username} is knocking!`;
+            let body = `${knockUserDoc.data().username} is knocking!`;
 
             // 4) Create message for push notification
             const message = {
                 notification: {body},
                 token: androidNotificationToken,
-                data: {recipient: userId},
+                data: {recipient: currentUserUid},
             };
 
             // 5) Send message with admin.messaging()
             admin.messaging().send(message).then(response => {
-                console.log(`${knockData.username} Successfully sent message to ${username}`, response);
+                console.log(`${knockUserDoc.data().username} Successfully sent message to ${currentUserUid}`, response);
             }).catch(error => {
                 console.log("Error sending message ", error);
             })

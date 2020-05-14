@@ -51,39 +51,39 @@ class _LogInState extends State<LogIn> {
   Widget build(BuildContext context) {
     final double screenHeight = (MediaQuery.of(context).size.height);
     final double screenWidth = (MediaQuery.of(context).size.width);
-    return Scaffold(
-      backgroundColor: kColorOffWhite,
-      appBar: AppBar(
-        centerTitle: true,
-        brightness: Brightness.light,
-        elevation: 2.0,
+    return ModalProgressHUD(
+      inAsyncCall: showSpinner,
+      progressIndicator: circularProgress(),
+      child: Scaffold(
         backgroundColor: kColorOffWhite,
-        title: Text(
-          "Welcome Back",
-          textAlign: TextAlign.left,
-          style: kAppBarTextStyle.copyWith(
-            color: kColorRed,
+        appBar: AppBar(
+          centerTitle: true,
+          brightness: Brightness.light,
+          elevation: 2.0,
+          backgroundColor: kColorOffWhite,
+          title: Text(
+            "Welcome Back",
+            textAlign: TextAlign.left,
+            style: kAppBarTextStyle.copyWith(
+              color: kColorRed,
+            ),
+          ),
+          leading: IconButton(
+            icon: Icon(FontAwesomeIcons.chevronLeft, size: 20),
+            onPressed: () {
+              Navigator.pop(context);
+            },
+            color: kColorBlack62,
+            splashColor: kColorExtraLightGray,
+            highlightColor: Colors.transparent,
           ),
         ),
-        leading: IconButton(
-          icon: Icon(FontAwesomeIcons.chevronLeft, size: 20),
-          onPressed: () {
-            Navigator.pop(context);
-          },
-          color: kColorBlack62,
-          splashColor: kColorExtraLightGray,
-          highlightColor: Colors.transparent,
-        ),
-      ),
-      body: Container(
-        height: screenHeight,
-        width: screenWidth,
-        child: SingleChildScrollView(
-          physics: AlwaysScrollableScrollPhysics(),
-          child: SafeArea(
-            child: ModalProgressHUD(
-              inAsyncCall: showSpinner,
-              progressIndicator: circularProgress(),
+        body: Container(
+          height: screenHeight,
+          width: screenWidth,
+          child: SingleChildScrollView(
+            physics: AlwaysScrollableScrollPhysics(),
+            child: SafeArea(
               child: GestureDetector(
                 behavior: HitTestBehavior.translucent,
                 onPanDown: (_) {
@@ -235,39 +235,36 @@ class _LogInState extends State<LogIn> {
                               ),
                             ),
                           ),
-                          Align(
-                            alignment: Alignment.topRight,
-                            child: FlatButton.icon(
-                              onPressed: _logIn,
-                              splashColor: _isButtonDisabled
-                                  ? Colors.transparent
-                                  : kColorOffWhite,
-                              highlightColor: Colors.transparent,
-                              icon: Icon(
-                                _isButtonDisabled
-                                    ? FontAwesomeIcons.arrowAltCircleUp
-                                    : FontAwesomeIcons
-                                    .arrowAltCircleRight,
-                                size: 30.0,
-                                color: _isButtonDisabled
-                                    ? kColorLightGray
-                                    : kColorBlue,
-                              ),
-                              label: Text(
-                                _isButtonDisabled ? 'Not Done' : 'Log In',
-                                style: kDefaultTextStyle.copyWith(
-                                    color: _isButtonDisabled
-                                        ? kColorLightGray
-                                        : kColorBlue),
-                              ),
-                            ),
-                          ),
                         ],
                       ),
                     ],
                   ),
                 ),
               ),
+            ),
+          ),
+        ),
+        bottomSheet: _isButtonDisabled ? SizedBox() : SafeArea(
+          child: Container(
+            height: 50,
+            width: screenWidth,
+            decoration: BoxDecoration(
+              border: Border(top: BorderSide(color: kColorExtraLightGray)),
+              color: kColorRed,
+            ),
+            child: Align(
+                alignment: Alignment.bottomRight,
+                child: ButtonTheme(
+                  minWidth: 40,
+                  child: FlatButton(
+                    onPressed: () => _logIn(),
+                    child: Text('Log In',
+                        style: kAppBarTextStyle.copyWith(
+                            color: Colors.white, fontSize: 16)),
+                    splashColor: kColorDarkRed,
+                    highlightColor: Colors.transparent,
+                  ),
+                )
             ),
           ),
         ),

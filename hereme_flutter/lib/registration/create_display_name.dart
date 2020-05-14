@@ -1,6 +1,7 @@
 import 'dart:math';
 import 'package:animator/animator.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -24,7 +25,7 @@ class _CreateDisplayNameState extends State<CreateDisplayName> {
   _CreateDisplayNameState({this.showBackButton = true});
 
   final _scaffoldKey = GlobalKey<ScaffoldState>();
-  String displayName;
+  String displayName = '';
   bool _isButtonDisabled = true;
   bool _isAvailable = false;
   bool showSpinner = false;
@@ -35,12 +36,14 @@ class _CreateDisplayNameState extends State<CreateDisplayName> {
   @override
   void initState() {
     super.initState();
-    if (currentUser.red != null) {
+    if (!showBackButton) {
+      createRandomColor();
+    } else if (currentUser.red == null) {
+      createRandomColor();
+    } else {
       red = currentUser.red;
       green = currentUser.green;
       blue = currentUser.blue;
-    } else {
-      createRandomColor();
     }
   }
 
@@ -52,13 +55,12 @@ class _CreateDisplayNameState extends State<CreateDisplayName> {
 
   createRandomColor() {
     Random rnd;
-    int min = 1;
+    int min = 52;
     int max = 255;
-    int bMax = 188;
     rnd = new Random();
     final r = min + rnd.nextInt(max - min);
     final g = min + rnd.nextInt(max - min);
-    final b = min + rnd.nextInt(bMax - min);
+    final b = min + rnd.nextInt(max - min);
 
     if (this.mounted) setState(() {
       red = r;
@@ -203,7 +205,7 @@ class _CreateDisplayNameState extends State<CreateDisplayName> {
                         color: Color.fromRGBO(red, green, blue, 1.0)),
                     decoration: kRegistrationInputDecoration.copyWith(
                       labelText: 'Username',
-                      hintText: currentUser.displayName == null
+                      hintText: !showBackButton
                           ? 'Your username'
                           : currentUser.displayName,
                       hintStyle: kDefaultTextStyle.copyWith(
@@ -253,24 +255,21 @@ class _CreateDisplayNameState extends State<CreateDisplayName> {
 
     final ref = usersRef.document(currentUser.uid);
     ref.updateData(data).whenComplete(() {
-      ref.collection('updatedFields').document('displayName').setData({
-        'displayName': displayName,
-      }).whenComplete(() {
+      userLocationsRef.document(currentUser.uid).setData({'displayName': displayName ?? ''}, merge: true);
         updateCurrentUserInfo();
         if (this.mounted) setState(() {
           showSpinner = false;
         });
+        kShowSnackbar(
+          key: _scaffoldKey,
+          text: 'Successfully changed username to $displayName',
+          backgroundColor: kColorGreen,
+        );
+        Future.delayed(Duration(seconds: 2), () => showBackButton ? Navigator.pop(context) :
+        Navigator.pushAndRemoveUntil(context,
+            MaterialPageRoute(builder: (BuildContext context) => BottomBar()),
+                (Route<dynamic> route) => false));
       });
-      kShowSnackbar(
-        key: _scaffoldKey,
-        text: 'Successfully changed username to $displayName',
-        backgroundColor: kColorGreen,
-      );
-      Future.delayed(Duration(seconds: 2), () => showBackButton ? Navigator.pop(context) :
-      Navigator.pushAndRemoveUntil(context,
-          MaterialPageRoute(builder: (BuildContext context) => BottomBar()),
-              (Route<dynamic> route) => false));
-    });
   }
 
   updateCurrentUserInfo() async {

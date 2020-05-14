@@ -1,25 +1,28 @@
+import 'dart:io';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_google_ad_manager/ad_size.dart';
+import 'package:flutter_google_ad_manager/banner.dart';
+import 'package:flutter_google_ad_manager/flutter_google_ad_manager.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:hereme_flutter/constants.dart';
 import 'package:hereme_flutter/home/bottom_bar.dart';
-import 'package:hereme_flutter/live_chat/add_live_chat.dart';
 import 'package:hereme_flutter/models/linked_account.dart';
 import 'package:hereme_flutter/models/user.dart';
 import 'package:hereme_flutter/notifications/notification_page.dart';
 import 'package:hereme_flutter/settings/choose_account.dart';
 import 'package:hereme_flutter/settings/menu_list.dart';
-import 'package:hereme_flutter/updates/add_update.dart';
-import 'package:hereme_flutter/updates/all_updates.dart';
+import 'package:hereme_flutter/latest/add_latest.dart';
+import 'package:hereme_flutter/latest/all_latest.dart';
 import 'package:hereme_flutter/user_profile/edit_profile.dart';
 import 'package:hereme_flutter/user_profile/profile_image_full_screen.dart';
 import 'package:hereme_flutter/utils/custom_image.dart';
 import 'package:hereme_flutter/utils/reusable_bottom_sheet.dart';
 import 'package:hereme_flutter/utils/reusable_button.dart';
 import 'package:hereme_flutter/utils/reusable_header_label.dart';
-import 'package:hereme_flutter/widgets/update_post.dart';
+import 'package:hereme_flutter/widgets/latest_post.dart';
 import 'package:icon_shadow/icon_shadow.dart';
 import 'package:intl/intl.dart';
 import 'package:modal_progress_hud/modal_progress_hud.dart';
@@ -73,6 +76,7 @@ class _NewProfileState extends State<NewProfile> {
   String displayedTotalCount;
 
   Color color = kColorOffWhite;
+  Color color2 = Colors.white;
   bool showSpinner = false;
   String defaultBackground = 'images/bubbly.png';
   bool backgroundImageLoading = true;
@@ -114,14 +118,16 @@ class _NewProfileState extends State<NewProfile> {
     final PaletteGenerator generator = await PaletteGenerator.fromImageProvider(
       backgroundImage != null
           ? CachedNetworkImageProvider(backgroundImage)
-          : AssetImage(defaultBackground),
+          : CachedNetworkImageProvider(profileImageUrl),
     );
     final muted = generator.mutedColor.color;
     final dominant = generator.dominantColor.color;
     final first = generator.colors.first;
+    final last = generator.colors.last;
     if (this.mounted)
       setState(() {
         color = muted != null ? muted : dominant != null ? dominant : first;
+        color2 = dominant != null ? dominant : muted != null ? muted : last;
         backgroundImageLoading = false;
       });
   }
@@ -291,12 +297,13 @@ class _NewProfileState extends State<NewProfile> {
                   (BuildContext context, bool innerBoxIsScrolled) {
                 return <Widget>[
                   SliverAppBar(
-                    backgroundColor: color,
+                    backgroundColor: backgroundImageUrl != null ? color : color2,
                     elevation: 2.0,
                     expandedHeight: screenHeight / 3,
                     floating: true,
                     pinned: true,
                     stretch: true,
+                    centerTitle: true,
                     title: appBarTitle(),
                     leading: IconButton(
                       icon: IconShadowWidget(
@@ -346,7 +353,7 @@ class _NewProfileState extends State<NewProfile> {
                       background: Stack(
                         children: <Widget>[
                           backgroundImageLoading
-                              ? Container(color: kColorOffWhite)
+                              ? Container(color: color)
                               : backgroundImageUrl != null
                                   ? CachedNetworkImage(
                                       imageUrl: backgroundImageUrl,
@@ -355,11 +362,18 @@ class _NewProfileState extends State<NewProfile> {
                                       fit: BoxFit.cover,
                                       fadeInDuration: Duration(seconds: 1),
                                     )
-                                  : Image.asset(
-                                      defaultBackground,
-                                      width: screenWidth,
-                                      fit: BoxFit.cover,
-                                    ),
+                                  : Container(
+                              decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomLeft,
+                                colors: [
+                                  color,
+                                  color2,
+                                ],
+                              ),
+                            ),
+                          ),
                           Align(
                             alignment: Alignment.bottomLeft,
                             child: Padding(
@@ -449,7 +463,7 @@ class _NewProfileState extends State<NewProfile> {
                   children: <Widget>[
                     buildAbout(screenWidth),
                     buildLinkedAccounts(),
-                    buildUpdatePosts(),
+                    buildLatestPosts(),
                   ],
                 ),
               )),
@@ -461,6 +475,38 @@ class _NewProfileState extends State<NewProfile> {
                   backgroundColor: color,
                 )
               : SizedBox(),
+        ),
+      ),
+    );
+  }
+
+  showAd() {
+    return Padding(
+      padding: const EdgeInsets.only(top: 8.0),
+      child: Container(
+        color: Colors.transparent,
+        height: 50.0,
+        child: Center(
+          child: DFPBanner(
+            isDevelop: false,
+            adUnitId: Platform.isIOS ? 'ca-app-pub-5239326709670732/4791964351' : 'ca-app-pub-5239326709670732/5712121097',
+            adSize: DFPAdSize.BANNER,
+            onAdLoaded: () {
+              print('Banner onAdLoaded');
+            },
+            onAdFailedToLoad: (errorCode) {
+              print('Banner onAdFailedToLoad: errorCode:$errorCode');
+            },
+            onAdOpened: () {
+              print('Banner onAdOpened');
+            },
+            onAdClosed: () {
+              print('Banner onAdClosed');
+            },
+            onAdLeftApplication: () {
+              print('Banner onAdLeftApplication');
+            },
+          ),
         ),
       ),
     );
@@ -526,7 +572,7 @@ class _NewProfileState extends State<NewProfile> {
                         final result = await Navigator.push(
                           context,
                           MaterialPageRoute(
-                              builder: (context) => EditProfile()),
+                              builder: (context) => EditProfile(color: color, color2: color2)),
                         );
                         result != null ? await _getCurrentUserData() : print('nothing happened');
                       },
@@ -716,14 +762,16 @@ class _NewProfileState extends State<NewProfile> {
                     }
                   },
                 ),
+          showAd()
         ],
       ),
     );
   }
 
-  buildUpdatePosts() {
+  buildLatestPosts() {
+    int postLimit = 5;
     return Padding(
-      padding: EdgeInsets.only(top: 16.0, bottom: 40.0),
+      padding: EdgeInsets.only(top: 16.0, bottom: 90.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
@@ -735,16 +783,16 @@ class _NewProfileState extends State<NewProfile> {
                       .document(currentUser.uid)
                       .collection('posts')
                       .orderBy('creationDate', descending: true)
-                      .limit(5)
+                      .limit(postLimit)
                       .snapshots(),
                   builder: (context, snapshot) {
                     if (!snapshot.hasData) {
                       return circularProgress();
                     }
-                    final updates = snapshot.data.documents;
-                    List<ProfileLatestPost> displayedUpdates = [];
+                    final latest = snapshot.data.documents;
+                    List<ProfileLatestPost> displayedLatest = [];
                     List<ProfileLatestPost> displayedPhotos = [];
-                    for (var post in updates) {
+                    for (var post in latest) {
                       final String photoUrl = post.data['photoUrl'];
                       final String title = post.data['title'];
                       final int creationDate = post.data['creationDate'];
@@ -766,12 +814,12 @@ class _NewProfileState extends State<NewProfile> {
                         green: green,
                         blue: blue,
                       );
-                      displayedUpdates.add(displayedPost);
+                      displayedLatest.add(displayedPost);
                       if (type == 'photo') {
                         displayedPhotos.add(displayedPost);
                       }
                     }
-                    if (displayedUpdates.isNotEmpty) {
+                    if (displayedLatest.isNotEmpty) {
                       return Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisSize: MainAxisSize.min,
@@ -780,22 +828,22 @@ class _NewProfileState extends State<NewProfile> {
                             padding: EdgeInsets.only(top: 8.0, bottom: 20.0),
                             physics: NeverScrollableScrollPhysics(),
                             shrinkWrap: true,
-                            itemCount: displayedUpdates.length,
+                            itemCount: displayedLatest.length,
                             itemBuilder: (context, i) {
                               return GestureDetector(
-                                onTap: () => Navigator.push(
+                                onTap: () => displayedPhotos.isNotEmpty ? Navigator.push(
                                   context,
                                   FadeRoute(
                                     page: FullScreenLatestPhoto(
-                                        index: displayedPhotos.indexOf(displayedUpdates[i]),
-                                        displayedUpdates: displayedPhotos),
+                                        index: displayedPhotos.indexOf(displayedLatest[i]),
+                                        displayedLatest: displayedPhotos),
                                   ),
-                                ),
-                                child: displayedUpdates[i],
+                                ) : print('do nothing'),
+                                child: displayedLatest[i],
                               );
                             },
                           ),
-                          Center(
+                          displayedLatest.length == postLimit ? Center(
                             child: Container(
                               height: 30,
                               child: ReusableRoundedCornerButton(
@@ -803,7 +851,7 @@ class _NewProfileState extends State<NewProfile> {
                                 onPressed: () => Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) => AllUpdates(
+                                    builder: (context) => AllLatest(
                                       uid: user.uid,
                                       displayName: displayName ?? username,
                                       red: red,
@@ -817,15 +865,17 @@ class _NewProfileState extends State<NewProfile> {
                                 textColor: kColorLightGray,
                               ),
                             ),
-                          ),
+                          ) : SizedBox(),
                         ],
                       );
                     } else {
                       return Padding(
-                        padding: EdgeInsets.only(top: 2.0, bottom: 8.0),
-                        child: Text(
-                          'No Posts Yet',
-                          style: kDefaultTextStyle,
+                        padding: EdgeInsets.only(top: 8.0, bottom: 8.0),
+                        child: Center(
+                          child: Text(
+                            'No Posts Yet',
+                            style: kDefaultTextStyle,
+                          ),
                         ),
                       );
                     }
@@ -836,16 +886,16 @@ class _NewProfileState extends State<NewProfile> {
                       .document(user.uid)
                       .collection('posts')
                       .orderBy('creationDate', descending: true)
-                      .limit(5)
+                      .limit(postLimit)
                       .snapshots(),
                   builder: (context, snapshot) {
                     if (!snapshot.hasData) {
                       return circularProgress();
                     }
-                    final updates = snapshot.data.documents;
-                    List<ProfileLatestPost> displayedUpdates = [];
+                    final latest = snapshot.data.documents;
+                    List<ProfileLatestPost> displayedLatest = [];
                     List<ProfileLatestPost> displayedPhotos = [];
-                    for (var post in updates) {
+                    for (var post in latest) {
                       final String photoUrl = post.data['photoUrl'];
                       final String title = post.data['title'];
                       final int creationDate = post.data['creationDate'];
@@ -866,34 +916,34 @@ class _NewProfileState extends State<NewProfile> {
                         green: green,
                         blue: blue,
                       );
-                      displayedUpdates.add(displayedPost);
+                      displayedLatest.add(displayedPost);
                       if (type == 'photo') {
                         displayedPhotos.add(displayedPost);
                       }
                     }
-                    if (displayedUpdates.isNotEmpty) {
+                    if (displayedLatest.isNotEmpty) {
                       return Column(
                         children: <Widget>[
                           ListView.builder(
                             padding: EdgeInsets.only(top: 8.0, bottom: 20.0),
                             physics: NeverScrollableScrollPhysics(),
                             shrinkWrap: true,
-                            itemCount: displayedUpdates.length,
+                            itemCount: displayedLatest.length,
                             itemBuilder: (context, i) {
                               return GestureDetector(
-                                onTap: () => Navigator.push(
+                                onTap: () => displayedPhotos.isNotEmpty ? Navigator.push(
                                   context,
                                   FadeRoute(
                                     page: FullScreenLatestPhoto(
-                                        index: displayedPhotos.indexOf(displayedUpdates[i]),
-                                        displayedUpdates: displayedPhotos),
+                                        index: displayedPhotos.indexOf(displayedLatest[i]),
+                                        displayedLatest: displayedPhotos),
                                   ),
-                                ),
-                                child: displayedUpdates[i],
+                                ) : print('do nothing'),
+                                child: displayedLatest[i],
                               );
                             },
                           ),
-                          Center(
+                          displayedLatest.length == postLimit ? Center(
                             child: Container(
                               height: 30,
                               child: ReusableRoundedCornerButton(
@@ -901,7 +951,7 @@ class _NewProfileState extends State<NewProfile> {
                                 onPressed: () => Navigator.push(
                                     context,
                                     MaterialPageRoute(
-                                        builder: (context) => AllUpdates(
+                                        builder: (context) => AllLatest(
                                             uid: user.uid,
                                             displayName:
                                                 displayName ?? username,
@@ -916,14 +966,17 @@ class _NewProfileState extends State<NewProfile> {
                                 textColor: kColorLightGray,
                               ),
                             ),
-                          ),
+                          ) : SizedBox(),
                         ],
                       );
                     } else {
-                      return Center(
-                        child: Text(
-                          'No Posts Yet',
-                          style: kDefaultTextStyle,
+                      return Padding(
+                        padding: EdgeInsets.only(top: 8.0, bottom: 8.0),
+                        child: Center(
+                          child: Text(
+                            'No Posts Yet',
+                            style: kDefaultTextStyle,
+                          ),
                         ),
                       );
                     }
@@ -1051,7 +1104,7 @@ class _NewProfileState extends State<NewProfile> {
                     kHandleRemoveDataAtId(
                         linkId, currentUser.uid, 'socialMedias', 'socials');
                     kHandleRemoveDataAtId(
-                        linkId, currentUser.uid, 'update', 'posts');
+                        linkId, currentUser.uid, 'latest', 'posts');
                     Navigator.pop(context);
                   },
                   color: kColorRed,

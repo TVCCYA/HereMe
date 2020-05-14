@@ -4,7 +4,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:hereme_flutter/models/user.dart';
 import 'package:hereme_flutter/user_profile/profile_image_full_screen.dart';
 import 'package:hereme_flutter/utils/reusable_header_label.dart';
-import 'package:hereme_flutter/widgets/update_post.dart';
+import 'package:hereme_flutter/widgets/latest_post.dart';
 import 'package:hereme_flutter/widgets/user_result.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 import '../constants.dart';
@@ -264,7 +264,9 @@ class _ExploreState extends State<Explore>
             isHome: true,
           );
 
-          posts.add(post);
+          if (post.type != 'link') {
+            posts.add(post);
+          }
           if (type == 'photo') {
             photoPosts.add(post);
             photoPosts.sort((p1, p2) {
@@ -288,38 +290,40 @@ class _ExploreState extends State<Explore>
   buildLatestPosts() {
     return isLatestLoading
         ? circularProgress()
-        : latestPosts.isNotEmpty
-            ? Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  ReusableHeaderLabel('Latest'),
-                  ListView.builder(
-                    physics: NeverScrollableScrollPhysics(),
-                    padding: EdgeInsets.only(top: 8.0, bottom: 20.0),
-                    shrinkWrap: true,
-                    itemCount: latestPosts.length,
-                    itemBuilder: (context, i) {
-                      return GestureDetector(
-                        onTap: () => Navigator.push(
-                          context,
-                          FadeRoute(
-                            page: FullScreenLatestPhoto(
-                                index: latestPhotoPosts.indexOf(latestPosts[i]),
-                                displayedUpdates: latestPhotoPosts),
-                          ),
-                        ),
-                        child: latestPosts[i],
-                      );
-                    },
-                  ),
-                ],
-              )
-            : Center(
-                child: Text(
-                  'No Posts Yet',
-                  style: kDefaultTextStyle,
+        : Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        ReusableHeaderLabel('Latest'),
+        latestPosts.isNotEmpty ?
+        ListView.builder(
+          physics: NeverScrollableScrollPhysics(),
+          padding: EdgeInsets.only(top: 8.0, bottom: 20.0),
+          shrinkWrap: true,
+          itemCount: latestPosts.length,
+          itemBuilder: (context, i) {
+            return GestureDetector(
+              onTap: () => Navigator.push(
+                context,
+                FadeRoute(
+                  page: FullScreenLatestPhoto(
+                      index: latestPhotoPosts.indexOf(latestPosts[i]),
+                      displayedLatest: latestPhotoPosts),
                 ),
-              );
+              ),
+              child: latestPosts[i],
+            );
+          },
+        ) : Padding(
+          padding: const EdgeInsets.only(top: 20.0),
+          child: Center(
+            child: Text(
+              'No Posts Yet',
+              style: kDefaultTextStyle,
+            ),
+          ),
+        )
+      ],
+    );
   }
 
   showContent() {

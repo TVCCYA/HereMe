@@ -3,21 +3,21 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:hereme_flutter/home/bottom_bar.dart';
 import 'package:hereme_flutter/user_profile/profile_image_full_screen.dart';
-import 'package:hereme_flutter/widgets/update_post.dart';
+import 'package:hereme_flutter/widgets/latest_post.dart';
 
 import '../constants.dart';
 
-class AllUpdates extends StatefulWidget {
+class AllLatest extends StatefulWidget {
   final String uid;
   final String displayName;
   final int red;
   final int green;
   final int blue;
 
-  AllUpdates({this.uid, this.displayName, this.red, this.green, this.blue});
+  AllLatest({this.uid, this.displayName, this.red, this.green, this.blue});
 
   @override
-  _AllUpdatesState createState() => _AllUpdatesState(
+  _AllLatestState createState() => _AllLatestState(
     uid: this.uid,
     displayName: this.displayName,
     red: this.red,
@@ -26,7 +26,7 @@ class AllUpdates extends StatefulWidget {
   );
 }
 
-class _AllUpdatesState extends State<AllUpdates> {
+class _AllLatestState extends State<AllLatest> {
   final String uid;
   final String displayName;
   String count;
@@ -34,7 +34,7 @@ class _AllUpdatesState extends State<AllUpdates> {
   final int green;
   final int blue;
 
-  _AllUpdatesState({this.uid, this.displayName, this.red, this.green, this.blue});
+  _AllLatestState({this.uid, this.displayName, this.red, this.green, this.blue});
 
   @override
   void initState() {
@@ -81,10 +81,10 @@ class _AllUpdatesState extends State<AllUpdates> {
                 if (!snapshot.hasData) {
                   return circularProgress();
                 }
-                final updates = snapshot.data.documents;
-                List<ProfileLatestPost> displayedUpdates = [];
+                final latest = snapshot.data.documents;
+                List<ProfileLatestPost> displayedLatest = [];
                 List<ProfileLatestPost> displayedPhotos = [];
-                for (var post in updates) {
+                for (var post in latest) {
 
                   final String photoUrl = post.data['photoUrl'];
                   final String title = post.data['title'];
@@ -106,7 +106,7 @@ class _AllUpdatesState extends State<AllUpdates> {
                     green: green,
                     blue: blue,
                   );
-                  displayedUpdates
+                  displayedLatest
                       .add(displayedPost);
                   if (type == 'photo') {
                     displayedPhotos.add(displayedPost);
@@ -115,17 +115,17 @@ class _AllUpdatesState extends State<AllUpdates> {
                 return ListView.builder(
                     physics: NeverScrollableScrollPhysics(),
                     shrinkWrap: true,
-                    itemCount: displayedUpdates.length,
+                    itemCount: displayedLatest.length,
                     itemBuilder: (context, i) {
                       return GestureDetector(
                         onTap: () =>
-                            Navigator.push(
+                        displayedPhotos.isNotEmpty ? Navigator.push(
                               context,
                               FadeRoute(
-                                page: FullScreenLatestPhoto(index: displayedPhotos.indexOf(displayedUpdates[i]), displayedUpdates: displayedPhotos),
+                                page: FullScreenLatestPhoto(index: displayedPhotos.indexOf(displayedLatest[i]), displayedLatest: displayedPhotos),
                               ),
-                            ),
-                        child: displayedUpdates[i],
+                            ) : print('do nothing'),
+                        child: displayedLatest[i],
                       );
                     },
                   );

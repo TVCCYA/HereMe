@@ -59,7 +59,7 @@ class SupportPage extends StatelessWidget {
           onTap: () => showResetPasswordAlert(context),
         ),
         InkWell(
-          onTap: () => !isAdmin ? _resetWeeklyViews() : _deleteAlert(context),
+          onTap: () => isAdmin ? _resetWeeklyViews() : _deleteAlert(context),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.start,
             children: <Widget>[
@@ -95,6 +95,18 @@ class SupportPage extends StatelessWidget {
               }
             });
           });
+        }
+      });
+    });
+  }
+
+  addDisplayName() {
+    usersRef.getDocuments().then((snapshot) {
+      snapshot.documents.forEach((doc) {
+        if (doc.exists) {
+          final uid = doc.documentID;
+          final displayName = doc.data['displayName'];
+          userLocationsRef.document(uid).setData({'displayName': displayName ?? ''}, merge: true);
         }
       });
     });
@@ -226,36 +238,137 @@ class SupportPage extends StatelessWidget {
     });
   }
 
+  _deleteLikedPosts() {
+    final ref = activityRef.document(currentUser.uid).collection('likedPosts');
+    ref.getDocuments().then((snapshot) {
+      snapshot.documents.forEach((doc) {
+        if (doc.exists) {
+          final postId = doc.documentID;
+          final uid = doc.data['uid'];
+          activityRef
+              .document(uid)
+              .collection('feedItems')
+              .where('uid', isEqualTo: currentUser.uid)
+              .getDocuments()
+              .then((snapshot) {
+            for (var doc in snapshot.documents) {
+              if (doc.exists) {
+                doc.reference.delete();
+              }
+            }
+          }).whenComplete(() {
+            latestRef
+                .document(uid)
+                .collection('posts')
+                .document(postId)
+                .updateData({'likes.${currentUser.uid}': false}).whenComplete(() {
+              doc.reference.delete();
+            });
+          });
+        }
+      });
+    });
+  }
+
+  _removeFromLiveChats() {
+    final ref = activityRef.document(currentUser.uid).collection('liveChatsJoined');
+    ref.getDocuments().then((snapshot) {
+      snapshot.documents.forEach((doc) {
+        if (doc.exists) {
+          final chatId = doc.documentID;
+          usersInChatRef.document(chatId).collection('inChat').document(currentUser.uid).delete().whenComplete(() {
+            liveChatMessagesRef
+                .document(chatId)
+                .collection('messages')
+                .where('uid', isEqualTo: currentUser.uid)
+                .getDocuments()
+                .then((snapshot) {
+              for (var doc in snapshot.documents) {
+                if (doc.exists) {
+                  doc.reference.delete();
+                }
+              }
+            }).whenComplete(() {
+              doc.reference.delete(); 
+            });
+          });
+        }
+      });
+    });
+  }
+
+  _deleteFollows() {
+    followingRef.document(currentUser.uid).collection('users').getDocuments().then((snapshot) {
+      snapshot.documents.forEach((doc){
+        if (doc.exists) {
+          final uid = doc.documentID;
+          followersRef.document(uid).collection('users').document(currentUser.uid).delete().whenComplete(() {
+            doc.reference.delete();
+          });
+        }
+      });
+    });
+  }
+
+  _deleteKnocks() {
+    knocksRef.document(currentUser.uid).collection('sentKnockTo').getDocuments().then((snapshot) {
+      snapshot.documents.forEach((doc) {
+        if (doc.exists) {
+          final uid = doc.documentID;
+          knocksRef.document(uid).collection('receivedKnockFrom').document(currentUser.uid).delete().whenComplete(() {
+              doc.reference.delete();
+          });
+        }
+      });
+    });
+      knocksRef.document(currentUser.uid).collection('receivedKnockFrom').getDocuments().then((snapshot) {
+        snapshot.documents.forEach((doc) {
+          if (doc.exists) {
+            final uid = doc.documentID;
+            knocksRef.document(uid).collection('sentKnockTo').document(currentUser.uid).delete().whenComplete(() {
+              doc.reference.delete();
+            });
+          }
+        });
+      });
+  }
+
+  _removeAuth() async {
+    FirebaseUser user = await FirebaseAuth.instance.currentUser();
+    user.delete();
+  }
+
   _handleAccountDelete(BuildContext context) async {
     String uid = currentUser.uid;
     final FirebaseStorage _storage = FirebaseStorage.instance;
-    FirebaseUser user = await FirebaseAuth.instance.currentUser();
     final userReference = usersRef.document(uid);
     final userLocation = userLocationsRef.document(uid);
 
     final socialMedias = socialMediasRef.document(uid);
-    final knocks = knocksRef.document(uid);
     final activityFeed = activityRef.document(uid);
-    final latestPost = liveChatsRef.document(uid);
+    final latestPost = latestRef.document(uid);
 
-    _storage.ref().child('profile_images/$uid').delete().whenComplete(() {
-      _storage.ref().child('recent_upload_thumbnail/$uid').delete();
-      userReference.delete();
-      userLocation.delete();
+    _storage.ref().child('profile_images_flutter/$uid').delete();
+    _storage.ref().child('latest_images/$uid').delete();
+    _storage.ref().child('profile_background_image/$uid').delete();
 
+      _deleteKnocks();
+      _deleteLikedPosts();
+      _removeFromLiveChats();
+      _deleteFollows();
       _handleRemoveCollection(socialMedias, 'socials');
       _handleRemoveCollection(activityFeed, 'feedItems');
-      _handleRemoveCollection(knocks, 'receivedKnockFrom');
+      _handleRemoveCollection(activityFeed, 'liveChatsJoined');
       _handleRemoveCollection(latestPost, 'posts');
-      kDeleteSentKnocks(uid);
 
-      user.delete().whenComplete(() {
+      userReference.delete();
+      userLocation.delete().whenComplete(() {
         print('all deleted');
+        _removeAuth();
         Navigator.pushAndRemoveUntil(
             context,
             MaterialPageRoute(builder: (BuildContext context) => InitialPage()),
-            (Route<dynamic> route) => false);
+                (Route<dynamic> route) => false);
       });
-    });
   }
 }

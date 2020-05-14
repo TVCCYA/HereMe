@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:hereme_flutter/user_profile/profile_image_full_screen.dart';
-import 'package:hereme_flutter/widgets/update_post.dart';
+import 'package:hereme_flutter/widgets/latest_post.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 
 import '../constants.dart';
@@ -88,7 +88,7 @@ class _ViewAllLatestPhotosState extends State<ViewAllLatestPhotos> {
                           context,
                           FadeRoute(
                             page: FullScreenLatestPhoto(
-                                index: i, displayedUpdates: displayedUpdates),
+                                index: i, displayedLatest: displayedUpdates),
                           ),
                         ),
                         child: displayedUpdates[i],

@@ -5,6 +5,7 @@ import 'home/bottom_bar.dart';
 void main() {
   runApp(
     MaterialApp(
+      themeMode: ThemeMode.light,
       debugShowCheckedModeBanner: false,
         home: BottomBar(),
     ),

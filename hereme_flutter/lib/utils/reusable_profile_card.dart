@@ -46,6 +46,10 @@ class ReusableCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
+      clipBehavior: Clip.hardEdge,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(15),
+      ),
       elevation: 4.0,
       child: InkResponse(
         onTap: onTap,

@@ -90,6 +90,7 @@ class _EditBioState extends State<EditBio> {
               crossAxisAlignment: CrossAxisAlignment.center,
               children: <Widget>[
                 TextField(
+                  textCapitalization: TextCapitalization.sentences,
                   maxLength: 200,
                   maxLines: 5,
                   cursorColor: kColorLightGray,

@@ -7,19 +7,20 @@ import 'package:rflutter_alert/rflutter_alert.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'home/bottom_bar.dart';
 
-const kColorRed = Color.fromRGBO(201, 62, 62, 1.0);
-const kColorBlue = Color.fromRGBO(91, 117, 212, 1.0);
-const kColorGreen = Color.fromRGBO(62, 201, 62, 1.0);
+const kColorRed = Color.fromRGBO(255, 52, 52, 1.0);
+const kColorBlue = Color.fromRGBO(52, 52, 255, 1.0);
+const kColorGreen = Color.fromRGBO(46, 229, 46, 1.0);
 
-const kColorBlack62 = Color.fromRGBO(62, 62, 62, 1.0);
-const kColorOffWhite = Color.fromRGBO(245, 245, 245, 1.0);
+const kColorBlack62 = Color.fromRGBO(52, 52, 52, 1.0);
+const kColorOffWhite = Color.fromRGBO(252, 252, 252, 1.0);
 const kColorOffBlack = Color.fromRGBO(11, 8, 19, 1.0);
-const kColorLightGray = Color.fromRGBO(162, 162, 162, 1.0);
-const kColorExtraLightGray = Color.fromRGBO(234, 234, 234, 1.0);
+const kColorLightGray = Color.fromRGBO(173, 173, 173, 1.0);
+const kColorExtraLightGray = Color.fromRGBO(238, 238, 238, 1.0);
 const kColorThistle = Color.fromRGBO(228, 162, 162, 1.0);
-const kColorDarkThistle = Color.fromRGBO(215, 115, 115, 1.0);
-const kColorDarkRed = Color.fromRGBO(120, 37, 37, 1.0);
-const kColorDarkBlue = Color.fromRGBO(63, 81, 148, 1.0);
+const kColorDarkThistle = Color.fromRGBO(255, 95, 95, 1.0);
+const kColorDarkRed = Color.fromRGBO(153, 31, 31, 1.0);
+const kColorDarkBlue = Color.fromRGBO(31, 31, 153, 1.0);
+const kColorLightBlue = Color.fromRGBO(92, 92, 255, 1.0);
 // SOCIAL MEDIA COLORS
 const kColorInstagram = Color.fromRGBO(185, 0, 180, 1.0);
 const kColorSnapchat = Color.fromRGBO(255, 252, 0, 1.0);
@@ -326,15 +327,14 @@ String kIconPath(String socialMedia) {
   }
 }
 
-Container circularProgress({double size}) {
+Container circularProgress() {
   return Container(
-    height: size,
-    width: size,
     alignment: Alignment.center,
-    padding: EdgeInsets.only(top: 10.0, bottom: 10.0),
+    padding: EdgeInsets.only(top: 20.0, bottom: 20.0),
     child: CircularProgressIndicator(
-      valueColor: AlwaysStoppedAnimation(kColorRed),
-      backgroundColor: kColorLightGray,
+      valueColor: AlwaysStoppedAnimation(kColorLightGray),
+      backgroundColor: kColorExtraLightGray,
+      strokeWidth: 2.0,
     ),
   );
 }

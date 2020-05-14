@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:hereme_flutter/constants.dart';
 import 'package:hereme_flutter/user_profile/profile_image_full_screen.dart';
-import 'package:hereme_flutter/widgets/update_post.dart';
+import 'package:hereme_flutter/widgets/latest_post.dart';
 
 class PostFullScreen extends StatefulWidget {
   final String postId;
@@ -113,7 +113,7 @@ class _PostFullScreenState extends State<PostFullScreen> {
           child: GestureDetector(
             onTap: () {
 
-              photoUrl != '' ? Navigator.push(context, FadeRoute(page: FullScreenLatestPhoto(index: 0, displayedUpdates: [post])))
+              photoUrl != '' ? Navigator.push(context, FadeRoute(page: FullScreenLatestPhoto(index: 0, displayedLatest: [post])))
                   : print('do nothing');
             },
             child: post

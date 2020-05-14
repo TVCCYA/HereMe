@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:hereme_flutter/home/bottom_bar.dart';
 import 'package:hereme_flutter/constants.dart';
-import 'package:hereme_flutter/registration/create_display_name.dart';
 import 'package:hereme_flutter/utils/reusable_profile_card.dart';
 import 'dart:io';
 import 'dart:async';
@@ -65,25 +64,25 @@ class _PhotoAddState extends State<PhotoAdd> {
       ),
     );
 
-    return Scaffold(
-      backgroundColor: kColorRed,
-      appBar: AppBar(
+    return ModalProgressHUD(
+      inAsyncCall: showSpinner,
+      progressIndicator: circularProgress(),
+      child: Scaffold(
         backgroundColor: kColorRed,
-        elevation: 0.0,
-        centerTitle: false,
-        title: Text(
-          'Spred',
-          textAlign: TextAlign.left,
-          style: kAppBarTextStyle.copyWith(
-            color: kColorOffWhite,
-            fontSize: 25.0,
+        appBar: AppBar(
+          backgroundColor: kColorRed,
+          elevation: 0.0,
+          centerTitle: false,
+          title: Text(
+            'Spred',
+            textAlign: TextAlign.left,
+            style: kAppBarTextStyle.copyWith(
+              color: kColorOffWhite,
+              fontSize: 25.0,
+            ),
           ),
         ),
-      ),
-      body: SafeArea(
-        child: ModalProgressHUD(
-          inAsyncCall: showSpinner,
-          progressIndicator: circularProgress(),
+        body: SafeArea(
           child: Center(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
@@ -113,28 +112,28 @@ class _PhotoAddState extends State<PhotoAdd> {
             ),
           ),
         ),
-      ),
-      bottomSheet: _isButtonDisabled ? SizedBox() : SafeArea(
-        child: Container(
-          height: 50,
-          width: screenWidth,
-          decoration: BoxDecoration(
-            border: Border(top: BorderSide(color: kColorExtraLightGray)),
-            color: kColorRed,
-          ),
-          child: Align(
-            alignment: Alignment.bottomRight,
-            child: ButtonTheme(
-              minWidth: 40,
-              child: FlatButton(
-                onPressed: () => _uploadImageToFirebase(mediaFile),
-                child: Text('Next',
-                    style: kAppBarTextStyle.copyWith(
-                        color: Colors.white, fontSize: 16)),
-                splashColor: kColorDarkRed,
-                highlightColor: Colors.transparent,
-              ),
-            )
+        bottomSheet: _isButtonDisabled ? SizedBox() : SafeArea(
+          child: Container(
+            height: 50,
+            width: screenWidth,
+            decoration: BoxDecoration(
+              border: Border(top: BorderSide(color: kColorExtraLightGray)),
+              color: kColorRed,
+            ),
+            child: Align(
+              alignment: Alignment.bottomRight,
+              child: ButtonTheme(
+                minWidth: 40,
+                child: FlatButton(
+                  onPressed: () => _uploadImageToFirebase(mediaFile),
+                  child: Text('Next',
+                      style: kAppBarTextStyle.copyWith(
+                          color: Colors.white, fontSize: 16)),
+                  splashColor: kColorDarkRed,
+                  highlightColor: Colors.transparent,
+                ),
+              )
+            ),
           ),
         ),
       ),
@@ -217,16 +216,9 @@ class _PhotoAddState extends State<PhotoAdd> {
             if (this.mounted) setState(() {
               showSpinner = false;
             });
-            print(user);
-            if (user.displayName == null) {
-              Navigator.pushAndRemoveUntil(context,
-                  MaterialPageRoute(builder: (BuildContext context) => BottomBar()),
-                      (Route<dynamic> route) => false);
-            } else {
-              Navigator.pushAndRemoveUntil(context,
-                  MaterialPageRoute(builder: (BuildContext context) => CreateDisplayName(showBackButton: false)),
-                      (Route<dynamic> route) => false);
-            }
+            Navigator.pushAndRemoveUntil(context,
+                MaterialPageRoute(builder: (BuildContext context) => BottomBar()),
+                    (Route<dynamic> route) => false);
           }).catchError(
                 (e) => kShowAlert(
               context: context,

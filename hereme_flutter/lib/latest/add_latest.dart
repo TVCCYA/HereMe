@@ -1,9 +1,9 @@
 import 'package:animator/animator.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:hereme_flutter/home/bottom_bar.dart';
-import 'package:hereme_flutter/home/home.dart';
 import 'package:hereme_flutter/utils/reusable_profile_card.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
@@ -78,7 +78,7 @@ class _AddLatestState extends State<AddLatest> {
                       'Done',
                       style: kAppBarTextStyle.copyWith(color: kColorBlue),
                     ),
-                    onPressed: () => _addUpdate(),
+                    onPressed: () => _addLatest(),
                     splashColor: kColorExtraLightGray,
                     highlightColor: Colors.transparent,
                   ),
@@ -101,6 +101,7 @@ class _AddLatestState extends State<AddLatest> {
                       title = value;
                       _isValid();
                     },
+                    textCapitalization: TextCapitalization.sentences,
                     focusNode: null,
                     autocorrect: false,
                     keyboardType: TextInputType.text,
@@ -231,7 +232,7 @@ class _AddLatestState extends State<AddLatest> {
       });
     StorageUploadTask uploadFile = _storage
         .ref()
-        .child('update_images/$currentUserUid/$id')
+        .child('latest_images/$currentUserUid/$id')
         .putFile(mediaFile);
 
     uploadFile.onComplete.catchError((error) {
@@ -241,7 +242,7 @@ class _AddLatestState extends State<AddLatest> {
       if (succeed == true) {
         final downloadUrl = await _storage
             .ref()
-            .child('update_images')
+            .child('latest_images')
             .child(currentUserUid)
             .child(id)
             .getDownloadURL();
@@ -306,7 +307,7 @@ class _AddLatestState extends State<AddLatest> {
     });
   }
 
-  _addUpdate() {
+  _addLatest() {
     if (mediaFile != null) {
       _uploadProfileImageToFirebase(mediaFile);
     } else {

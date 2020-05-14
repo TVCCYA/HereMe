@@ -1,4 +1,3 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -7,11 +6,11 @@ import 'package:hereme_flutter/home/bottom_bar.dart';
 import 'package:hereme_flutter/models/user.dart';
 import 'package:hereme_flutter/notifications/all_followers.dart';
 import 'package:hereme_flutter/notifications/knocks/received_knocks.dart';
-import 'package:hereme_flutter/updates/post_full_screen.dart';
+import 'package:hereme_flutter/latest/post_full_screen.dart';
 import 'package:hereme_flutter/utils/custom_image.dart';
 import 'package:hereme_flutter/utils/reusable_button.dart';
 import 'package:hereme_flutter/utils/reusable_header_label.dart';
-import 'package:hereme_flutter/widgets/update_post.dart';
+import 'package:hereme_flutter/widgets/latest_post.dart';
 import 'package:hereme_flutter/widgets/user_result.dart';
 import 'package:intl/intl.dart';
 import 'package:time_ago_provider/time_ago_provider.dart';
@@ -31,6 +30,7 @@ class _NotificationPageState extends State<NotificationPage> {
       child: Scaffold(
         backgroundColor: kColorOffWhite,
         appBar: AppBar(
+          centerTitle: true,
           brightness: Brightness.light,
           elevation: 2.0,
           backgroundColor: kColorOffWhite,
@@ -662,43 +662,43 @@ class _PostLikeState extends State<PostLike> {
         ),
       ),
     );
-    return Padding(
-      padding: EdgeInsets.only(left: 4.0),
-      child: ListTile(
-          dense: true,
-          title: RichText(
-            text: TextSpan(
-              children: [
-                TextSpan(
-                  text: '$username ',
-                  style: kAppBarTextStyle.copyWith(fontSize: 16.0),
-                ),
-                photoUrl != ''
-                    ? TextSpan(
-                        text: 'liked your photo',
-                        style: kDefaultTextStyle,
-                      )
-                    : TextSpan(
-                        text: "liked your post: '$title'",
-                        style: kDefaultTextStyle,
-                      ),
-              ],
-            ),
-          ),
-          subtitle: Text(
-            creationDate != 0 ? date() : 'a long time ago',
-            overflow: TextOverflow.fade,
-            softWrap: false,
-            style: kDefaultTextStyle.copyWith(
-              fontSize: 12.0,
-              color: kColorLightGray,
-            ),
-          ),
-          leading: cachedUserResultImage(profileImageUrl, 45, true),
-          onTap: _goToProfile,
-          trailing: photoUrl != ''
-              ? cachedRoundedCornerImage(photoUrl, 45, radius: 5)
-              : SizedBox()),
-    );
+//    return Padding(
+//      padding: EdgeInsets.only(left: 4.0),
+//      child: ListTile(
+//          dense: true,
+//          title: RichText(
+//            text: TextSpan(
+//              children: [
+//                TextSpan(
+//                  text: '$username ',
+//                  style: kAppBarTextStyle.copyWith(fontSize: 16.0),
+//                ),
+//                photoUrl != ''
+//                    ? TextSpan(
+//                        text: 'liked your photo',
+//                        style: kDefaultTextStyle,
+//                      )
+//                    : TextSpan(
+//                        text: "liked your post: '$title'",
+//                        style: kDefaultTextStyle,
+//                      ),
+//              ],
+//            ),
+//          ),
+//          subtitle: Text(
+//            creationDate != 0 ? date() : 'a long time ago',
+//            overflow: TextOverflow.fade,
+//            softWrap: false,
+//            style: kDefaultTextStyle.copyWith(
+//              fontSize: 12.0,
+//              color: kColorLightGray,
+//            ),
+//          ),
+//          leading: cachedUserResultImage(profileImageUrl, 45, true),
+//          onTap: _goToProfile,
+//          trailing: photoUrl != ''
+//              ? cachedRoundedCornerImage(photoUrl, 45, radius: 5)
+//              : SizedBox()),
+//    );
   }
 }

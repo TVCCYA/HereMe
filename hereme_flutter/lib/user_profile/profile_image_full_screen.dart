@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -10,10 +9,9 @@ import 'package:hereme_flutter/constants.dart';
 import 'package:hereme_flutter/home/bottom_bar.dart';
 import 'package:hereme_flutter/models/user.dart';
 import 'package:hereme_flutter/utils/reusable_bottom_sheet.dart';
-import 'package:hereme_flutter/widgets/update_post.dart';
+import 'package:hereme_flutter/widgets/latest_post.dart';
 import 'package:hereme_flutter/widgets/user_result.dart';
-import 'package:palette_generator/palette_generator.dart';
-import 'package:pinch_zoom_image/pinch_zoom_image.dart';
+import 'package:photo_view/photo_view.dart';
 import 'package:time_ago_provider/time_ago_provider.dart';
 
 class ProfileImageFullScreen extends StatelessWidget {
@@ -22,29 +20,24 @@ class ProfileImageFullScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final double screenHeight = MediaQuery.of(context).size.height;
-    final double screenWidth = MediaQuery.of(context).size.height;
     return SafeArea(
       child: Dismissible(
         resizeDuration: Duration(milliseconds: 1),
         direction: DismissDirection.vertical,
-        key: Key('key'),
+        key: UniqueKey(),
         onDismissed: (_) => Navigator.pop(context),
         child: Stack(
           children: <Widget>[
             Padding(
               padding: EdgeInsets.symmetric(vertical: 36.0),
               child: Center(
-                child: PinchZoomImage(
-                  zoomedBackgroundColor: Colors.black,
-                  hideStatusBarWhileZooming: false,
-                  image: CachedNetworkImage(
-                    imageUrl: profileImageUrl,
-                    height: screenHeight,
-                    width: screenWidth,
-                    fit: BoxFit.contain,
+                child: PhotoView(
+                  maxScale: PhotoViewComputedScale.contained,
+                  minScale: PhotoViewComputedScale.contained,
+                  imageProvider: CachedNetworkImageProvider(
+                    profileImageUrl
                   ),
-                ),
+                )
               ),
             ),
             Align(
@@ -68,17 +61,17 @@ class ProfileImageFullScreen extends StatelessWidget {
 
 class FullScreenLatestPhoto extends StatefulWidget {
   final int index;
-  final List<dynamic> displayedUpdates;
-  FullScreenLatestPhoto({this.index, this.displayedUpdates});
+  final List<dynamic> displayedLatest;
+  FullScreenLatestPhoto({this.index, this.displayedLatest});
   @override
   _FullScreenLatestPhotoState createState() => _FullScreenLatestPhotoState(
-      index: this.index, displayedUpdates: this.displayedUpdates);
+      index: this.index, displayedLatest: this.displayedLatest);
 }
 
 class _FullScreenLatestPhotoState extends State<FullScreenLatestPhoto> {
   final int index;
-  final List<dynamic> displayedUpdates;
-  _FullScreenLatestPhotoState({this.index, this.displayedUpdates});
+  final List<dynamic> displayedLatest;
+  _FullScreenLatestPhotoState({this.index, this.displayedLatest});
   bool showTitle = true;
 
   _imageTapped() {
@@ -117,9 +110,9 @@ class _FullScreenLatestPhotoState extends State<FullScreenLatestPhoto> {
               onPressed1: () {
                 FirebaseStorage.instance
                     .ref()
-                    .child('update_images/$uid/$id')
+                    .child('latest_images/$uid/$id')
                     .delete().whenComplete(() {
-                  kHandleRemoveDataAtId(id, uid, 'update', 'posts');
+                  kHandleRemoveDataAtId(id, uid, 'latest', 'posts');
                   Navigator.pop(context);
                 });
                 Navigator.pop(context);
@@ -259,6 +252,14 @@ class _FullScreenLatestPhotoState extends State<FullScreenLatestPhoto> {
     }
   }
 
+  createLikedPostsOnActivity(String id, String uid) {
+    activityRef.document(currentUser.uid).collection('likedPosts').document(id).setData({'uid': uid});
+  }
+
+  removeLikedPostFromActivity(String id) {
+    activityRef.document(currentUser.uid).collection('likedPosts').document(id).delete();
+  }
+
   removeLikeFromActivityFeed(String uid, String id)  {
     activityRef
         .document(uid)
@@ -273,6 +274,7 @@ class _FullScreenLatestPhotoState extends State<FullScreenLatestPhoto> {
         }
       });
     });
+    removeLikedPostFromActivity(id);
   }
 
   addLikeToActivityFeed(String uid, String id, String type) {
@@ -291,6 +293,7 @@ class _FullScreenLatestPhotoState extends State<FullScreenLatestPhoto> {
       });
       removeFifthSameLikedPost(uid, id);
       removeEleventhLikedPost(uid, id);
+      createLikedPostsOnActivity(id, uid);
     }
   }
 
@@ -355,7 +358,7 @@ class _FullScreenLatestPhotoState extends State<FullScreenLatestPhoto> {
   buildPost(BuildContext context, int i) {
     final double screenHeight = MediaQuery.of(context).size.height;
     final double screenWidth = MediaQuery.of(context).size.height;
-    LatestPost post = displayedUpdates[i];
+    dynamic post = displayedLatest[i];
     bool isLiked = post.likes[post.currentUserUid] == true;
     bool isCurrentUser = currentUser.uid == post.uid;
     return GestureDetector(
@@ -363,23 +366,20 @@ class _FullScreenLatestPhotoState extends State<FullScreenLatestPhoto> {
       child: Dismissible(
         resizeDuration: Duration(milliseconds: 1),
         direction: DismissDirection.vertical,
-        key: Key('key'),
+        key: UniqueKey(),
         onDismissed: (_) => Navigator.pop(context),
         child: Stack(
           children: <Widget>[
             Padding(
               padding: EdgeInsets.symmetric(vertical: 36.0),
               child: Center(
-                child: PinchZoomImage(
-                  zoomedBackgroundColor: Colors.black,
-                  hideStatusBarWhileZooming: false,
-                  image: CachedNetworkImage(
-                    imageUrl: post.photoUrl,
-                    height: screenHeight,
-                    width: screenWidth,
-                    fit: BoxFit.contain,
+                child: PhotoView(
+                  maxScale: PhotoViewComputedScale.contained,
+                  minScale: PhotoViewComputedScale.contained,
+                  imageProvider: CachedNetworkImageProvider(
+                      post.photoUrl
                   ),
-                ),
+                )
               ),
             ),
             showTitle
@@ -517,7 +517,7 @@ class _FullScreenLatestPhotoState extends State<FullScreenLatestPhoto> {
       body: SafeArea(
         child: PageView.builder(
           controller: PageController(initialPage: index),
-          itemCount: displayedUpdates.length,
+          itemCount: displayedLatest.length,
           itemBuilder: (context, i) {
             return buildPost(context, i);
           },

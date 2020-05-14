@@ -13,16 +13,16 @@ import 'package:hereme_flutter/models/knock.dart';
 import 'package:hereme_flutter/models/linked_account.dart';
 import 'package:hereme_flutter/models/user.dart';
 import 'package:hereme_flutter/registration/create_display_name.dart';
-import 'package:hereme_flutter/updates/add_update.dart';
+import 'package:hereme_flutter/latest/add_latest.dart';
 import 'package:hereme_flutter/settings/choose_account.dart';
-import 'package:hereme_flutter/updates/all_updates.dart';
+import 'package:hereme_flutter/latest/all_latest.dart';
 import 'package:hereme_flutter/user_profile/profile_image_full_screen.dart';
 import 'package:hereme_flutter/utils/custom_image.dart';
 import 'package:hereme_flutter/utils/reusable_button.dart';
 import 'package:hereme_flutter/utils/reusable_header_label.dart';
 import 'package:hereme_flutter/utils/reusable_profile_card.dart';
 import 'package:hereme_flutter/widgets/activity_feed_item.dart';
-import 'package:hereme_flutter/widgets/update_post.dart';
+import 'package:hereme_flutter/widgets/latest_post.dart';
 import 'package:hereme_flutter/widgets/user_result.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
@@ -497,7 +497,7 @@ class _ProfileState extends State<Profile> {
                               style: kAppBarTextStyle.copyWith(
                                   fontSize: 16.0, color: kColorRed)),
                         ),
-                        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => AllUpdates(uid: currentUserUid, displayName: displayName ?? username))),
+                        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => AllLatest(uid: currentUserUid, displayName: displayName ?? username))),
                       ),
                     ),
                     SizedBox(height: 8.0),
@@ -511,7 +511,7 @@ class _ProfileState extends State<Profile> {
                               Navigator.push(
                                 context,
                                 FadeRoute(
-                                  page: FullScreenLatestPhoto(index: i, displayedUpdates: displayedPhotos),
+                                  page: FullScreenLatestPhoto(index: i, displayedLatest: displayedPhotos),
                                 ),
                               ),
                           child: displayedUpdates[i],
@@ -605,7 +605,7 @@ class _ProfileState extends State<Profile> {
                           style: kAppBarTextStyle.copyWith(
                               fontSize: 16.0, color: kColorRed)),
                     ),
-                    onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => AllUpdates(uid: userUid, displayName: displayName ?? username))),
+                    onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => AllLatest(uid: userUid, displayName: displayName ?? username))),
                   ),
                 ),
                 SizedBox(height: 8.0),
@@ -619,7 +619,7 @@ class _ProfileState extends State<Profile> {
                           Navigator.push(
                             context,
                             FadeRoute(
-                              page: FullScreenLatestPhoto(index: i, displayedUpdates: displayedPhotos),
+                              page: FullScreenLatestPhoto(index: i, displayedLatest: displayedPhotos),
                             ),
                           ),
                       child: displayedUpdates[i],
@@ -1620,14 +1620,12 @@ class _ProfileState extends State<Profile> {
         };
         final ref = usersRef.document(currentUserUid);
         ref.updateData(photoUrl).whenComplete(() {
-          ref.collection('updatedFields').document('profileImageUrl').setData(photoUrl).whenComplete(() {
-            print('User updated Photo');
-            if (this.mounted)
-              setState(() {
-                profileImageUrl = downloadUrl;
-                showSpinner = false;
-              });
-          });
+          print('User updated Photo');
+          if (this.mounted)
+            setState(() {
+              profileImageUrl = downloadUrl;
+              showSpinner = false;
+            });
         }).catchError(
               (e) => kShowAlert(
             context: context,

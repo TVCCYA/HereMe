@@ -98,6 +98,52 @@ class _AddLinkState extends State<AddLink> {
           splashColor: kColorExtraLightGray,
           highlightColor: Colors.transparent,
         ),
+        actions: <Widget>[
+          Center(
+            child: FlatButton(
+              child: Text(
+                'Done',
+                style: kAppBarTextStyle.copyWith(color: _isButtonDisabled ? kColorLightGray : kColorBlue),
+              ),
+              onPressed: () {
+                _isButtonDisabled
+                    ? print('disabled')
+                    : _addLinkToFirebase();
+                if (platform == 'YouTube' ||
+                    platform == 'Facebook' ||
+                    platform == 'Your Website' ||
+                    platform == 'SoundCloud' ||
+                    platform == 'Pinterest' ||
+                    platform == 'Etsy') {
+                  if (url.contains(' ')) {
+                    kShowSnackbar(
+                        key: _scaffoldKey,
+                        text: 'URL cannot contain spaces',
+                        backgroundColor: kColorRed
+                    );
+                  }
+                  if (!url.contains('https://')) {
+                    kShowSnackbar(
+                        key: _scaffoldKey,
+                        text: 'URL format: https://example.com',
+                        backgroundColor: kColorRed
+                    );
+                  }
+                } else {
+                  if (username.contains(' ')) {
+                    kShowSnackbar(
+                        key: _scaffoldKey,
+                        text: 'Username cannot contain spaces',
+                        backgroundColor: kColorRed
+                    );
+                  }
+                }
+              },
+              splashColor: kColorExtraLightGray,
+              highlightColor: Colors.transparent,
+            ),
+          ),
+        ],
       ),
       body: GestureDetector(
         behavior: HitTestBehavior.translucent,
@@ -226,62 +272,6 @@ class _AddLinkState extends State<AddLink> {
                       )
                     : SizedBox(),
                 SizedBox(height: 12.0),
-                Align(
-                  alignment: Alignment.topRight,
-                  child: FlatButton.icon(
-                    onPressed: () {
-                      _isButtonDisabled
-                          ? print('disabled')
-                          : _addLinkToFirebase();
-                      if (platform == 'YouTube' ||
-                          platform == 'Facebook' ||
-                          platform == 'Your Website' ||
-                          platform == 'SoundCloud' ||
-                          platform == 'Pinterest' ||
-                          platform == 'Etsy') {
-                        if (url.contains(' ')) {
-                          kShowSnackbar(
-                              key: _scaffoldKey,
-                              text: 'URL cannot contain spaces',
-                              backgroundColor: kColorRed
-                          );
-                        }
-                        if (!url.contains('https://')) {
-                          kShowSnackbar(
-                              key: _scaffoldKey,
-                              text: 'URL format: https://example.com',
-                              backgroundColor: kColorRed
-                          );
-                        }
-                      } else {
-                        if (username.contains(' ')) {
-                          kShowSnackbar(
-                              key: _scaffoldKey,
-                              text: 'Username cannot contain spaces',
-                              backgroundColor: kColorRed
-                          );
-                        }
-                      }
-                    },
-                    splashColor:
-                        _isButtonDisabled ? Colors.transparent : kColorOffWhite,
-                    highlightColor: Colors.transparent,
-                    icon: Icon(
-                      _isButtonDisabled
-                          ? FontAwesomeIcons.arrowAltCircleUp
-                          : FontAwesomeIcons.arrowAltCircleRight,
-                      size: 30.0,
-                      color: _isButtonDisabled ? kColorLightGray : kColorBlue,
-                    ),
-                    label: Text(
-                      _isButtonDisabled ? 'Not Done' : 'Add Link',
-                      style: kDefaultTextStyle.copyWith(
-                          color: _isButtonDisabled
-                              ? kColorLightGray
-                              : kColorBlue),
-                    ),
-                  ),
-                ),
               ],
             ),
           ),
