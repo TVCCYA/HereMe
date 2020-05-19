@@ -185,6 +185,12 @@
       <excludeFolder url="file://$MODULE_DIR$/hereme_flutter/ios/.symlinks/plugins/shared_preferences_web/.dart_tool" />
       <excludeFolder url="file://$MODULE_DIR$/hereme_flutter/ios/.symlinks/plugins/shared_preferences_web/.pub" />
       <excludeFolder url="file://$MODULE_DIR$/hereme_flutter/ios/.symlinks/plugins/shared_preferences_web/build" />
+      <excludeFolder url="file://$MODULE_DIR$/hereme_flutter/ios/.symlinks/plugins/sign_in_with_apple/.dart_tool" />
+      <excludeFolder url="file://$MODULE_DIR$/hereme_flutter/ios/.symlinks/plugins/sign_in_with_apple/.pub" />
+      <excludeFolder url="file://$MODULE_DIR$/hereme_flutter/ios/.symlinks/plugins/sign_in_with_apple/build" />
+      <excludeFolder url="file://$MODULE_DIR$/hereme_flutter/ios/.symlinks/plugins/sign_in_with_apple/example/.dart_tool" />
+      <excludeFolder url="file://$MODULE_DIR$/hereme_flutter/ios/.symlinks/plugins/sign_in_with_apple/example/.pub" />
+      <excludeFolder url="file://$MODULE_DIR$/hereme_flutter/ios/.symlinks/plugins/sign_in_with_apple/example/build" />
       <excludeFolder url="file://$MODULE_DIR$/hereme_flutter/ios/.symlinks/plugins/sqflite/.dart_tool" />
       <excludeFolder url="file://$MODULE_DIR$/hereme_flutter/ios/.symlinks/plugins/sqflite/.pub" />
       <excludeFolder url="file://$MODULE_DIR$/hereme_flutter/ios/.symlinks/plugins/sqflite/build" />

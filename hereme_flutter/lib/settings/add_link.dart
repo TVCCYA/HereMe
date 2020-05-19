@@ -253,7 +253,7 @@ class _AddLinkState extends State<AddLink> {
                         controller: _urlController,
                         focusNode: _urlNode,
                         autocorrect: false,
-                        keyboardType: TextInputType.url,
+                        keyboardType: TextInputType.text,
                         textInputAction: TextInputAction.next,
                         autofocus: true,
                         style: kDefaultTextStyle,

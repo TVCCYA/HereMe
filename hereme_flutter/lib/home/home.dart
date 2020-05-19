@@ -1,9 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
-import 'package:flutter/services.dart';
-import 'package:flutter_google_ad_manager/banner.dart';
-import 'package:flutter_google_ad_manager/flutter_google_ad_manager.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:geoflutterfire/geoflutterfire.dart';
 import 'package:geolocator/geolocator.dart';
@@ -73,13 +70,13 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
   }
 
   @override
-  void didChangeDependencies() async {
+  void didChangeDependencies()  {
     super.didChangeDependencies();
     isHideMe();
     if (hideMe) {
       _locationEnabled = false;
     }
-    await checkHasAccountLinked();
+     checkHasAccountLinked();
   }
 
   @override
@@ -655,6 +652,7 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
       latestPosts = [];
     });
     kSelectionClick();
+    await checkHasAccountLinked();
     await getCurrentLocation();
     await getNearbyUsers();
     _refreshController.refreshCompleted();

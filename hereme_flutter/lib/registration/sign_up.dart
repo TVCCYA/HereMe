@@ -147,6 +147,7 @@ class _SignUpState extends State<SignUp> {
                           FocusScope.of(context)
                               .requestFocus(_firstNameFocus);
                         },
+                        textCapitalization: TextCapitalization.words,
                         autocorrect: false,
                         keyboardType: TextInputType.text,
                         textInputAction: TextInputAction.next,
@@ -358,7 +359,7 @@ class _SignUpState extends State<SignUp> {
         title: 'Whoops',
         desc: 'This link cannot be opened at this time',
         buttonText: 'Try Again',
-        onPressed: Navigator.pop(context),
+        onPressed: () => Navigator.pop(context),
         color: kColorRed,
       );
     }

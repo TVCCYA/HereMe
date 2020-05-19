@@ -120,7 +120,7 @@ class _BlockedProfilesState extends State<BlockedProfiles> {
             title: 'Successfully Unblocked',
             desc: 'You will now be able to see each others content',
             buttonText: 'Dismiss',
-            onPressed: Navigator.pop(context),
+            onPressed: () => Navigator.pop(context),
             color: kColorBlue,
           );
     });

@@ -95,7 +95,7 @@ class _ChooseAccountState extends State<ChooseAccount> {
       children: <Widget>[
         GridView.count(
           physics: NeverScrollableScrollPhysics(),
-          padding: EdgeInsets.only(left: 2.0, right: 2.0),
+          padding: EdgeInsets.only(left: 2.0, right: 2.0, bottom: 50.0),
           crossAxisCount: 2,
           childAspectRatio: 2.0,
           mainAxisSpacing: 2.0,

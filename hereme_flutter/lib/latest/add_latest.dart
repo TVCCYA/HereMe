@@ -102,9 +102,7 @@ class _AddLatestState extends State<AddLatest> {
                       _isValid();
                     },
                     textCapitalization: TextCapitalization.sentences,
-                    focusNode: null,
-                    autocorrect: false,
-                    keyboardType: TextInputType.text,
+                    autocorrect: true,
                     textInputAction: TextInputAction.done,
                     autofocus: true,
                     style: kDefaultTextStyle,
