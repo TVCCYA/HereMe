@@ -149,9 +149,10 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
         _locationEnabled = false;
       });
     GeolocationStatus geolocationStatus =
-        await Geolocator().checkGeolocationPermissionStatus();
+        await Geolocator().checkGeolocationPermissionStatus(locationPermission: GeolocationPermission.locationWhenInUse);
 
     if (geolocationStatus != GeolocationStatus.granted || hideMe) {
+      PermissionHandler().requestPermissions([PermissionGroup.locationWhenInUse]);
       if (this.mounted)
         setState(() {
           isLocationLoading = false;
@@ -177,7 +178,8 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin<Home> {
         await Geolocator().checkGeolocationPermissionStatus();
     geolocationStatus = GeolocationStatus.granted;
 
-    if (geolocationStatus != GeolocationStatus.granted) {
+    if (geolocationStatus != GeolocationStatus.granted || hideMe) {
+      PermissionHandler().requestPermissions([PermissionGroup.locationWhenInUse]);
       if (this.mounted)
         setState(() {
           isLocationLoading = false;

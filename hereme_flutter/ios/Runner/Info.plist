@@ -13,7 +13,7 @@
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>hereme_flutter</string>
+	<string>HereMe</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
@@ -33,12 +33,24 @@
 		<key>NSAllowsArbitraryLoads</key>
 		<true/>
 	</dict>
+	<key>NSAppleMusicUsageDescription</key>
+	<string>We would like access to your media library.</string>
+	<key>NSCalendarsUsageDescription</key>
+	<string>We would like access to your calendar.</string>
 	<key>NSCameraUsageDescription</key>
-	<string>We would like access to your camera.</string>
+	<string>We would like access to your camera so you can post original photos to your profile.</string>
+	<key>NSContactsUsageDescription</key>
+	<string>We would like access to your contacts.</string>
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>We would like access to your location so you can see what's happening nearby.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>We would like access to your location so you can see what's happening nearby.</string>
+	<key>NSMotionUsageDescription</key>
+	<string>We would like access to your motion usage.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>We would like access to your photo library.</string>
+	<string>We would like access to your photo library so you can upload photos to your profile.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>We would like access to your speech recognition.</string>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>

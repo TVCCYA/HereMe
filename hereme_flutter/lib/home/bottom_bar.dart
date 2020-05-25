@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:hereme_flutter/constants.dart';
 import 'package:hereme_flutter/home/explore.dart';
 import 'package:hereme_flutter/models/user.dart';
@@ -11,6 +12,7 @@ import 'package:hereme_flutter/registration/initial_page.dart';
 import 'package:hereme_flutter/registration/photo_add.dart';
 import 'package:hereme_flutter/user_profile/new_profile.dart';
 import 'package:hereme_flutter/utils/custom_image.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'home.dart';
@@ -49,7 +51,6 @@ class BottomBar extends StatefulWidget {
 class _BottomBarState extends State<BottomBar>
     with SingleTickerProviderStateMixin {
   final _scaffoldKey = GlobalKey<ScaffoldState>();
-  FirebaseMessaging _firebaseMessaging = FirebaseMessaging();
   bool _isAuth = false;
   bool pageLoading = true;
   List<String> blockedUids = [];
@@ -67,6 +68,15 @@ class _BottomBarState extends State<BottomBar>
     _tabController = new TabController(vsync: this, length: 2);
   }
 
+//  getLocationPermission() async {
+//    GeolocationStatus geolocationStatus =
+//    await Geolocator().checkGeolocationPermissionStatus(locationPermission: GeolocationPermission.locationWhenInUse);
+//
+//    if (geolocationStatus != GeolocationStatus.granted) {
+//      PermissionHandler().requestPermissions([PermissionGroup.locationWhenInUse]);
+//    }
+//  }
+
   handleLoggedIn() async {
     if (await auth.currentUser() != null) {
       await getCurrentUser();
@@ -75,7 +85,7 @@ class _BottomBarState extends State<BottomBar>
           _isAuth = true;
           pageLoading = false;
         });
-      await configurePushNotifications();
+//      await getLocationPermission();
     } else {
       Navigator.pushAndRemoveUntil(
           context,
@@ -87,40 +97,6 @@ class _BottomBarState extends State<BottomBar>
           pageLoading = false;
         });
     }
-  }
-
-  configurePushNotifications() async {
-    final user = await auth.currentUser();
-    if (Platform.isIOS) getIOSPermission();
-    _firebaseMessaging.getToken().then((token) {
-      usersRef.document(user.uid).updateData({
-        'androidNotificationToken': token,
-      });
-    });
-
-    _firebaseMessaging.configure(
-//      onLaunch: (Map<String, dynamic> message) async {},
-//      onResume: (Map<String, dynamic> message) async {},
-//      onMessage: (Map<String, dynamic> message) async {
-//        print('on message: $message\n');
-//        final String recipientId = message['data']['recipient'];
-//        final String body = message['notification']['body'];
-//        if (recipientId == user.uid) {
-//          kShowSnackbar(
-//            key: _scaffoldKey,
-//            text: body,
-//            backgroundColor: kColorBlack71,
-//          );
-//        }
-//        print('NOTIFICATION NOT SHOWN');
-//      },
-        );
-  }
-
-  getIOSPermission() {
-    _firebaseMessaging.requestNotificationPermissions(
-        IosNotificationSettings(sound: true, alert: true, badge: true));
-    _firebaseMessaging.onIosSettingsRegistered.listen((settings) {});
   }
 
   getCurrentUser() async {
